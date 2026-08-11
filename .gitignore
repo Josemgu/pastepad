@@ -1,0 +1,21 @@
+# Datos del usuario: nunca deben subirse
+snippets.json
+historial.json
+config.json
+imagenes/
+
+# Salidas de PyInstaller
+build/
+dist/
+*.spec
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Windows
+Thumbs.db
+desktop.ini

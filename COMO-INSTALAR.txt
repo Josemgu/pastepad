@@ -1,0 +1,352 @@
+===============================================================
+   PASTEPAD - Guia de instalacion desde cero
+   Para alguien que nunca ha instalado Python
+===============================================================
+
+pastepad es un panel de portapapeles. Guarda todo lo que copias
+y lo que tu decidas guardar en carpetas propias, y lo pega donde
+estes trabajando con el atajo Ctrl + Alt + V.
+
+Es lo mismo que el historial de Windows (la tecla Windows + V),
+pero sin el limite de 25 elementos, con carpetas propias y con
+buscador.
+
+
+---------------------------------------------------------------
+QUE VAS A NECESITAR
+---------------------------------------------------------------
+
+- Una computadora con Windows 10 u 11
+- Conexion a internet (solo durante la instalacion)
+- Unos 15 minutos
+- Los archivos pastepad.pyw y build.bat
+
+
+---------------------------------------------------------------
+PASO 1 - INSTALAR PYTHON
+---------------------------------------------------------------
+
+Python es el motor que hace funcionar el programa. Es gratis
+y viene de una organizacion seria, no es nada raro.
+
+1. Abre tu navegador y entra a:
+
+      https://www.python.org/downloads/
+
+2. Vas a ver un boton amarillo grande que dice algo como
+   "Download Python 3.13" (el numero puede variar). Dale clic.
+
+3. Cuando termine de bajar, abre el archivo descargado.
+   Suele estar en tu carpeta de Descargas.
+
+4. IMPORTANTE - No le des a "Install Now" todavia.
+
+   En la primera pantalla, ABAJO, hay una casilla que dice:
+
+      [ ] Add python.exe to PATH
+
+   MARCA ESA CASILLA. Es la parte mas importante de todo
+   este proceso. Si no la marcas, nada de lo que sigue va
+   a funcionar y vas a tener que desinstalar y empezar de
+   nuevo.
+
+5. Ahora si, dale a "Install Now".
+
+6. Espera a que termine y dale a "Close".
+
+
+---------------------------------------------------------------
+PASO 2 - PREPARAR LA CARPETA
+---------------------------------------------------------------
+
+1. Abre el Explorador de archivos.
+
+2. Ve a la unidad C: y crea una carpeta nueva llamada:
+
+      pastepad
+
+   Te queda asi:  C:\pastepad
+
+   NOTA: No la pongas dentro de OneDrive ni del Escritorio si
+   tu Escritorio esta sincronizado con OneDrive. Cuando OneDrive
+   sube archivos, los bloquea un momento, y si el programa
+   intenta guardar justo en ese momento, se pierde lo que
+   acabas de guardar.
+
+3. Copia estos dos archivos dentro de C:\pastepad
+
+      pastepad.pyw
+      build.bat
+
+
+---------------------------------------------------------------
+PASO 3 - INSTALAR LAS PIEZAS QUE FALTAN
+---------------------------------------------------------------
+
+El programa usa cuatro complementos de Python. Se bajan solos
+con un comando.
+
+1. Abre la carpeta C:\pastepad en el Explorador.
+
+2. Haz clic en la barra de direcciones de arriba (donde se lee
+   la ruta de la carpeta). Se pone azul.
+
+3. Escribe esto y presiona Enter:
+
+      cmd
+
+   Se abre una ventana negra. No te asustes, es normal, y ya
+   viene parada en la carpeta correcta.
+
+4. En esa ventana negra escribe esto tal cual y presiona Enter:
+
+      pip install customtkinter keyboard pyperclip pywin32
+
+5. Van a salir muchas lineas de texto. Espera a que termine.
+   Toma uno o dos minutos.
+
+   Cuando veas de nuevo la linea con C:\pastepad> y el cursor
+   parpadeando, ya termino.
+
+   Si sale algo en amarillo que dice WARNING, ignoralo. Eso es
+   normal. Solo importa si sale en rojo.
+
+
+---------------------------------------------------------------
+PASO 4 - PROBARLO
+---------------------------------------------------------------
+
+1. En la misma ventana negra escribe:
+
+      python pastepad.pyw
+
+2. Debe aparecer un panel oscuro pequeno.
+
+3. Pruebalo asi:
+
+   a) Copia cualquier texto de una pagina web (Ctrl+C)
+   b) Presiona Ctrl + Alt + V
+   c) El texto que copiaste debe aparecer en la lista
+   d) Abre el Bloc de notas
+   e) Haz clic dentro, donde escribirias
+   f) Presiona Ctrl + Alt + V
+   g) Dale un clic a lo que quieras pegar
+   h) Debe caer en el Bloc de notas
+
+4. Si todo funciono, cierra la ventana negra.
+
+   OJO: al cerrar la ventana negra tambien se cierra el
+   programa. Eso es normal y se arregla en el paso 5.
+
+   Si algo fallo, en esa ventana negra vas a ver el error
+   escrito. Copialo y pidele ayuda a quien te paso esto.
+
+
+---------------------------------------------------------------
+PASO 5 - CONVERTIRLO EN UN PROGRAMA DE VERDAD
+---------------------------------------------------------------
+
+Hasta aqui el programa depende de Python. Ahora lo vamos a
+convertir en un archivo .exe que funciona solo.
+
+1. En el Explorador, dentro de C:\pastepad, dale doble clic a:
+
+      build.bat
+
+2. Se abre una ventana negra y empieza a trabajar. Tarda entre
+   dos y cinco minutos. Deja que termine.
+
+3. Cuando diga "Listo" y "Presione una tecla para continuar",
+   presiona cualquier tecla para cerrar.
+
+4. Dentro de C:\pastepad ahora hay una carpeta nueva llamada
+   dist. Entra ahi y vas a ver:
+
+      pastepad.exe
+
+5. Arrastra ese pastepad.exe hacia afuera, a C:\pastepad, para
+   que quede junto a los demas archivos.
+
+6. Ya puedes borrar estas tres cosas que quedaron de sobra:
+
+      la carpeta dist
+      la carpeta build
+      el archivo pastepad.spec
+
+
+---------------------------------------------------------------
+PASO 6 - PRIMER ARRANQUE
+---------------------------------------------------------------
+
+1. Haz CLIC DERECHO sobre pastepad.exe
+
+2. Elige "Ejecutar como administrador"
+
+   Por que: Windows no deja que un programa normal capture
+   combinaciones de teclas cuando la ventana activa es un
+   programa que corre con mas permisos. Si no lo abres asi,
+   el atajo va a fallar justo en algunas aplicaciones.
+
+3. Windows puede mostrar una pantalla azul que dice
+   "Windows protegio su PC".
+
+   Eso es normal. Sale porque el programa es de uso interno y
+   no tiene un certificado comprado, que cuesta cientos de
+   dolares al ano. No significa que tenga virus.
+
+   Dale clic a "Mas informacion" y despues a
+   "Ejecutar de todas formas".
+
+4. Listo. De aqui en adelante el programa se abre solo cada
+   vez que enciendas la computadora, y se queda escondido
+   hasta que presiones Ctrl + Alt + V.
+
+
+===============================================================
+   COMO SE USA
+===============================================================
+
+ABRIR EL PANEL
+
+   Presiona Ctrl + Alt + V desde cualquier programa.
+   Aparece junto al puntero del mouse.
+
+   Antes de abrirlo, haz clic en el lugar donde vas a pegar.
+   El programa recuerda donde estaba tu cursor.
+
+
+PEGAR
+
+   Un clic sobre lo que quieras. Se pega solo.
+
+   O sin tocar el mouse: escribe dos o tres letras para
+   buscar, baja con las flechas, y presiona Enter.
+
+   Ctrl + Enter pega sin formato, en texto limpio.
+
+
+CERRAR
+
+   Escape, la equis, o simplemente haz clic en otro lado.
+
+
+LAS DOS PESTANAS
+
+   RECIENTE   Todo lo que copias entra aqui solo. Guarda
+              las ultimas 80 cosas, textos e imagenes.
+
+   GUARDADOS  Tus carpetas con lo que decidiste conservar.
+              Esto no caduca nunca.
+
+   Si escribes en el buscador, busca en las dos a la vez.
+
+
+LOS TRES ICONOS DE CADA FILA
+
+   Alfiler    Fija ese elemento arriba de la lista. Los
+              fijados no se borran cuando el historial se
+              llena.
+
+   Lapiz      Abre el texto para corregirlo antes de usarlo.
+
+   Papelera   Borra solo ese elemento.
+
+
+LOS BOTONES DE ABAJO
+
+   Carpeta    Crea una carpeta nueva. Al crearla te ofrece
+              llenarla pegando una lista.
+
+   Lista      Pega varias cosas de golpe en la carpeta que
+              tengas elegida. Puedes elegir entre hacer una
+              nota por cada linea, o meterlo todo junto en
+              una sola.
+
+   Escoba     Vacia el historial reciente. Lo que este
+              fijado se queda.
+
+   Nuevo      Crea un texto guardado desde cero.
+
+
+PLANTILLAS
+
+   Si escribes algo entre dobles corchetes, el programa te
+   lo pregunta antes de pegar. Por ejemplo, guarda esto:
+
+      El lider de [[unidad]] reporto [[problema]] el
+      dia [[fecha]].
+
+   Cuando lo elijas, te va a pedir unidad, problema y fecha,
+   y pega la frase ya completa. Sirve para todo lo que
+   escribes siempre igual cambiando dos o tres datos.
+
+
+EL COLOR
+
+   El icono de paleta, arriba a la derecha, cambia el color
+   de acento. Hay seis.
+
+   El programa tambien detecta si tienes Windows en tema
+   claro u oscuro y se adapta solo.
+
+
+===============================================================
+   PREGUNTAS COMUNES
+===============================================================
+
+EL ATAJO NO FUNCIONA
+
+   Casi siempre es porque no lo abriste como administrador.
+   Cierralo desde el Administrador de tareas y vuelve a
+   abrirlo con clic derecho, "Ejecutar como administrador".
+
+   Si sigue sin funcionar, puede que otro programa este
+   usando esa misma combinacion de teclas.
+
+
+COMO LO CIERRO DEL TODO
+
+   Presiona Ctrl + Shift + Esc para abrir el Administrador
+   de tareas, ve a la pestana Detalles, busca pastepad.exe
+   y dale a Finalizar tarea.
+
+
+DONDE QUEDAN MIS TEXTOS
+
+   En la misma carpeta del programa, en estos archivos:
+
+      snippets.json     lo que guardaste en carpetas
+      historial.json    lo que se copio solo
+      config.json       el color que elegiste
+      imagenes\         las capturas de pantalla
+
+   Para respaldar todo o pasarlo a otra computadora, copia
+   esa carpeta completa.
+
+
+COMO LO DESINSTALO
+
+   No hay desinstalador porque no es un programa instalado,
+   es portable. Para quitarlo:
+
+   1. Cierralo desde el Administrador de tareas
+   2. Abre PowerShell y pega esto:
+
+      reg delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Run" /v GestorSnippets /f
+
+   3. Borra la carpeta C:\pastepad
+
+   Listo. No queda nada regado por el sistema.
+
+
+EL PROGRAMA GUARDA CONTRASENAS?
+
+   El historial guarda todo lo que copies, y eso incluye
+   contrasenas o datos personales si los copias durante el
+   dia. Se guardan sin cifrar en tu computadora.
+
+   Usa la escoba de vez en cuando para vaciarlo, sobre todo
+   si compartes la maquina con alguien mas.
+
+
+===============================================================

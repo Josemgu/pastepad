@@ -1,0 +1,4 @@
+customtkinter>=5.2
+keyboard>=0.13
+pyperclip>=1.8
+pywin32>=306
