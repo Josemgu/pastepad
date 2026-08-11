@@ -3,35 +3,23 @@
 </p>
 
 <p align="center">
-  <b>A clipboard manager for Windows.</b><br>
-  Keeps what you copy, stores what you choose to keep,<br>
-  and pastes it back where your cursor was.
-</p>
-
-<p align="center">
   <img src="https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078D4?style=flat-square" alt="Platform">
   <img src="https://img.shields.io/badge/python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python">
   <img src="https://img.shields.io/badge/license-MIT-22C55E?style=flat-square" alt="License">
 </p>
 
----
-
 Windows keeps 25 clipboard entries and drops them on restart. This keeps
 80, plus anything you save into your own folders, which never expires.
 
-Press <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>V</kbd> anywhere. Type two
-letters, hit <kbd>Enter</kbd>, and the text lands in the field you were
-working in.
-
 <p align="center">
-  <img src="docs/screenshot.png" alt="The panel, open next to the cursor" width="380">
+  <img src="docs/flow.svg" alt="Click the field, press Ctrl+Alt+V, type two letters, press Enter" width="820">
 </p>
-
-## What it does
 
 <table>
 <tr>
-<td width="50%" valign="top">
+<td width="56%" valign="top">
+
+## What it does
 
 ### Automatic history
 
@@ -39,19 +27,11 @@ Everything you copy shows up in **Recent** — text and screenshots. Pin
 the ones you use often and they stay at the top, safe from the cleanup
 that trims the rest.
 
-</td>
-<td width="50%" valign="top">
-
 ### Your own folders
 
-**Saved** holds what you decide to keep, organized however you want.
-Pick a folder and the **Borrar carpeta** button appears — it takes the
-folder and everything inside. Nothing here expires otherwise.
-
-</td>
-</tr>
-<tr>
-<td valign="top">
+**Saved** holds what you decide to keep. Pick a folder and a **Borrar
+carpeta** button appears; it takes the folder and everything inside.
+Right-click a chip to rename it instead. Nothing here expires.
 
 ### Search that ranks
 
@@ -60,72 +40,16 @@ finds `LMS-FINQ: Finance Questions`. Accents are ignored, so
 `informacion` matches `información`. Title matches rank above matches
 buried in the body.
 
-</td>
-<td valign="top">
-
 ### Rich text
 
-Pastes with font, size, bold and color into Word and Outlook. Plain text
-everywhere else. <kbd>Ctrl</kbd> + <kbd>Enter</kbd> forces plain.
-
-</td>
-</tr>
-</table>
+Pastes with font, size, bold and colour into Word and Outlook. Plain
+text everywhere else. <kbd>Ctrl</kbd>+<kbd>Enter</kbd> forces plain.
 
 ### Fill-in templates
 
 Write `[[anything]]` in a saved text and the app asks for it before
 pasting:
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 240" width="880" height="240" role="img" aria-label="pastepad - clipboard manager for Windows">
-  <title>pastepad</title>
-  <defs>
-    <style>
-      .bg    { fill: #161616; }
-      .card  { fill: #242424; }
-      .accent{ fill: #3B82F6; }
-      .t     { fill: #F0F0F0; font-family: 'Segoe UI', system-ui, sans-serif; }
-      .dim   { fill: #8E8E8E; font-family: 'Segoe UI', system-ui, sans-serif; }
-      .on    { fill: #FFFFFF; font-family: 'Segoe UI', system-ui, sans-serif; }
-      .mono  { font-family: 'Cascadia Code', Consolas, monospace; }
-    </style>
-  </defs>
 
-  <rect class="bg" width="880" height="240" rx="14"/>
-
-  <text class="t" x="56" y="88" font-size="46" font-weight="600">pastepad</text>
-  <text class="dim" x="56" y="122" font-size="17">A clipboard manager for Windows</text>
-
-  <rect class="card" x="56" y="150" width="230" height="34" rx="8"/>
-  <text class="dim mono" x="72" y="172" font-size="14">Ctrl</text>
-  <text class="dim" x="98" y="172" font-size="14">+</text>
-  <text class="dim mono" x="110" y="172" font-size="14">Alt</text>
-  <text class="dim" x="136" y="172" font-size="14">+</text>
-  <text class="dim mono" x="148" y="172" font-size="14">V</text>
-  <text class="dim" x="176" y="172" font-size="13">anywhere</text>
-
-  <g transform="translate(560, 34)">
-    <rect class="card" width="268" height="172" rx="12" fill="#1F1F1F"/>
-    <rect class="card" x="12" y="14" width="244" height="26" rx="7"/>
-    <circle cx="30" cy="27" r="5" fill="none" stroke="#8E8E8E" stroke-width="1.6"/>
-    <line x1="34" y1="31" x2="38" y2="35" stroke="#8E8E8E" stroke-width="1.6" stroke-linecap="round"/>
-    <text class="dim" x="48" y="32" font-size="11">Search</text>
-
-    <rect class="accent" x="12" y="50" width="118" height="20" rx="10"/>
-    <text class="on" x="47" y="64" font-size="10">Recent</text>
-    <rect class="card" x="138" y="50" width="118" height="20" rx="10"/>
-    <text class="dim" x="169" y="64" font-size="10">Saved</text>
-
-    <rect class="accent" x="12" y="80" width="244" height="30" rx="8"/>
-    <text class="on" x="24" y="93" font-size="10">LMS-FINQ: Finance Questions</text>
-    <text class="on" x="24" y="105" font-size="9" opacity="0.75">27 characters</text>
-
-    <rect class="card" x="12" y="116" width="244" height="30" rx="8"/>
-    <text class="t" x="24" y="129" font-size="10">The leader from [[unit]] reported...</text>
-    <text class="dim" x="24" y="141" font-size="9">Cases</text>
-
-    <rect class="card" x="12" y="152" width="244" height="12" rx="6"/>
-  </g>
-</svg>
 ```
 The leader from [[unit]] reported [[issue]] on [[date]].
 ```
@@ -137,6 +61,24 @@ straight into your form.
 
 Paste a list of ten names and choose: one note per line, or all of it in
 a single note. Numbering and bullets get stripped if you want.
+
+### Four sizes
+
+Mini, small, medium and large, from the appearance dialog. Mini drops to
+single-line rows so it still shows a useful number of entries.
+
+Free edge-dragging isn't offered on purpose — CustomTkinter doesn't
+repaint reliably under continuous resizing, and the result was worse
+than no resizing at all.
+
+</td>
+<td width="44%" valign="top">
+
+<img src="docs/panel.svg" alt="The panel" width="100%">
+
+</td>
+</tr>
+</table>
 
 ## Install
 
@@ -169,7 +111,7 @@ packaged. Click *More info* → *Run anyway*, or build it yourself below.
 
 <br>
 
-You need Python 3.10 or newer from
+Python 3.10 or newer from
 [python.org](https://www.python.org/downloads/). Check **Add python.exe
 to PATH** on the first installer screen — nothing works without it.
 
@@ -187,14 +129,13 @@ python pastepad.pyw
 
 ```powershell
 pip install pyinstaller
-pyinstaller --onefile --noconsole --name pastepad --collect-all customtkinter pastepad.pyw
+pyinstaller --onefile --noconsole --name pastepad ^
+  --version-file version.txt ^
+  --collect-all customtkinter ^
+  pastepad.pyw
 ```
 
-Or just double-click `build.bat`.
-
-The result lands in `dist\`. Move it wherever you want it to live and run
-it once from there — the app registers its own startup entry using
-whatever path it was launched from.
+Or just double-click `build.bat`. The result lands in `dist\`.
 
 Run it as administrator. Windows blocks global hotkeys from reaching a
 normal process while an elevated window has focus, so without this the
@@ -207,7 +148,7 @@ shortcut fails in exactly the apps where you need it most.
 
 <br>
 
-There's a full step-by-step walkthrough in Spanish:
+Full step-by-step walkthrough in Spanish:
 [COMO-INSTALAR.txt](COMO-INSTALAR.txt)
 
 </details>
@@ -224,41 +165,13 @@ There's a full step-by-step walkthrough in Spanish:
 | <kbd>Esc</kbd> | Close |
 
 A single click on a row pastes it. The three icons on the right — pin,
-edit, delete — act on that row instead.
-
-**Clearing several at once:** hit **Seleccionar**, tick the rows you
-want, and **Borrar (n)** removes them together. **Todos** ticks
-everything currently listed, so filtering first and then selecting all
-is the fast way to clear a batch.
+edit, delete — act on that row instead. **Seleccionar** turns on
+multi-select: tick several rows, then **Borrar (n)** removes them
+together.
 
 Click into the field you want to fill **before** opening the panel. The
 app records which window had focus and hands it back before sending the
 paste.
-
-### Respects password managers
-
-Windows defines
-[clipboard formats](https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats)
-that let an app say "do not record this". KeePass, Bitwarden, Windows
-Credential Manager and Chrome's incognito mode all use them. pastepad
-honours all four — `Clipboard Viewer Ignore`,
-`ExcludeClipboardContentFromMonitorProcessing`,
-`CanIncludeInClipboardHistory=0` and `CanUploadToCloudClipboard=0` —
-and doesn't even read the clipboard when one is present.
-
-There's also a pause button in the header for when you're about to work
-with something you'd rather not have written down at all.
-
-### Four sizes
-
-Mini, small, medium and large, picked from the appearance dialog. Mini
-drops to single-line rows so it still shows a useful number of entries. The choice
-persists, and the panel falls back to a smaller size if the one you
-picked would not fit on the screen it opens on.
-
-Free edge-dragging isn't offered on purpose — CustomTkinter doesn't
-repaint reliably under continuous resizing, and the result was worse
-than no resizing at all.
 
 ## Where your data lives
 
@@ -277,15 +190,18 @@ Move that folder to another machine and everything comes with it.
 
 > [!WARNING]
 > **The history is stored unencrypted** on your own disk. Password
-> managers are handled (see below), but anything else sensitive you
-> copy during the day does get written down. The broom button empties
-> it, and the pause button stops capture entirely. Worth knowing before
-> you install this on a shared machine.
+> managers are handled (see below), but anything else sensitive you copy
+> during the day does get written down. The broom button empties it, and
+> the pause button stops capture entirely. Worth knowing before you
+> install this on a shared machine.
 
 > [!NOTE]
-> **Defender will flag the executable** the first time. PyInstaller
-> output isn't code-signed, and a certificate costs a few hundred
-> dollars a year. Click *More info* → *Run anyway*.
+> **Respects password managers.** Windows defines
+> [clipboard formats](https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats)
+> that let an app say "do not record this" — KeePass, Bitwarden, Windows
+> Credential Manager and Chrome's incognito mode all use them. pastepad
+> honours all four and doesn't even open the clipboard when one is
+> present.
 
 > [!TIP]
 > **Don't put the folder inside OneDrive.** Sync can lock the JSON files
@@ -306,13 +222,13 @@ pywin32 and keyboard.
 
 The list is drawn on a canvas rather than built from widgets. Rendering
 one widget per row meant rebuilding hundreds of them on every keystroke,
-which made search unusable once the history filled up.
+which made search unusable once the history filled up. Hovering a row
+recolours two rows instead of repainting the canvas, and the clipboard
+is only read when Windows' sequence number changes.
 
 ## Security
 
-The history is stored unencrypted on disk. Password-manager content is
-excluded automatically. Details and recommendations in
-[SECURITY.md](SECURITY.md).
+Details and recommendations in [SECURITY.md](SECURITY.md).
 
 ## License
 
