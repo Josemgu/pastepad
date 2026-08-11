@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 260" width="880" height="260" role="img" aria-label="pastepad, a clipboard manager for Windows">
+<title>pastepad</title>
+<desc>Logo and tagline next to a preview of the panel: a search box, Recent and Saved tabs, and a list of clipboard entries.</desc>
+<style>
+  .bg{fill:#161616}.card{fill:#242424}.panel{fill:#1f1f1f}
+  .t{fill:#f0f0f0}.dim{fill:#8e8e8e}.on{fill:#fff}
+  .ac{fill:#3b82f6}.line{stroke:#2e2e2e;stroke-width:1;fill:none}
+  text{font-family:'Segoe UI',system-ui,-apple-system,sans-serif}
+  @media (prefers-color-scheme: light){
+    .bg{fill:#f7f7f5}.card{fill:#efefec}.panel{fill:#fff}
+    .t{fill:#1c1c1c}.dim{fill:#6e6e6b}
+    .line{stroke:#dcdcd8}
+  }
+</style>
+
+<rect class="bg" width="880" height="260" rx="16"/>
+
+<text class="t" x="60" y="96" font-size="48" font-weight="600">pastepad</text>
+<text class="dim" x="60" y="130" font-size="17">A clipboard manager for Windows</text>
+
+<g transform="translate(60,158)">
+  <rect class="card" width="42" height="30" rx="8"/>
+  <text class="t" x="21" y="20" font-size="13" text-anchor="middle">Ctrl</text>
+  <text class="dim" x="52" y="20" font-size="14">+</text>
+  <rect class="card" x="66" width="36" height="30" rx="8"/>
+  <text class="t" x="84" y="20" font-size="13" text-anchor="middle">Alt</text>
+  <text class="dim" x="112" y="20" font-size="14">+</text>
+  <rect class="card" x="126" width="30" height="30" rx="8"/>
+  <text class="t" x="141" y="20" font-size="13" text-anchor="middle">V</text>
+  <text class="dim" x="172" y="20" font-size="14">anywhere</text>
+</g>
+
+<g transform="translate(556,30)">
+  <rect class="panel" width="272" height="200" rx="14"/>
+
+  <rect class="card" x="14" y="16" width="244" height="28" rx="8"/>
+  <circle cx="34" cy="30" r="5" fill="none" stroke="#8e8e8e" stroke-width="1.5"/>
+  <line x1="38" y1="34" x2="42" y2="38" stroke="#8e8e8e" stroke-width="1.5" stroke-linecap="round"/>
+  <text class="dim" x="52" y="34" font-size="11">Search everything</text>
+
+  <rect class="ac" x="14" y="52" width="118" height="22" rx="11"/>
+  <text class="on" x="73" y="67" font-size="10" text-anchor="middle">Recent</text>
+  <rect class="card" x="140" y="52" width="118" height="22" rx="11"/>
+  <text class="dim" x="199" y="67" font-size="10" text-anchor="middle">Saved</text>
+
+  <rect class="ac" x="14" y="84" width="244" height="34" rx="8"/>
+  <text class="on" x="28" y="99" font-size="10">Meeting notes template</text>
+  <text class="on" x="28" y="111" font-size="9" opacity=".7">22 characters</text>
+
+  <rect class="card" x="14" y="124" width="244" height="34" rx="8"/>
+  <text class="t" x="28" y="139" font-size="10">Hi [[name]], following up on...</text>
+  <text class="dim" x="28" y="151" font-size="9">Templates</text>
+
+  <rect class="card" x="14" y="164" width="244" height="20" rx="8"/>
+  <text class="dim" x="28" y="178" font-size="9">https://example.com/docs</text>
+</g>
+</svg>
