@@ -257,6 +257,15 @@ LOS BOTONES DE ABAJO
    Carpeta    Crea una carpeta nueva. Al crearla te ofrece
               llenarla pegando una lista.
 
+              Para borrar o renombrar una carpeta: haz clic
+              derecho sobre su ficha, arriba de la lista.
+              Tambien aparece un boton de papelera con carpeta
+              abajo cuando tienes una carpeta seleccionada.
+
+              Al borrar una carpeta se borra todo lo que tiene
+              dentro. El programa te avisa cuantos textos vas
+              a perder y no se puede deshacer.
+
    Lista      Pega varias cosas de golpe en la carpeta que
               tengas elegida. Puedes elegir entre hacer una
               nota por cada linea, o meterlo todo junto en

@@ -60,11 +60,13 @@ IC = {"buscar": "\uE721", "mas": "\uE710", "carpeta": "\uE8F4",
       "lista": "\uE8FD", "pin": "\uE718", "unpin": "\uE77A",
       "editar": "\uE70F", "borrar": "\uE74D", "cerrar": "\uE711",
       "paleta": "\uE790", "escoba": "\uE75C", "check": "\uE73E",
+      "borrar_carp": "\uED43",
       "imagen": "\uEB9F"}
 
 RESPALDO = {"buscar": "?", "mas": "+", "carpeta": "[+]", "lista": "=",
             "pin": "^", "unpin": "v", "editar": "/", "borrar": "x",
             "cerrar": "X", "paleta": "@", "escoba": "~", "check": "v",
+            "borrar_carp": "[x]",
             "imagen": "[]"}
 
 ACENTOS = {"azul": ("#3B82F6", "#2563EB"), "verde": ("#22C55E", "#16A34A"),
@@ -1069,6 +1071,9 @@ class Panel(ctk.CTk):
         self.b_carpeta.pack(side="left")
         self.b_lista = ico(pie, "lista", self.pegar_lista, 15, 28)
         self.b_lista.pack(side="left", padx=4)
+        self.b_borrar_carp = ico(pie, "borrar_carp",
+                                 lambda: self.borrar_carpeta(self.categoria),
+                                 15, 28)
         self.b_escoba = ico(pie, "escoba", self.limpiar, 15, 28)
         self.b_escoba.pack(side="left", padx=4)
 
@@ -1150,6 +1155,7 @@ class Panel(ctk.CTk):
                              text_color=C["texto"] if rec else C["sobre"])
         # Solo cambia la altura: no se reordena nada, no hay salto.
         self.carp.configure(height=0 if rec else 30)
+        self._ajustar_pie()
         self._pintar_lista()
         self.e_buscar.focus_set()
 
@@ -1158,20 +1164,98 @@ class Panel(ctk.CTk):
             w.destroy()
         for cat in [None] + list(self.datos["categorias"]):
             act = cat == self.categoria
-            ctk.CTkButton(
+            b = ctk.CTkButton(
                 self.carp, text="Todas" if cat is None else cat,
                 height=22, width=10, corner_radius=11,
                 fg_color=C["acento"] if act else C["tarjeta"],
                 hover_color=C["acento_h"] if act else C["hover"],
                 text_color=C["sobre"] if act else C["texto"],
                 font=ctk.CTkFont(size=11),
-                command=lambda c=cat: self._carpeta(c)).pack(side="left",
-                                                             padx=3, pady=4)
+                command=lambda c=cat: self._carpeta(c))
+            b.pack(side="left", padx=3, pady=4)
+            if cat is not None:
+                # Clic derecho sobre la ficha: menu de la carpeta.
+                for hijo in (b,) + tuple(b.winfo_children()):
+                    hijo.bind("<Button-3>",
+                              lambda e, c=cat: self._menu_carpeta(e, c))
+
+    def _menu_carpeta(self, evento, cat):
+        m = tk.Menu(self, tearoff=0, bd=0, bg=C["tarjeta"], fg=C["texto"],
+                    activebackground=C["acento"], activeforeground=C["sobre"],
+                    font=("Segoe UI", 9))
+        m.add_command(label="Renombrar carpeta",
+                      command=lambda: self.renombrar_carpeta(cat))
+        m.add_separator()
+        m.add_command(label="Eliminar carpeta y su contenido",
+                      command=lambda: self.borrar_carpeta(cat))
+        try:
+            m.tk_popup(evento.x_root, evento.y_root)
+        finally:
+            m.grab_release()
+
+    def renombrar_carpeta(self, cat):
+        d = self._dialogo(lambda: DlgLinea(self, "Renombrar carpeta",
+                                           "Nuevo nombre para " + cat))
+        nuevo = d.resultado
+        if not nuevo or nuevo == cat:
+            return
+        if nuevo in self.datos["categorias"]:
+            self.ocupado = True
+            messagebox.showinfo(APP, "Ya existe una carpeta con ese nombre.")
+            self.ocupado = False
+            return
+        i = self.datos["categorias"].index(cat)
+        self.datos["categorias"][i] = nuevo
+        for sn in self.datos["snippets"]:
+            if sn["categoria"] == cat:
+                sn["categoria"] = nuevo
+        if self.categoria == cat:
+            self.categoria = nuevo
+        guardar_datos(self.datos)
+        self._cambio()
+        self._pintar_carpetas()
+        self._pintar_lista()
+        self._ajustar_pie()
+
+    def borrar_carpeta(self, cat):
+        dentro = [x for x in self.datos["snippets"] if x["categoria"] == cat]
+        self.ocupado = True
+        if dentro:
+            aviso = ("Eliminar la carpeta %s y sus %d texto%s?\n\n"
+                     "Esto no se puede deshacer."
+                     % (cat, len(dentro), "" if len(dentro) == 1 else "s"))
+        else:
+            aviso = "Eliminar la carpeta %s?" % cat
+        ok = messagebox.askyesno(APP, aviso, icon="warning")
+        self.ocupado = False
+        if not ok:
+            return
+        for x in dentro:
+            self.datos["snippets"].remove(x)
+        try:
+            self.datos["categorias"].remove(cat)
+        except ValueError:
+            pass
+        if self.categoria == cat:
+            self.categoria = None
+        guardar_datos(self.datos)
+        self._cambio()
+        self._pintar_carpetas()
+        self._pintar_lista()
+        self._ajustar_pie()
 
     def _carpeta(self, cat):
         self.categoria = cat
         self._pintar_carpetas()
         self._pintar_lista()
+        self._ajustar_pie()
+
+    def _ajustar_pie(self):
+        """El boton de borrar carpeta solo aparece si hay una elegida."""
+        if self.pestana == "guardados" and self.categoria:
+            self.b_borrar_carp.pack(side="left", padx=(0, 4))
+        else:
+            self.b_borrar_carp.pack_forget()
 
     # ------------------------------------------------ lista
 
