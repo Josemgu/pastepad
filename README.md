@@ -76,7 +76,56 @@ everywhere else. <kbd>Ctrl</kbd> + <kbd>Enter</kbd> forces plain.
 
 Write `[[anything]]` in a saved text and the app asks for it before
 pasting:
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 240" width="880" height="240" role="img" aria-label="pastepad - clipboard manager for Windows">
+  <title>pastepad</title>
+  <defs>
+    <style>
+      .bg    { fill: #161616; }
+      .card  { fill: #242424; }
+      .accent{ fill: #3B82F6; }
+      .t     { fill: #F0F0F0; font-family: 'Segoe UI', system-ui, sans-serif; }
+      .dim   { fill: #8E8E8E; font-family: 'Segoe UI', system-ui, sans-serif; }
+      .on    { fill: #FFFFFF; font-family: 'Segoe UI', system-ui, sans-serif; }
+      .mono  { font-family: 'Cascadia Code', Consolas, monospace; }
+    </style>
+  </defs>
 
+  <rect class="bg" width="880" height="240" rx="14"/>
+
+  <text class="t" x="56" y="88" font-size="46" font-weight="600">pastepad</text>
+  <text class="dim" x="56" y="122" font-size="17">A clipboard manager for Windows</text>
+
+  <rect class="card" x="56" y="150" width="230" height="34" rx="8"/>
+  <text class="dim mono" x="72" y="172" font-size="14">Ctrl</text>
+  <text class="dim" x="98" y="172" font-size="14">+</text>
+  <text class="dim mono" x="110" y="172" font-size="14">Alt</text>
+  <text class="dim" x="136" y="172" font-size="14">+</text>
+  <text class="dim mono" x="148" y="172" font-size="14">V</text>
+  <text class="dim" x="176" y="172" font-size="13">anywhere</text>
+
+  <g transform="translate(560, 34)">
+    <rect class="card" width="268" height="172" rx="12" fill="#1F1F1F"/>
+    <rect class="card" x="12" y="14" width="244" height="26" rx="7"/>
+    <circle cx="30" cy="27" r="5" fill="none" stroke="#8E8E8E" stroke-width="1.6"/>
+    <line x1="34" y1="31" x2="38" y2="35" stroke="#8E8E8E" stroke-width="1.6" stroke-linecap="round"/>
+    <text class="dim" x="48" y="32" font-size="11">Search</text>
+
+    <rect class="accent" x="12" y="50" width="118" height="20" rx="10"/>
+    <text class="on" x="47" y="64" font-size="10">Recent</text>
+    <rect class="card" x="138" y="50" width="118" height="20" rx="10"/>
+    <text class="dim" x="169" y="64" font-size="10">Saved</text>
+
+    <rect class="accent" x="12" y="80" width="244" height="30" rx="8"/>
+    <text class="on" x="24" y="93" font-size="10">LMS-FINQ: Finance Questions</text>
+    <text class="on" x="24" y="105" font-size="9" opacity="0.75">27 characters</text>
+
+    <rect class="card" x="12" y="116" width="244" height="30" rx="8"/>
+    <text class="t" x="24" y="129" font-size="10">The leader from [[unit]] reported...</text>
+    <text class="dim" x="24" y="141" font-size="9">Cases</text>
+
+    <rect class="card" x="12" y="152" width="244" height="12" rx="6"/>
+  </g>
+</svg>
 ```
 The leader from [[unit]] reported [[issue]] on [[date]].
 ```
