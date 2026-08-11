@@ -14,6 +14,7 @@ import queue
 import sys
 import threading
 import time
+import traceback
 import tkinter as tk
 import tkinter.font as tkfont
 from tkinter import messagebox
@@ -42,16 +43,20 @@ except Exception:
 
 # ================================================================ constantes
 
-ANCHO, ALTO = 360, 470
+# Tres medidas fijas. El arrastre libre de bordes esta descartado a
+# proposito: CustomTkinter no repinta bien sus widgets cuando la ventana
+# cambia de tamano decenas de veces por segundo, y el resultado eran
+# franjas del dibujo anterior y una interfaz pesada.
+TAMANOS = {"mini": (290, 360), "chico": (330, 440),
+           "mediano": (370, 540), "grande": (460, 700)}
+ANCHO, ALTO = TAMANOS["mediano"]
 MAX_HIST = 80
 MAX_CARACTERES = 200000
 HOTKEY = "ctrl+alt+v"
-APP = "Snippets"
+APP = "pastepad"
+VERSION = "1.1.0"
 CLAVE_RUN = r"Software\Microsoft\Windows\CurrentVersion\Run"
 NOMBRE_RUN = "GestorSnippets"
-
-# Color que Windows vuelve transparente: sirve para las esquinas redondeadas.
-MAGICO = "#010203"
 
 FUENTE_ICONOS = "Segoe Fluent Icons"
 FUENTE_ICONOS_ALT = "Segoe MDL2 Assets"
@@ -60,13 +65,17 @@ IC = {"buscar": "\uE721", "mas": "\uE710", "carpeta": "\uE8F4",
       "lista": "\uE8FD", "pin": "\uE718", "unpin": "\uE77A",
       "editar": "\uE70F", "borrar": "\uE74D", "cerrar": "\uE711",
       "paleta": "\uE790", "escoba": "\uE75C", "check": "\uE73E",
-      "borrar_carp": "\uED43",
+      "borrar_carp": "\uED43", "marcar": "\uE762",
+      "pausa": "\uE769", "grabar": "\uE768",
+      "marcado": "\uE73A", "sin_marcar": "\uE739",
       "imagen": "\uEB9F"}
 
 RESPALDO = {"buscar": "?", "mas": "+", "carpeta": "[+]", "lista": "=",
             "pin": "^", "unpin": "v", "editar": "/", "borrar": "x",
             "cerrar": "X", "paleta": "@", "escoba": "~", "check": "v",
-            "borrar_carp": "[x]",
+            "borrar_carp": "[x]", "marcar": "[ ]",
+            "pausa": "||", "grabar": ">",
+            "marcado": "[x]", "sin_marcar": "[ ]",
             "imagen": "[]"}
 
 ACENTOS = {"azul": ("#3B82F6", "#2563EB"), "verde": ("#22C55E", "#16A34A"),
@@ -90,6 +99,21 @@ ctk.set_appearance_mode("dark")
 
 
 # ================================================================ archivos
+
+def registrar_error(texto):
+    """Deja el fallo escrito en errores.log.
+
+    Sin consola, un fallo hace que la ventana desaparezca sin decir
+    nada. Este archivo es lo unico que queda para saber que paso.
+    """
+    try:
+        with open(os.path.join(base(), "errores.log"), "a",
+                  encoding="utf-8") as f:
+            f.write("\n%s  v%s\n%s\n" % (
+                time.strftime("%Y-%m-%d %H:%M:%S"), VERSION, texto))
+    except Exception:
+        pass
+
 
 def base():
     if getattr(sys, "frozen", False):
@@ -136,7 +160,9 @@ def cargar_datos():
 guardar_datos = lambda d: _escribir(R_DATOS, d)
 cargar_hist = lambda: _leer(R_HIST, [])
 guardar_hist = lambda l: _escribir(R_HIST, l)
-cargar_prefs = lambda: _leer(R_PREFS, {"acento": "azul"})
+cargar_prefs = lambda: _leer(R_PREFS, {"acento": "azul",
+                                       "ancho": ANCHO,
+                                       "alto": ALTO})
 guardar_prefs = lambda p: _escribir(R_PREFS, p)
 
 
@@ -353,6 +379,54 @@ def copiar_runs(runs, sin_formato=False):
         pyperclip.copy(txt)
 
 
+# Formatos con los que un programa dice "no guardes esto". Los usan
+# KeePass, Bitwarden, el Administrador de credenciales de Windows y el
+# modo incognito de Chrome. Documentados por Microsoft:
+# learn.microsoft.com/windows/win32/dataxchg/clipboard-formats
+FORMATOS_PRIVADOS = ("Clipboard Viewer Ignore",
+                     "ExcludeClipboardContentFromMonitorProcessing")
+FORMATOS_CERO = ("CanIncludeInClipboardHistory", "CanUploadToCloudClipboard")
+
+
+def contenido_privado():
+    """True si quien copio pidio expresamente que no se guarde.
+
+    Se llama con el portapapeles ya abierto.
+    """
+    try:
+        for nombre in FORMATOS_PRIVADOS:
+            f = win32clipboard.RegisterClipboardFormat(nombre)
+            if f and win32clipboard.IsClipboardFormatAvailable(f):
+                return True
+        for nombre in FORMATOS_CERO:
+            f = win32clipboard.RegisterClipboardFormat(nombre)
+            if f and win32clipboard.IsClipboardFormatAvailable(f):
+                dato = win32clipboard.GetClipboardData(f)
+                # Un DWORD en cero significa "no lo incluyas".
+                if isinstance(dato, bytes):
+                    if int.from_bytes(dato[:4], "little") == 0:
+                        return True
+                elif not dato:
+                    return True
+    except Exception:
+        pass
+    return False
+
+
+def secuencia_portapapeles():
+    """Contador que Windows sube cada vez que alguien copia algo.
+
+    Leerlo cuesta una llamada; abrir el portapapeles y traer el texto
+    cuesta muchisimo mas. Si el numero no cambio, no hay nada que hacer.
+    """
+    if not HAY_WIN32:
+        return None
+    try:
+        return ctypes.windll.user32.GetClipboardSequenceNumber()
+    except Exception:
+        return None
+
+
 def leer_portapapeles():
     if not HAY_WIN32:
         try:
@@ -361,6 +435,10 @@ def leer_portapapeles():
             return None, None
 
     def hacer():
+        if contenido_privado():
+            # Una contrasena, o algo que su duena marco como privado.
+            # Ni siquiera lo leemos.
+            return "privado", None
         if win32clipboard.IsClipboardFormatAvailable(win32con.CF_UNICODETEXT):
             return "texto", win32clipboard.GetClipboardData(
                 win32con.CF_UNICODETEXT)
@@ -416,6 +494,25 @@ def autoarranque(activar=True):
 # ================================================================ foco
 
 _MI_PID = os.getpid()
+
+
+def redondear_ventana(hwnd, ancho, alto, radio=12):
+    """Recorta la ventana con esquinas curvas.
+
+    Es la forma nativa de Windows. Solo se aplica al abrir y al cambiar
+    de tamano: rehacerla continuamente, como cuando se arrastraba un
+    borde, era lo que dejaba restos en pantalla.
+    """
+    if not HAY_WIN32 or not hwnd:
+        return
+    try:
+        region = ctypes.windll.gdi32.CreateRoundRectRgn(
+            0, 0, ancho + 1, alto + 1, radio, radio)
+        if region:
+            # Windows se queda con la region: no hay que liberarla.
+            ctypes.windll.user32.SetWindowRgn(hwnd, region, True)
+    except Exception:
+        pass
 
 
 def ventana_activa():
@@ -501,6 +598,7 @@ class ListaCanvas(tk.Frame):
 
     FILA = 44
     PAD = 3
+    FILA_MINI = 36
 
     def __init__(self, padre, al_click, al_pegar, al_accion):
         super().__init__(padre, bg=C["fondo"], highlightthickness=0)
@@ -511,6 +609,8 @@ class ListaCanvas(tk.Frame):
         self.sel = 0
         self.desliz = 0
         self.zonas = []
+        self.modo_marcar = False
+        self.marcados = set()
 
         self.cv = tk.Canvas(self, bg=C["fondo"], highlightthickness=0, bd=0)
         self.cv.pack(side="left", fill="both", expand=True)
@@ -518,7 +618,8 @@ class ListaCanvas(tk.Frame):
                                bd=0, width=5)
         self.barra.pack(side="right", fill="y")
 
-        self.cv.bind("<Configure>", lambda e: self.pintar())
+        self.cv.bind("<Configure>", self._al_cambiar_tamano)
+        self._espera_pintar = None
         self.cv.bind("<MouseWheel>", self._rueda)
         self.cv.bind("<Button-1>", self._click)
         self.cv.bind("<Double-Button-1>", self._doble)
@@ -531,6 +632,31 @@ class ListaCanvas(tk.Frame):
         self.f_ico = tkfont.Font(family=fam_iconos() or "Segoe UI", size=9)
 
     # ---------------- datos
+
+    def _al_cambiar_tamano(self, e):
+        """Mientras se arrastra el borde llegan decenas de estos avisos.
+
+        Dibujar en cada uno era lo que hacia que agrandar se sintiera
+        pesado, asi que esperamos a que la cosa se quede quieta.
+        """
+        if self._espera_pintar:
+            try:
+                self.after_cancel(self._espera_pintar)
+            except Exception:
+                pass
+        self._espera_pintar = self.after(60, self._pintar_ya)
+
+    def _pintar_ya(self):
+        self._espera_pintar = None
+        self.pintar()
+
+    def compactar(self, si):
+        """Filas mas bajas cuando el panel es pequeno: con poca altura,
+        dos filas visibles no sirven de nada."""
+        nueva = self.FILA_MINI if si else 44
+        if nueva != self.FILA:
+            self.FILA = nueva
+            self.pintar()
 
     def cargar(self, items):
         """items: lista de (dato, tipo). tipo 'h' historial, 'g' guardado."""
@@ -579,32 +705,58 @@ class ListaCanvas(tk.Frame):
         self._msg = texto
 
     def _fila(self, i, dato, tipo, y, ancho):
+        """Dibuja una fila. Cada pieza lleva etiquetas para poder
+        recolorearla despues sin volver a dibujar nada."""
         cv = self.cv
         activa = (i == self.sel)
         hover = (self.encima == i)
         fondo = C["acento"] if activa else (C["hover"] if hover else C["tarjeta"])
         col_t = C["sobre"] if activa else C["texto"]
         col_s = C["sobre"] if activa else C["tenue"]
+        tf, tt, ts = "f%d" % i, "t%d" % i, "s%d" % i
 
-        self._redondo(4, y, ancho - 4, y + self.FILA, 8, fondo)
+        self._redondo(4, y, ancho - 4, y + self.FILA, 8, fondo, tf)
+
+        desde_x = 16
+        if self.modo_marcar:
+            marcado = id(dato) in self.marcados
+            cv.create_text(20, y + self.FILA // 2,
+                           text=simbolo("marcado" if marcado else "sin_marcar"),
+                           fill=C["acento"] if marcado and not activa else col_s,
+                           font=self.f_ico, tags=(ts,))
+            desde_x = 40
+
+        # Cuantas letras caben: depende del ancho, no de un numero fijo.
+        libre = ancho - desde_x - (74 if not self.modo_marcar else 20)
+        tope = max(12, int(libre / 5.6))
 
         es_h = (tipo == "h")
         if es_h:
             if dato["tipo"] == "imagen":
                 titulo, sub = "Imagen copiada", "captura"
             else:
-                titulo = una_linea(dato.get("texto", ""), 40) or "(vacio)"
+                titulo = una_linea(dato.get("texto", ""), tope) or "(vacio)"
                 sub = "%d caracteres" % len(dato.get("texto", ""))
             fijado = bool(dato.get("pin"))
         else:
-            titulo = una_linea(dato["titulo"], 40)
+            titulo = una_linea(dato["titulo"], tope)
             sub = dato["categoria"]
             fijado = False
 
-        cv.create_text(16, y + 13, text=titulo, anchor="w", fill=col_t,
-                       font=self.f_tit)
-        cv.create_text(16, y + 30, text=sub, anchor="w", fill=col_s,
-                       font=self.f_sub)
+        if self.FILA <= self.FILA_MINI:
+            # En el panel pequeno solo cabe una linea: va el texto, que
+            # es lo unico que hace falta para reconocer la entrada.
+            cv.create_text(desde_x, y + self.FILA // 2, text=titulo,
+                           anchor="w", fill=col_t, font=self.f_tit,
+                           tags=(tt,))
+        else:
+            cv.create_text(desde_x, y + 13, text=titulo, anchor="w",
+                           fill=col_t, font=self.f_tit, tags=(tt,))
+            cv.create_text(desde_x, y + 30, text=sub, anchor="w",
+                           fill=col_s, font=self.f_sub, tags=(ts,))
+
+        if self.modo_marcar:
+            return
 
         x = ancho - 22
         iconos = [("borrar", "borrar")]
@@ -613,20 +765,48 @@ class ListaCanvas(tk.Frame):
         if es_h:
             iconos.insert(0, ("unpin" if fijado else "pin", "pin"))
         for clave, accion in reversed(iconos):
-            color = C["acento"] if (clave == "unpin" and not activa) else col_s
+            fijo = (clave == "unpin")
             cv.create_text(x, y + self.FILA // 2, text=simbolo(clave),
-                           fill=color, font=self.f_ico)
+                           fill=C["acento"] if (fijo and not activa) else col_s,
+                           font=self.f_ico,
+                           tags=(ts,) if not fijo else ("pin%d" % i,))
             self.zonas.append((x - 10, y, x + 10, y + self.FILA, accion, i))
             x -= 24
 
-    def _redondo(self, x1, y1, x2, y2, r, color):
+    def _recolorear(self, i):
+        """Cambia solo los colores de una fila, sin redibujarla.
+
+        Antes cada movimiento del raton repintaba el lienzo entero. Con
+        la ventana grande eso son cientos de objetos por cada pixel.
+        """
+        if i is None or not (0 <= i < len(self.items)):
+            return
+        activa = (i == self.sel)
+        hover = (self.encima == i)
+        fondo = C["acento"] if activa else (C["hover"] if hover else C["tarjeta"])
+        col_t = C["sobre"] if activa else C["texto"]
+        col_s = C["sobre"] if activa else C["tenue"]
         cv = self.cv
-        cv.create_rectangle(x1 + r, y1, x2 - r, y2, fill=color, outline=color)
-        cv.create_rectangle(x1, y1 + r, x2, y2 - r, fill=color, outline=color)
+        try:
+            cv.itemconfig("f%d" % i, fill=fondo, outline=fondo)
+            cv.itemconfig("t%d" % i, fill=col_t)
+            cv.itemconfig("s%d" % i, fill=col_s)
+            cv.itemconfig("pin%d" % i,
+                          fill=col_s if activa else C["acento"])
+        except Exception:
+            pass
+
+    def _redondo(self, x1, y1, x2, y2, r, color, etiqueta=None):
+        cv = self.cv
+        t = (etiqueta,) if etiqueta else ()
+        cv.create_rectangle(x1 + r, y1, x2 - r, y2, fill=color, outline=color,
+                            tags=t)
+        cv.create_rectangle(x1, y1 + r, x2, y2 - r, fill=color, outline=color,
+                            tags=t)
         for cx, cy, ini in ((x1 + r, y1 + r, 90), (x2 - r, y1 + r, 0),
                             (x1 + r, y2 - r, 180), (x2 - r, y2 - r, 270)):
             cv.create_arc(cx - r, cy - r, cx + r, cy + r, start=ini, extent=90,
-                          fill=color, outline=color)
+                          fill=color, outline=color, tags=t)
 
     def _barra(self):
         b = self.barra
@@ -647,14 +827,27 @@ class ListaCanvas(tk.Frame):
         return i if 0 <= i < len(self.items) else None
 
     def _click(self, e):
-        # Los iconos de la derecha mandan sobre el resto de la fila.
-        for x1, y1, x2, y2, accion, i in self.zonas:
-            if x1 <= e.x <= x2 and y1 <= e.y <= y2:
-                self.al_accion(accion, self.items[i][0])
-                return
         i = self._indice(e.y)
+        if self.modo_marcar:
+            if i is not None:
+                dato = self.items[i][0]
+                clave = id(dato)
+                if clave in self.marcados:
+                    self.marcados.discard(clave)
+                else:
+                    self.marcados.add(clave)
+                self.pintar()
+                self.al_accion("conteo", None)
+            return
+        # Los iconos de la derecha mandan sobre el resto de la fila.
+        for x1, y1, x2, y2, accion, j in self.zonas:
+            if x1 <= e.x <= x2 and y1 <= e.y <= y2:
+                self.al_accion(accion, self.items[j][0])
+                return
         if i is not None:
-            self.sel = i
+            anterior, self.sel = self.sel, i
+            self._recolorear(anterior)
+            self._recolorear(i)
             self.al_click(i)
             self.al_pegar()
 
@@ -663,12 +856,16 @@ class ListaCanvas(tk.Frame):
         return "break"
 
     def _mover(self, e):
+        # _hover ya compara contra la fila anterior y no repinta si es la
+        # misma, asi que mover el raton dentro de una fila no cuesta nada.
         self._hover(self._indice(e.y))
 
     def _hover(self, i):
-        if i != self.encima:
-            self.encima = i
-            self.pintar()
+        if i == self.encima:
+            return
+        anterior, self.encima = self.encima, i
+        self._recolorear(anterior)
+        self._recolorear(i)
 
     def _rueda(self, e):
         self.mover_scroll(-1 if e.delta > 0 else 1)
@@ -682,13 +879,36 @@ class ListaCanvas(tk.Frame):
     def seleccionar(self, i):
         if not self.items:
             return
+        anterior = self.sel
         self.sel = max(0, min(len(self.items) - 1, i))
         y = self.PAD + self.sel * (self.FILA + self.PAD)
-        if y < self.desliz:
-            self.desliz = y
-        elif y + self.FILA > self.desliz + self.visible():
-            self.desliz = y + self.FILA - self.visible()
+        desliz = self.desliz
+        if y < desliz:
+            desliz = y
+        elif y + self.FILA > desliz + self.visible():
+            desliz = y + self.FILA - self.visible()
+        if desliz != self.desliz:
+            # Hubo que mover la lista: no queda mas remedio que redibujar.
+            self.desliz = desliz
+            self.pintar()
+        else:
+            self._recolorear(anterior)
+            self._recolorear(self.sel)
+
+    def marcar_modo(self, activo):
+        self.modo_marcar = activo
+        self.marcados.clear()
         self.pintar()
+
+    def marcar_todos(self):
+        if len(self.marcados) == len(self.items):
+            self.marcados.clear()
+        else:
+            self.marcados = {id(d) for d, _ in self.items}
+        self.pintar()
+
+    def elegidos(self):
+        return [d for d, _ in self.items if id(d) in self.marcados]
 
     def repintar_colores(self):
         self.configure(bg=C["fondo"])
@@ -978,17 +1198,22 @@ class DlgLista(Ventana):
         self.destroy()
 
 
-class DlgColores(Ventana):
-    def __init__(self, master):
-        super().__init__(master, "Color", 300, 175)
+class DlgApariencia(Ventana):
+    """Color de acento y tamano del panel."""
+
+    def __init__(self, master, tamano):
+        super().__init__(master, "Apariencia", 340, 250)
         self.acento = cargar_prefs().get("acento", "azul")
+        self.tamano = tamano
+
         pie = ctk.CTkFrame(self, fg_color="transparent")
-        pie.pack(side="bottom", fill="x", padx=18, pady=16)
+        pie.pack(side="bottom", fill="x", padx=18, pady=14)
         btn(pie, "Aplicar", self.ok, 92, 32, True).pack(side="right")
         btn(pie, "Cancelar", self.destroy, 88, 32).pack(side="right", padx=8)
-        ctk.CTkLabel(self, text="Color de acento", text_color=C["texto"],
-                     font=ctk.CTkFont(size=13)).pack(anchor="w", padx=18,
-                                                     pady=(18, 12))
+
+        ctk.CTkLabel(self, text="Color", text_color=C["tenue"],
+                     font=ctk.CTkFont(size=11)).pack(anchor="w", padx=18,
+                                                     pady=(16, 6))
         fila = ctk.CTkFrame(self, fg_color="transparent")
         fila.pack(padx=18, anchor="w")
         self.bolas = {}
@@ -998,17 +1223,46 @@ class DlgColores(Ventana):
                 width=32, height=32, corner_radius=16, fg_color=col,
                 hover_color=col, text_color="#FFFFFF",
                 font=ctk.CTkFont(family=fam_iconos() or None, size=13),
-                command=lambda n=nombre: self._elegir(n))
+                command=lambda n=nombre: self._color(n))
             b.pack(side="left", padx=4)
             self.bolas[nombre] = b
 
-    def _elegir(self, nombre):
+        ctk.CTkLabel(self, text="Tamano del panel", text_color=C["tenue"],
+                     font=ctk.CTkFont(size=11)).pack(anchor="w", padx=18,
+                                                     pady=(20, 6))
+        fila2 = ctk.CTkFrame(self, fg_color="transparent")
+        fila2.pack(padx=18, anchor="w", fill="x")
+        self.medidas = {}
+        for nombre in ("mini", "chico", "mediano", "grande"):
+            activo = nombre == self.tamano
+            b = ctk.CTkButton(
+                fila2, text=nombre.capitalize(), height=30, corner_radius=8,
+                width=10,
+                fg_color=C["acento"] if activo else C["tarjeta"],
+                hover_color=C["acento_h"] if activo else C["hover"],
+                text_color=C["sobre"] if activo else C["texto"],
+                border_width=0 if activo else 1, border_color=C["borde"],
+                font=ctk.CTkFont(size=10),
+                command=lambda n=nombre: self._medida(n))
+            b.pack(side="left", expand=True, fill="x", padx=2)
+            self.medidas[nombre] = b
+
+    def _color(self, nombre):
         self.acento = nombre
         for n, b in self.bolas.items():
             b.configure(text=simbolo("check") if n == nombre else "")
 
+    def _medida(self, nombre):
+        self.tamano = nombre
+        for n, b in self.medidas.items():
+            act = n == nombre
+            b.configure(fg_color=C["acento"] if act else C["tarjeta"],
+                        hover_color=C["acento_h"] if act else C["hover"],
+                        text_color=C["sobre"] if act else C["texto"],
+                        border_width=0 if act else 1)
+
     def ok(self):
-        self.resultado = self.acento
+        self.resultado = (self.acento, self.tamano)
         self.destroy()
 
 
@@ -1016,15 +1270,16 @@ class DlgColores(Ventana):
 
 class Panel(ctk.CTk):
     def __init__(self):
-        super().__init__(fg_color=MAGICO)
+        super().__init__(fg_color=C["fondo"])
         self.overrideredirect(True)
-        self.geometry("%dx%d" % (ANCHO, ALTO))
+        prefs = cargar_prefs()
+        self.tamano = prefs.get("tamano", "mediano")
+        if self.tamano not in TAMANOS:
+            self.tamano = "mediano"
+        self.ancho, self.alto = TAMANOS[self.tamano]
+        self.geometry("%dx%d" % (self.ancho, self.alto))
         self.attributes("-topmost", True)
-        try:
-            # Vuelve transparente el color de fondo: deja las esquinas curvas.
-            self.attributes("-transparentcolor", MAGICO)
-        except Exception:
-            self.configure(fg_color=C["fondo"])
+        self.configure(fg_color=C["fondo"])
 
         self.datos = cargar_datos()
         self.hist = cargar_hist()
@@ -1035,6 +1290,11 @@ class Panel(ctk.CTk):
         self.sel = 0
         self._pendiente = None
         self._idx = None
+        self._cache_norm = {}
+        self._seq = secuencia_portapapeles()
+        self.pausado = bool(cargar_prefs().get("pausado", False))
+        self._ini = None
+        self.marcando = False
         self.destino = None
         self.ocupado = False
         self._claro = windows_claro()
@@ -1046,10 +1306,12 @@ class Panel(ctk.CTk):
 
         self.bind("<Escape>", lambda e: self.ocultar())
         self.bind("<FocusOut>", lambda e: self.after(170, self._chequear))
+        # La region necesita que la ventana ya exista en Windows.
+        self.after(80, self._redondear)
         self._hotkey()
         self.after(120, self._cola)
         self.after(900, self._vigilar)
-        self.after(5000, self._tema)
+        self.after(30000, self._tema)
 
     # ------------------------------------------------ construccion
 
@@ -1068,14 +1330,43 @@ class Panel(ctk.CTk):
                       font=ctk.CTkFont(family=fam_iconos() or None, size=12),
                       command=self.nuevo).pack(side="right")
         self.b_carpeta = ico(pie, "carpeta", self.nueva_carpeta, 15, 28)
-        self.b_carpeta.pack(side="left")
         self.b_lista = ico(pie, "lista", self.pegar_lista, 15, 28)
-        self.b_lista.pack(side="left", padx=4)
-        self.b_borrar_carp = ico(pie, "borrar_carp",
-                                 lambda: self.borrar_carpeta(self.categoria),
-                                 15, 28)
+
+        # Borrar carpeta: con texto, para que no haya que adivinar.
+        self.b_borrar_carp = ctk.CTkButton(
+            pie, text="Borrar carpeta", width=104, height=28, corner_radius=8,
+            fg_color="transparent", hover_color="#7F1D1D",
+            text_color=C["tenue"], border_width=1, border_color=C["borde"],
+            font=ctk.CTkFont(size=11),
+            command=lambda: self.borrar_carpeta(self.categoria))
+
+        # Seleccionar varios y borrarlos de golpe.
+        self.b_marcar = ctk.CTkButton(
+            pie, text="Seleccionar", width=86, height=28, corner_radius=8,
+            fg_color="transparent", hover_color=C["hover"],
+            text_color=C["tenue"], border_width=1, border_color=C["borde"],
+            font=ctk.CTkFont(size=11), command=self.alternar_marcado)
+        self.b_todos = ctk.CTkButton(
+            pie, text="Todos", width=54, height=28, corner_radius=8,
+            fg_color="transparent", hover_color=C["hover"],
+            text_color=C["tenue"], border_width=1, border_color=C["borde"],
+            font=ctk.CTkFont(size=11), command=self.marcar_todos)
+        self.b_borrar_sel = ctk.CTkButton(
+            pie, text="Borrar", width=70, height=28, corner_radius=8,
+            fg_color="#B91C1C", hover_color="#991B1B", text_color="#FFFFFF",
+            font=ctk.CTkFont(size=11), command=self.borrar_marcados)
+
         self.b_escoba = ico(pie, "escoba", self.limpiar, 15, 28)
-        self.b_escoba.pack(side="left", padx=4)
+
+        # Tres rayitas en la esquina: la pista de que se puede estirar.
+        self.agarre = tk.Canvas(self.marco, width=13, height=13, bd=0,
+                                highlightthickness=0, bg=C["fondo"])
+        self.agarre.place(relx=1.0, rely=1.0, anchor="se", x=-3, y=-3)
+        for d in (2, 6, 10):
+            self.agarre.create_line(12 - d, 12, 12, 12 - d,
+                                    fill=C["borde"], width=1)
+        self.agarre.bind("<Enter>",
+                         lambda e: self.agarre.configure(cursor="size_nw_se"))
 
         # --- cabecera
         cab = ctk.CTkFrame(self.marco, fg_color="transparent", height=28)
@@ -1086,6 +1377,15 @@ class Panel(ctk.CTk):
         tit.pack(side="left")
         ico(cab, "cerrar", self.ocultar, 12, 24).pack(side="right")
         ico(cab, "paleta", self.colores, 14, 24).pack(side="right", padx=2)
+        self.b_pausa = ico(cab, "grabar" if self.pausado else "pausa",
+                           self.alternar_pausa, 13, 24,
+                           "#EF4444" if self.pausado else None)
+        self.b_pausa.pack(side="right", padx=2)
+        self.lbl_pausa = ctk.CTkLabel(cab, text="Captura en pausa",
+                                      text_color="#EF4444",
+                                      font=ctk.CTkFont(size=10))
+        if self.pausado:
+            self.lbl_pausa.pack(side="left", padx=8)
         for w in (cab, tit):
             w.bind("<Button-1>", self._agarrar)
             w.bind("<B1-Motion>", self._mover_ventana)
@@ -1135,7 +1435,48 @@ class Panel(ctk.CTk):
 
         self.lista = ListaCanvas(self.marco, self._click_fila, self.pegar,
                                  self._accion)
+        self.lista.compactar(self.tamano == "mini")
         self.lista.pack(fill="both", expand=True, padx=7, pady=(2, 4))
+
+    def cambiar_tamano(self, nombre):
+        """Aplica una de las tres medidas y rehace la interfaz.
+
+        Pasa una sola vez, no decenas de veces por segundo como cuando
+        se arrastraba un borde, asi que no deja restos en pantalla.
+        """
+        if nombre not in TAMANOS:
+            return
+        self.tamano = nombre
+        self.ancho, self.alto = TAMANOS[nombre]
+        p = cargar_prefs()
+        p["tamano"] = nombre
+        guardar_prefs(p)
+
+        izq, arr, der, aba = self._area(self.winfo_x(), self.winfo_y())
+        x = max(izq + 6, min(self.winfo_x(), der - self.ancho - 6))
+        y = max(arr + 6, min(self.winfo_y(), aba - self.alto - 6))
+        self.geometry("%dx%d+%d+%d" % (self.ancho, self.alto, x, y))
+
+        texto = self.e_buscar.get()
+        estado = self.pestana
+        try:
+            self.marco.destroy()
+        except Exception:
+            pass
+        self._construir()
+        self._pintar_carpetas()
+        self.cambiar(estado)
+        if texto:
+            self.e_buscar.insert(0, texto)
+            self._pintar_lista()
+        self._redondear()
+
+    def _redondear(self):
+        try:
+            self.update_idletasks()
+            redondear_ventana(self.winfo_id(), self.ancho, self.alto)
+        except Exception:
+            pass
 
     def _agarrar(self, e):
         self._dx = e.x_root - self.winfo_x()
@@ -1143,6 +1484,8 @@ class Panel(ctk.CTk):
 
     def _mover_ventana(self, e):
         self.geometry("+%d+%d" % (e.x_root - self._dx, e.y_root - self._dy))
+
+    # ------------------------------------------------ tamano
 
     # ------------------------------------------------ pestanas
 
@@ -1155,6 +1498,9 @@ class Panel(ctk.CTk):
                              text_color=C["texto"] if rec else C["sobre"])
         # Solo cambia la altura: no se reordena nada, no hay salto.
         self.carp.configure(height=0 if rec else 30)
+        if self.marcando:
+            self.marcando = False
+            self.lista.marcar_modo(False)
         self._ajustar_pie()
         self._pintar_lista()
         self.e_buscar.focus_set()
@@ -1251,11 +1597,100 @@ class Panel(ctk.CTk):
         self._ajustar_pie()
 
     def _ajustar_pie(self):
-        """El boton de borrar carpeta solo aparece si hay una elegida."""
-        if self.pestana == "guardados" and self.categoria:
-            self.b_borrar_carp.pack(side="left", padx=(0, 4))
+        """Muestra solo los botones que tienen sentido ahora mismo."""
+        for b in (self.b_carpeta, self.b_lista, self.b_borrar_carp,
+                  self.b_escoba, self.b_marcar, self.b_todos,
+                  self.b_borrar_sel):
+            b.pack_forget()
+
+        if self.marcando:
+            self.b_todos.pack(side="left")
+            self.b_borrar_sel.pack(side="left", padx=5)
+            self.b_marcar.configure(text="Cancelar")
+            self.b_marcar.pack(side="left")
+            self._contar_marcados()
+            return
+
+        self.b_marcar.configure(text="Seleccionar")
+        if self.pestana == "guardados":
+            self.b_carpeta.pack(side="left")
+            self.b_lista.pack(side="left", padx=4)
+            if self.categoria:
+                self.b_borrar_carp.pack(side="left", padx=(0, 4))
         else:
-            self.b_borrar_carp.pack_forget()
+            self.b_escoba.pack(side="left")
+        if self.visibles:
+            self.b_marcar.pack(side="left", padx=4)
+
+    def _contar_marcados(self):
+        n = len(self.lista.marcados)
+        self.b_borrar_sel.configure(
+            text="Borrar" if not n else "Borrar (%d)" % n)
+
+    def alternar_pausa(self):
+        """Deja de anotar lo que se copia, sin cerrar el programa.
+
+        Util cuando vas a trabajar un rato con datos que no quieres
+        que queden guardados.
+        """
+        self.pausado = not self.pausado
+        p = cargar_prefs()
+        p["pausado"] = self.pausado
+        guardar_prefs(p)
+        self.b_pausa.configure(
+            text=simbolo("grabar" if self.pausado else "pausa"),
+            text_color="#EF4444" if self.pausado else C["tenue"])
+        if self.pausado:
+            self.lbl_pausa.pack(side="left", padx=8)
+        else:
+            self.lbl_pausa.pack_forget()
+            self._seq = secuencia_portapapeles()
+
+    def alternar_marcado(self):
+        self.marcando = not self.marcando
+        self.lista.marcar_modo(self.marcando)
+        self._ajustar_pie()
+
+    def marcar_todos(self):
+        self.lista.marcar_todos()
+        self._contar_marcados()
+
+    def borrar_marcados(self):
+        elegidos = self.lista.elegidos()
+        if not elegidos:
+            return
+        self.ocupado = True
+        ok = messagebox.askyesno(
+            APP, "Borrar %d elemento%s?\n\nEsto no se puede deshacer."
+                 % (len(elegidos), "" if len(elegidos) == 1 else "s"),
+            icon="warning")
+        self.ocupado = False
+        if not ok:
+            return
+        for dato in elegidos:
+            if dato.get("tipo"):
+                if dato["tipo"] == "imagen":
+                    try:
+                        os.remove(dato.get("ruta", ""))
+                    except Exception:
+                        pass
+                try:
+                    self.hist.remove(dato)
+                except ValueError:
+                    pass
+            else:
+                try:
+                    self.datos["snippets"].remove(dato)
+                except ValueError:
+                    pass
+        guardar_hist(self.hist)
+        self._cambio()
+        guardar_datos(self.datos)
+        self._cambio()
+        self.marcando = False
+        self.lista.marcar_modo(False)
+        self._pintar_lista()
+        self._ajustar_pie()
 
     # ------------------------------------------------ lista
 
@@ -1273,26 +1708,52 @@ class Panel(ctk.CTk):
         self._pendiente = None
         self._pintar_lista()
 
-    def _indice(self):
-        """Arma una vez la lista de (dato, tipo, titulo, cuerpo) normalizada.
+    def _norm_de(self, dato, tipo):
+        """Texto normalizado de una entrada, calculado una sola vez.
 
-        Se rehace solo cuando cambian los datos, no en cada tecla.
+        Se guarda en una cache por objeto: normalizar 80 textos largos
+        cuesta unos 25 ms, y antes eso pasaba cada vez que copiabas algo.
+        """
+        clave = id(dato)
+        marca = (dato.get("texto") if tipo == "h" else dato.get("titulo"))
+        guardado = self._cache_norm.get(clave)
+        if guardado is not None and guardado[0] is marca:
+            return guardado[1], guardado[2]
+
+        if tipo == "g":
+            titulo = normalizar(dato["titulo"])
+            cuerpo = normalizar(plano(dato["runs"]))
+        elif dato["tipo"] == "imagen":
+            titulo, cuerpo = "imagen captura", ""
+        else:
+            t = dato.get("texto", "")
+            titulo, cuerpo = normalizar(una_linea(t, 80)), normalizar(t)
+
+        self._cache_norm[clave] = (marca, titulo, cuerpo)
+        return titulo, cuerpo
+
+    def _indice(self):
+        """Lista de (dato, tipo, titulo, cuerpo) lista para buscar.
+
+        Solo se rearma el orden; el texto normalizado sale de la cache.
         """
         if self._idx is not None:
             return self._idx
         idx = []
         for g in self.datos["snippets"]:
-            idx.append((g, "g", normalizar(g["titulo"]),
-                        normalizar(plano(g["runs"]))))
+            t, c = self._norm_de(g, "g")
+            idx.append((g, "g", t, c))
         fijos = [x for x in self.hist if x.get("pin")]
         resto = [x for x in self.hist if not x.get("pin")]
         for it in fijos + resto:
-            if it["tipo"] == "imagen":
-                idx.append((it, "h", "imagen captura", ""))
-            else:
-                t = it.get("texto", "")
-                idx.append((it, "h", normalizar(una_linea(t, 80)),
-                            normalizar(t)))
+            t, c = self._norm_de(it, "h")
+            idx.append((it, "h", t, c))
+
+        # La cache solo guarda lo que sigue existiendo.
+        vivos = {id(x) for x, _, _, _ in idx}
+        for k in [k for k in self._cache_norm if k not in vivos]:
+            del self._cache_norm[k]
+
         self._idx = idx
         return idx
 
@@ -1333,6 +1794,8 @@ class Panel(ctk.CTk):
             "Copia algo y aparecera aqui." if self.pestana == "reciente" else
             "Vacio. Usa Nuevo para guardar un texto.")
         self.lista.cargar(items)
+        if hasattr(self, "b_marcar"):
+            self._ajustar_pie()
 
     def _click_fila(self, i):
         self.sel = i
@@ -1342,7 +1805,9 @@ class Panel(ctk.CTk):
         self._idx = None
 
     def _accion(self, que, dato):
-        if que == "pin":
+        if que == "conteo":
+            self._contar_marcados()
+        elif que == "pin":
             dato["pin"] = not dato.get("pin")
             guardar_hist(self.hist)
             self._cambio()
@@ -1490,14 +1955,18 @@ class Panel(ctk.CTk):
         self.cambiar("guardados")
 
     def colores(self):
-        d = self._dialogo(lambda: DlgColores(self))
+        d = self._dialogo(lambda: DlgApariencia(self, self.tamano))
         if not d.resultado:
             return
+        acento, tamano = d.resultado
         p = cargar_prefs()
-        p["acento"] = d.resultado
+        p["acento"] = acento
         guardar_prefs(p)
-        aplicar_tema(d.resultado)
-        self._reconstruir()
+        aplicar_tema(acento)
+        if tamano != self.tamano:
+            self.cambiar_tamano(tamano)
+        else:
+            self._reconstruir()
 
     def _reconstruir(self):
         estado = self.pestana
@@ -1506,6 +1975,7 @@ class Panel(ctk.CTk):
         self._pintar_carpetas()
         self.cambiar(estado)
         self.lista.repintar_colores()
+        self._redondear()
 
     # ------------------------------------------------ pegar
 
@@ -1531,6 +2001,7 @@ class Panel(ctk.CTk):
                 runs = rellenar(runs, d.resultado)
             copiar_runs(runs, sin_formato)
             self.ultimo_cb = plano(runs)
+        self._seq = secuencia_portapapeles()
         destino = self.destino
         self.withdraw()
         self.destino = None
@@ -1552,9 +2023,20 @@ class Panel(ctk.CTk):
     # ------------------------------------------------ vigilancia
 
     def _vigilar(self):
+        if self.pausado:
+            self.after(1200, self._vigilar)
+            return
         try:
+            seq = secuencia_portapapeles()
+            if seq is not None and seq == self._seq:
+                # Nadie ha copiado nada: ni abrimos el portapapeles.
+                self.after(700, self._vigilar)
+                return
+            self._seq = seq
             tipo, dato = leer_portapapeles()
-            if tipo == "texto" and dato and dato.strip():
+            if tipo == "privado":
+                pass
+            elif tipo == "texto" and dato and dato.strip():
                 if len(dato) > MAX_CARACTERES:
                     dato = dato[:MAX_CARACTERES]
                 if dato != self.ultimo_cb:
@@ -1567,7 +2049,7 @@ class Panel(ctk.CTk):
                     self._imagen(dato)
         except Exception:
             pass
-        self.after(900, self._vigilar)
+        self.after(700, self._vigilar)
 
     def _imagen(self, dib):
         try:
@@ -1595,8 +2077,9 @@ class Panel(ctk.CTk):
             self.hist.remove(viejo)
         guardar_hist(self.hist)
         self._cambio()
-        if self.state() != "withdrawn" and self.pestana == "reciente" \
-                and not self.e_buscar.get().strip():
+        if self.state() == "withdrawn":
+            return
+        if self.pestana == "reciente" and not self.e_buscar.get().strip():
             self._pintar_lista()
 
     def _tema(self):
@@ -1608,7 +2091,7 @@ class Panel(ctk.CTk):
                 self._reconstruir()
         except Exception:
             pass
-        self.after(5000, self._tema)
+        self.after(30000, self._tema)
 
     # ------------------------------------------------ mostrar
 
@@ -1627,11 +2110,20 @@ class Panel(ctk.CTk):
             self.destino = ventana_activa()
         px, py = self.winfo_pointerx(), self.winfo_pointery()
         izq, arr, der, aba = self._area(px, py)
-        x = px + 10 if px + 10 + ANCHO <= der else px - ANCHO - 10
-        y = py + 14 if py + 14 + ALTO <= aba else py - ALTO - 14
-        x = max(izq + 6, min(int(x), der - ANCHO - 6))
-        y = max(arr + 6, min(int(y), aba - ALTO - 6))
-        self.geometry("%dx%d+%d+%d" % (ANCHO, ALTO, x, y))
+        # Si la pantalla no da para el tamano elegido, usa uno menor.
+        a, l = self.ancho, self.alto
+        if a > der - izq - 12 or l > aba - arr - 12:
+            for nombre in ("mediano", "chico", "mini"):
+                ta, tl = TAMANOS[nombre]
+                if ta <= der - izq - 12 and tl <= aba - arr - 12:
+                    a, l = ta, tl
+                    break
+        x = px + 10 if px + 10 + a <= der else px - a - 10
+        y = py + 14 if py + 14 + l <= aba else py - l - 14
+        x = max(izq + 6, min(int(x), der - a - 6))
+        y = max(arr + 6, min(int(y), aba - l - 6))
+        self.geometry("%dx%d+%d+%d" % (a, l, x, y))
+        self._redondear()
         self.e_buscar.delete(0, "end")
         self._pintar_lista()
         self.deiconify()
@@ -1642,6 +2134,10 @@ class Panel(ctk.CTk):
     def ocultar(self):
         self.withdraw()
         self.destino = None
+        if self.marcando:
+            self.marcando = False
+            self.lista.marcar_modo(False)
+            self._ajustar_pie()
 
     def _chequear(self):
         if self.ocupado:
@@ -1685,7 +2181,18 @@ class Panel(ctk.CTk):
 
 # ================================================================ arranque
 
+def _fallo(tipo, valor, rastro):
+    registrar_error("".join(traceback.format_exception(tipo, valor, rastro)))
+    try:
+        messagebox.showerror(
+            APP, "Algo fallo y quedo anotado en errores.log\n\n%s: %s"
+                 % (tipo.__name__, valor))
+    except Exception:
+        pass
+
+
 if __name__ == "__main__":
+    sys.excepthook = _fallo
     aplicar_tema()
     try:
         if cargar_prefs().get("autoarranque", "si") == "si":

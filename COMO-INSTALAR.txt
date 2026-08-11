@@ -257,14 +257,32 @@ LOS BOTONES DE ABAJO
    Carpeta    Crea una carpeta nueva. Al crearla te ofrece
               llenarla pegando una lista.
 
-              Para borrar o renombrar una carpeta: haz clic
-              derecho sobre su ficha, arriba de la lista.
-              Tambien aparece un boton de papelera con carpeta
-              abajo cuando tienes una carpeta seleccionada.
+              Para borrar una carpeta: haz clic en su ficha
+              para elegirla y abajo aparece el boton que dice
+              "Borrar carpeta". Se lleva la carpeta y todo lo
+              que tenga dentro. El programa te avisa cuantos
+              textos vas a perder.
 
-              Al borrar una carpeta se borra todo lo que tiene
-              dentro. El programa te avisa cuantos textos vas
-              a perder y no se puede deshacer.
+              Tambien puedes hacer clic derecho sobre la ficha
+              de la carpeta para renombrarla o borrarla.
+
+
+BORRAR VARIOS DE UNA VEZ
+
+   Si tienes que limpiar muchas cosas, no las borres una por
+   una. Abajo hay un boton que dice "Seleccionar".
+
+   1. Dale a "Seleccionar". Aparece una casilla en cada fila.
+   2. Marca las que quieras tocando cada una.
+   3. El boton rojo te dice cuantas llevas: "Borrar (5)".
+   4. Dale y confirma.
+
+   El boton "Todos" marca todo lo que este en la lista en ese
+   momento. Truco util: escribe algo en el buscador primero
+   para filtrar, luego "Todos", luego "Borrar". Asi borras de
+   golpe todo lo que tenga esa palabra.
+
+   Para salir sin borrar nada, dale a "Cancelar".
 
    Lista      Pega varias cosas de golpe en la carpeta que
               tengas elegida. Puedes elegir entre hacer una
@@ -288,6 +306,21 @@ PLANTILLAS
    Cuando lo elijas, te va a pedir unidad, problema y fecha,
    y pega la frase ya completa. Sirve para todo lo que
    escribes siempre igual cambiando dos o tres datos.
+
+
+EL TAMANO DE LA VENTANA
+
+   Hay cuatro tamanos: mini, chico, mediano y grande.
+
+   En mini las filas se ponen mas bajas y muestran solo una
+   linea, para que quepan mas cosas en poco espacio.
+
+   Dale al icono de la paleta, arriba a la derecha. En esa
+   ventana eliges el color y tambien el tamano.
+
+   Se guarda solo, asi que la proxima vez abre como lo
+   dejaste. Y si el tamano que elegiste no cabe en la
+   pantalla donde lo abres, usa uno menor.
 
 
 EL COLOR
@@ -326,7 +359,7 @@ DONDE QUEDAN MIS TEXTOS
 
       snippets.json     lo que guardaste en carpetas
       historial.json    lo que se copio solo
-      config.json       el color que elegiste
+      config.json       el color y el tamano de ventana
       imagenes\         las capturas de pantalla
 
    Para respaldar todo o pasarlo a otra computadora, copia
@@ -350,12 +383,25 @@ COMO LO DESINSTALO
 
 EL PROGRAMA GUARDA CONTRASENAS?
 
-   El historial guarda todo lo que copies, y eso incluye
-   contrasenas o datos personales si los copias durante el
-   dia. Se guardan sin cifrar en tu computadora.
+   Las que vienen de un gestor de contrasenas, no.
 
-   Usa la escoba de vez en cuando para vaciarlo, sobre todo
-   si compartes la maquina con alguien mas.
+   Windows tiene una marca que un programa puede poner al
+   copiar para decir "esto no se guarda". La usan KeePass,
+   Bitwarden, el Administrador de credenciales de Windows y
+   el modo incognito de Chrome. El programa la respeta: si
+   esa marca esta puesta, ni siquiera lee lo que copiaste.
+
+   Pero si escribes una contrasena a mano y la copias, o
+   copias datos de una pagina, eso si queda guardado, y sin
+   cifrar, en tu computadora.
+
+   Dos cosas que puedes hacer:
+
+   - La escoba vacia el historial cuando quieras.
+   - El boton de pausa, arriba junto a la paleta, deja de
+     grabar hasta que lo vuelvas a activar. Sirve cuando vas
+     a trabajar un rato con informacion delicada. Mientras
+     esta en pausa se ve un aviso en rojo.
 
 
 ===============================================================

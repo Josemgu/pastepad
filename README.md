@@ -45,8 +45,8 @@ that trims the rest.
 ### Your own folders
 
 **Saved** holds what you decide to keep, organized however you want.
-Right-click a folder chip to rename it, or delete it along with
-everything inside. Nothing here expires.
+Pick a folder and the **Borrar carpeta** button appears — it takes the
+folder and everything inside. Nothing here expires otherwise.
 
 </td>
 </tr>
@@ -92,7 +92,31 @@ a single note. Numbering and bullets get stripped if you want.
 ## Install
 
 <details open>
-<summary><b>Quick start</b></summary>
+<summary><b>Download the .exe</b></summary>
+
+<br>
+
+Grab `pastepad.exe` from
+[Releases](https://github.com/Josemgu/pastepad/releases). No installer,
+no Python needed. Put it wherever you want it to live and run it once
+from there.
+
+Every release is built on a clean GitHub Actions runner from the source
+in this repo — the build log is public — and ships a SHA256 checksum:
+
+```powershell
+Get-FileHash pastepad.exe -Algorithm SHA256
+```
+
+Windows Defender will warn on first run. The binary isn't code-signed,
+and PyInstaller output trips antivirus heuristics because it bundles and
+self-extracts a Python runtime, which is also how a lot of malware is
+packaged. Click *More info* → *Run anyway*, or build it yourself below.
+
+</details>
+
+<details>
+<summary><b>Run from source</b></summary>
 
 <br>
 
@@ -108,7 +132,7 @@ python pastepad.pyw
 </details>
 
 <details>
-<summary><b>Build a standalone .exe</b></summary>
+<summary><b>Build the .exe yourself</b></summary>
 
 <br>
 
@@ -153,9 +177,39 @@ There's a full step-by-step walkthrough in Spanish:
 A single click on a row pastes it. The three icons on the right — pin,
 edit, delete — act on that row instead.
 
+**Clearing several at once:** hit **Seleccionar**, tick the rows you
+want, and **Borrar (n)** removes them together. **Todos** ticks
+everything currently listed, so filtering first and then selecting all
+is the fast way to clear a batch.
+
 Click into the field you want to fill **before** opening the panel. The
 app records which window had focus and hands it back before sending the
 paste.
+
+### Respects password managers
+
+Windows defines
+[clipboard formats](https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats)
+that let an app say "do not record this". KeePass, Bitwarden, Windows
+Credential Manager and Chrome's incognito mode all use them. pastepad
+honours all four — `Clipboard Viewer Ignore`,
+`ExcludeClipboardContentFromMonitorProcessing`,
+`CanIncludeInClipboardHistory=0` and `CanUploadToCloudClipboard=0` —
+and doesn't even read the clipboard when one is present.
+
+There's also a pause button in the header for when you're about to work
+with something you'd rather not have written down at all.
+
+### Four sizes
+
+Mini, small, medium and large, picked from the appearance dialog. Mini
+drops to single-line rows so it still shows a useful number of entries. The choice
+persists, and the panel falls back to a smaller size if the one you
+picked would not fit on the screen it opens on.
+
+Free edge-dragging isn't offered on purpose — CustomTkinter doesn't
+repaint reliably under continuous resizing, and the result was worse
+than no resizing at all.
 
 ## Where your data lives
 
@@ -164,7 +218,7 @@ Next to the executable, in plain files you can copy or back up:
 ```
 snippets.json     saved texts and folders
 historial.json    automatic history
-config.json       accent color
+config.json       accent colour and panel size
 imagenes\         copied screenshots
 ```
 
@@ -173,10 +227,11 @@ Move that folder to another machine and everything comes with it.
 ## Notes
 
 > [!WARNING]
-> **The history stores everything you copy**, unencrypted, on your own
-> disk. That includes passwords and personal data if you copy them
-> during the day. The broom button empties it. Worth knowing before you
-> install this on a shared machine.
+> **The history is stored unencrypted** on your own disk. Password
+> managers are handled (see below), but anything else sensitive you
+> copy during the day does get written down. The broom button empties
+> it, and the pause button stops capture entirely. Worth knowing before
+> you install this on a shared machine.
 
 > [!NOTE]
 > **Defender will flag the executable** the first time. PyInstaller
@@ -203,6 +258,12 @@ pywin32 and keyboard.
 The list is drawn on a canvas rather than built from widgets. Rendering
 one widget per row meant rebuilding hundreds of them on every keystroke,
 which made search unusable once the history filled up.
+
+## Security
+
+The history is stored unencrypted on disk. Password-manager content is
+excluded automatically. Details and recommendations in
+[SECURITY.md](SECURITY.md).
 
 ## License
 
