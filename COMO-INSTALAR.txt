@@ -300,10 +300,10 @@ PLANTILLAS
    Si escribes algo entre dobles corchetes, el programa te
    lo pregunta antes de pegar. Por ejemplo, guarda esto:
 
-      El lider de [[unidad]] reporto [[problema]] el
-      dia [[fecha]].
+      Hola [[nombre]], te escribo sobre [[asunto]]
+      del dia [[fecha]].
 
-   Cuando lo elijas, te va a pedir unidad, problema y fecha,
+   Cuando lo elijas, te va a pedir nombre, asunto y fecha,
    y pega la frase ya completa. Sirve para todo lo que
    escribes siempre igual cambiando dos o tres datos.
 

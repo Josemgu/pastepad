@@ -3,6 +3,18 @@
 All notable changes to this project are documented here.
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [1.2.0] - 2026-08-12
+
+### Added
+- Its own icon, bundled into the executable and shown on dialogs
+- Error log: an unhandled failure now writes to `errores.log` and says so,
+  instead of the window vanishing with no trace
+- Illustrations in the README, drawn as SVG so they follow GitHub's theme
+
+### Changed
+- The build embeds version metadata, so the file has a name and an author
+  in Properties instead of showing up blank
+
 ## [1.1.0] - 2026-08-11
 
 ### Added

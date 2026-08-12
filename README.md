@@ -1,4 +1,8 @@
 <p align="center">
+  <img src="docs/logo.svg" alt="" width="96">
+</p>
+
+<p align="center">
   <img src="docs/banner.svg" alt="pastepad" width="880">
 </p>
 
@@ -35,8 +39,8 @@ Right-click a chip to rename it instead. Nothing here expires.
 
 ### Search that ranks
 
-Type across both tabs at once. Words come in any order — `fin quest`
-finds `LMS-FINQ: Finance Questions`. Accents are ignored, so
+Type across both tabs at once. Words come in any order — `inv rep`
+finds `Monthly report — invoicing`. Accents are ignored, so
 `informacion` matches `información`. Title matches rank above matches
 buried in the body.
 
@@ -51,7 +55,7 @@ Write `[[anything]]` in a saved text and the app asks for it before
 pasting:
 
 ```
-The leader from [[unit]] reported [[issue]] on [[date]].
+Hi [[name]], following up on [[topic]] from [[date]].
 ```
 
 Pick that entry, fill three fields, and the finished sentence goes
@@ -130,6 +134,7 @@ python pastepad.pyw
 ```powershell
 pip install pyinstaller
 pyinstaller --onefile --noconsole --name pastepad ^
+  --icon docs\pastepad.ico ^
   --version-file version.txt ^
   --collect-all customtkinter ^
   pastepad.pyw
@@ -212,8 +217,8 @@ Move that folder to another machine and everything comes with it.
 [Ditto](https://github.com/sabrogden/Ditto) and
 [CopyQ](https://github.com/hluk/CopyQ) are excellent and have years of
 work behind them. I built this because my daily work needed two things
-neither one does out of the box: fill-in templates for repetitive case
-notes, and rich-text paste that survives into Outlook.
+neither one does out of the box: fill-in templates for notes I retype
+constantly, and rich-text paste that survives into Outlook.
 
 ## Built with
 

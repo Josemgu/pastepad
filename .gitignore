@@ -3,6 +3,7 @@ snippets.json
 historial.json
 config.json
 imagenes/
+errores.log
 
 # Salidas de PyInstaller
 build/

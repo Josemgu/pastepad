@@ -1,0 +1,71 @@
+name: Build and release
+
+# Compila el .exe en un runner limpio de GitHub y lo publica.
+# Ventaja sobre compilar en tu maquina: cualquiera puede ver el registro
+# de la compilacion y comprobar que el binario sale del codigo publicado.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build
+        run: |
+          pyinstaller --onefile --noconsole --name pastepad `
+            --icon docs/pastepad.ico `
+            --add-data "docs/pastepad.ico;." `
+            --version-file version.txt `
+            --collect-all customtkinter `
+            pastepad.pyw
+
+      - name: Checksum
+        run: |
+          $h = (Get-FileHash dist\pastepad.exe -Algorithm SHA256).Hash
+          "$h  pastepad.exe" | Out-File -Encoding ascii dist\SHA256.txt
+          Write-Host "SHA256: $h"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pastepad
+          path: |
+            dist/pastepad.exe
+            dist/SHA256.txt
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/pastepad.exe
+            dist/SHA256.txt
+          body: |
+            Descarga `pastepad.exe` y ejecutalo. No necesita instalacion.
+
+            Windows Defender puede marcarlo la primera vez: es un falso
+            positivo conocido de PyInstaller. El binario se compila en un
+            runner limpio de GitHub Actions a partir de este codigo, y el
+            registro de la compilacion es publico.
+
+            Verifica la descarga comparando el hash:
+
+            ```powershell
+            Get-FileHash pastepad.exe -Algorithm SHA256
+            ```

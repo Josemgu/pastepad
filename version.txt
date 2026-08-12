@@ -1,0 +1,30 @@
+# Metadatos del ejecutable.
+# Sin esto, el .exe sale sin nombre ni autor en Propiedades, y eso
+# es una de las cosas que suben la sospecha de los antivirus.
+VSVersionInfo(
+  ffi=FixedFileInfo(
+    filevers=(1, 2, 0, 0),
+    prodvers=(1, 2, 0, 0),
+    mask=0x3f,
+    flags=0x0,
+    OS=0x40004,
+    fileType=0x1,
+    subtype=0x0,
+    date=(0, 0)
+  ),
+  kids=[
+    StringFileInfo([
+      StringTable(
+        '040904B0',
+        [StringStruct('CompanyName', 'Jose Miguel Ortiz'),
+         StringStruct('FileDescription', 'pastepad - clipboard manager'),
+         StringStruct('FileVersion', '1.2.0'),
+         StringStruct('InternalName', 'pastepad'),
+         StringStruct('LegalCopyright', 'MIT License'),
+         StringStruct('OriginalFilename', 'pastepad.exe'),
+         StringStruct('ProductName', 'pastepad'),
+         StringStruct('ProductVersion', '1.2.0')])
+    ]),
+    VarFileInfo([VarStruct('Translation', [1033, 1200])])
+  ]
+)

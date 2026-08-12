@@ -54,7 +54,7 @@ MAX_HIST = 80
 MAX_CARACTERES = 200000
 HOTKEY = "ctrl+alt+v"
 APP = "pastepad"
-VERSION = "1.1.0"
+VERSION = "1.2.0"
 CLAVE_RUN = r"Software\Microsoft\Windows\CurrentVersion\Run"
 NOMBRE_RUN = "GestorSnippets"
 
@@ -99,6 +99,24 @@ ctk.set_appearance_mode("dark")
 
 
 # ================================================================ archivos
+
+def ruta_icono():
+    """Busca el .ico donde pueda estar.
+
+    Con --onefile, PyInstaller descomprime los recursos en una carpeta
+    temporal cuya ruta deja en sys._MEIPASS; no quedan junto al .exe.
+    """
+    posibles = []
+    temporal = getattr(sys, "_MEIPASS", None)
+    if temporal:
+        posibles.append(os.path.join(temporal, "pastepad.ico"))
+    posibles.append(os.path.join(base(), "pastepad.ico"))
+    posibles.append(os.path.join(base(), "docs", "pastepad.ico"))
+    for candidata in posibles:
+        if os.path.exists(candidata):
+            return candidata
+    return None
+
 
 def registrar_error(texto):
     """Deja el fallo escrito en errores.log.
@@ -928,6 +946,12 @@ class Ventana(ctk.CTkToplevel):
         self.geometry("%dx%d" % (ancho, alto))
         self.minsize(ancho, alto)
         self.attributes("-topmost", True)
+        icono = ruta_icono()
+        if icono:
+            try:
+                self.iconbitmap(icono)
+            except Exception:
+                pass
         self.after(130, self._tomar)
         self.bind("<Escape>", lambda e: self.destroy())
 
@@ -1280,6 +1304,12 @@ class Panel(ctk.CTk):
         self.geometry("%dx%d" % (self.ancho, self.alto))
         self.attributes("-topmost", True)
         self.configure(fg_color=C["fondo"])
+        icono = ruta_icono()
+        if icono:
+            try:
+                self.iconbitmap(icono)
+            except Exception:
+                pass
 
         self.datos = cargar_datos()
         self.hist = cargar_hist()

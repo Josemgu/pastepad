@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="pastepad logo">
+<title>pastepad</title>
+<desc>A blue rounded square holding three stacked rows; the top row is highlighted, standing for the entry you pick from the list.</desc>
+<rect width="128" height="128" rx="28" fill="#3B82F6"/>
+<rect x="26" y="28" width="76" height="23" rx="8" fill="#FFFFFF"/>
+<rect x="36" y="36" width="38" height="7" rx="3.5" fill="#3B82F6"/>
+<rect x="26" y="59" width="76" height="17" rx="7" fill="#FFFFFF" opacity="0.45"/>
+<rect x="26" y="82" width="76" height="17" rx="7" fill="#FFFFFF" opacity="0.26"/>
+</svg>
