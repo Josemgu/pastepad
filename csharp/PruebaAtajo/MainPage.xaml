@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="PruebaAtajo.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:PruebaAtajo"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <ScrollViewer Padding="32,16,32,32">
+        <StackPanel Spacing="20">
+
+            <TextBlock
+                Style="{StaticResource TitleTextBlockStyle}"
+                Text="Paso 1 — atajo y portapapeles" />
+
+            <TextBlock
+                x:Name="Estado"
+                Style="{StaticResource BodyTextBlockStyle}"
+                TextWrapping="Wrap" />
+
+            <!--  Los dos contadores. Es todo lo que hay que mirar.  -->
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Border
+                    Grid.Column="0"
+                    Padding="20"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8">
+                    <StackPanel Spacing="4">
+                        <TextBlock
+                            Style="{StaticResource CaptionTextBlockStyle}"
+                            Text="Ctrl+Shift+V" />
+                        <TextBlock
+                            x:Name="ContadorAtajo"
+                            FontSize="52"
+                            FontWeight="SemiBold"
+                            Text="0" />
+                    </StackPanel>
+                </Border>
+
+                <Border
+                    Grid.Column="1"
+                    Padding="20"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8">
+                    <StackPanel Spacing="4">
+                        <TextBlock
+                            Style="{StaticResource CaptionTextBlockStyle}"
+                            Text="Copias detectadas" />
+                        <TextBlock
+                            x:Name="ContadorPortapapeles"
+                            FontSize="52"
+                            FontWeight="SemiBold"
+                            Text="0" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <TextBlock
+                x:Name="Ultimo"
+                Style="{StaticResource CaptionTextBlockStyle}"
+                TextWrapping="Wrap" />
+
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button x:Name="BotonOcultar" Click="Ocultar_Click">
+                    Ocultar 10 s
+                </Button>
+                <Button Click="AbrirLog_Click">Abrir el log</Button>
+                <Button Click="Reiniciar_Click">Poner a cero</Button>
+            </StackPanel>
+
+            <TextBlock
+                x:Name="RutaLog"
+                IsTextSelectionEnabled="True"
+                Opacity="0.6"
+                Style="{StaticResource CaptionTextBlockStyle}"
+                TextWrapping="Wrap" />
+
+        </StackPanel>
+    </ScrollViewer>
+</Page>
