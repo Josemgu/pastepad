@@ -266,68 +266,6 @@ def devolver_foco(hwnd):
         return False
 
 
-# ------------------------------------------------------------ ventana
-
-GA_ROOT = 2
-
-
-def hwnd_real(widget):
-    """La ventana que Windows conoce.
-
-    winfo_id() devuelve el handle del widget interno de Tk. GetParent
-    sube un nivel, pero segun como este montada la ventana pueden ser
-    varios; GetAncestor con GA_ROOT llega arriba del todo de una vez.
-    """
-    try:
-        h = widget.winfo_id()
-        if HAY_WIN32:
-            raiz = ctypes.windll.user32.GetAncestor(h, GA_ROOT)
-            if raiz:
-                return raiz
-            padre = ctypes.windll.user32.GetParent(h)
-            if padre:
-                return padre
-        return h
-    except Exception:
-        return None
-
-
-def redondear(hwnd, ancho, alto, radio=16):
-    """Recorta la ventana con esquinas curvas, como hace Windows 11."""
-    if not HAY_WIN32 or not hwnd:
-        return
-    try:
-        region = ctypes.windll.gdi32.CreateRoundRectRgn(
-            0, 0, ancho + 1, alto + 1, radio, radio)
-        if region:
-            # Windows se queda con la region: no hay que liberarla.
-            ctypes.windll.user32.SetWindowRgn(hwnd, region, True)
-    except Exception:
-        pass
-
-
-def marco_hueco(hwnd, ancho, alto, radio=18, grosor=2):
-    """Recorta la ventana dejando solo el borde: el centro queda
-    transparente. Sirve para el contorno que marca el tamano futuro."""
-    if not HAY_WIN32 or not hwnd:
-        return
-    try:
-        gdi = ctypes.windll.gdi32
-        fuera = gdi.CreateRoundRectRgn(0, 0, ancho + 1, alto + 1,
-                                       radio, radio)
-        if not fuera:
-            return
-        dentro = gdi.CreateRoundRectRgn(
-            grosor, grosor, ancho + 1 - grosor, alto + 1 - grosor,
-            max(1, radio - grosor), max(1, radio - grosor))
-        if dentro:
-            gdi.CombineRgn(fuera, fuera, dentro, 4)   # RGN_DIFF
-            gdi.DeleteObject(dentro)
-        ctypes.windll.user32.SetWindowRgn(hwnd, fuera, True)
-    except Exception:
-        pass
-
-
 VK_CONTROL, VK_V = 0x11, 0x56
 KEYEVENTF_KEYUP = 0x0002
 

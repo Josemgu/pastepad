@@ -16,6 +16,7 @@ import pyperclip
 
 from . import config as cfg
 from . import estilo as st
+from . import idiomas as idi
 from . import filas
 from . import modelo
 from . import registro
@@ -55,6 +56,7 @@ class App:
         if self.atajo not in cfg.ATAJOS:
             self.atajo = cfg.ATAJO_DEF
         self.pausado = bool(almacen.pref("pausado", False))
+        self.idioma = idi.poner(almacen.pref("idioma", idi.IDIOMA_DEF))
         self.tema = almacen.pref("tema", st.TEMA_DEF)
         if self.tema not in st.TEMAS:
             self.tema = st.TEMA_DEF
@@ -190,7 +192,7 @@ class App:
     # ------------------------------------------------------ interfaz
 
     def _construir(self):
-        self.buscador = st.campo("Buscar en todo", self._al_buscar,
+        self.buscador = st.campo(idi.t("Buscar en todo"), self._al_buscar,
                                  self._al_enviar,
                                  icono_nombre=ft.Icons.SEARCH,
                                  alto=st.ALTO_BUSCADOR)
@@ -199,10 +201,10 @@ class App:
             padding=ft.Padding.symmetric(horizontal=st.E4, vertical=st.E1),
             expand=True, auto_scroll=False)
 
-        self.tab_reciente = st.pildora("Reciente",
+        self.tab_reciente = st.pildora(idi.t("Reciente"),
                                        lambda e: self.cambiar("reciente"),
                                        True)
-        self.tab_guardados = st.pildora("Guardados",
+        self.tab_guardados = st.pildora(idi.t("Guardados"),
                                         lambda e: self.cambiar("guardados"))
         self.barra_carpetas = ft.Container(height=0, animate=ft.Animation(
             160, ft.AnimationCurve.EASE_OUT))
@@ -215,7 +217,7 @@ class App:
             ft.Icons.PLAY_ARROW if self.pausado else ft.Icons.PAUSE,
             lambda e: self.alternar_pausa(), 17,
             filas.ROJO if self.pausado else None,
-            "Reanudar la captura" if self.pausado else "Pausar la captura",
+            idi.t("Reanudar la captura") if self.pausado else idi.t("Pausar la captura"),
             True)
 
         cabecera = ft.WindowDragArea(
@@ -229,9 +231,9 @@ class App:
                     self.boton_pausa,
                     st.icono(ft.Icons.PALETTE_OUTLINED,
                              lambda e: self.abrir_apariencia(), 17, None,
-                             "Apariencia", True),
+                             idi.t("Apariencia"), True),
                     st.icono(ft.Icons.CLOSE, lambda e: self.ocultar(), 17,
-                             None, "Cerrar", True),
+                             None, idi.t("Cerrar"), True),
                 ], spacing=st.E1),
                 padding=ft.Padding.only(left=st.E4, right=st.E2, top=st.E2)),
             maximizable=False)
@@ -261,28 +263,28 @@ class App:
         # el ultimo se salia por la derecha y quedaba cortado. Al apretar,
         # "Nuevo" se queda solo con el signo mas.
         apretado = self._compacta()
-        etiqueta_nuevo = "" if apretado else "Nuevo"
+        etiqueta_nuevo = "" if apretado else idi.t("Nuevo")
         lado = 30 if apretado else 36
         if self.marcando:
             hijos = [
-                st.boton("Todos", lambda e: self.marcar_todos()),
+                st.boton(idi.t("Todos"), lambda e: self.marcar_todos()),
                 st.boton("Borrar (%d)" % len(self.marcados),
                          lambda e: self.borrar_marcados(), "peligro"),
                 ft.Container(expand=True),
-                st.boton("Cancelar", lambda e: self.alternar_marcado()),
+                st.boton(idi.t("Cancelar"), lambda e: self.alternar_marcado()),
             ]
         elif self.pestana == "guardados":
             hijos = [
                 st.icono(ft.Icons.CREATE_NEW_FOLDER,
                          lambda e: self.nueva_carpeta(), 18, filas.AMBAR,
-                         "Nueva carpeta", False, lado),
+                         idi.t("Nueva carpeta"), False, lado),
                 st.icono(ft.Icons.PLAYLIST_ADD,
                          lambda e: self.agregar_lista(), 18, None,
-                         "Agregar una lista", False, lado),
+                         idi.t("Agregar una lista"), False, lado),
             ]
             # En mini no cabe: la maqueta 16 deja solo el icono y Nuevo.
             if not apretado:
-                hijos.append(st.boton("Seleccionar",
+                hijos.append(st.boton(idi.t("Seleccionar"),
                                       lambda e: self.alternar_marcado()))
             hijos += [
                 ft.Container(expand=True),
@@ -293,10 +295,10 @@ class App:
             hijos = [
                 st.icono(ft.Icons.CLEANING_SERVICES_OUTLINED,
                          lambda e: self.vaciar(), 18, None,
-                         "Vaciar el historial", False, lado),
+                         idi.t("Vaciar el historial"), False, lado),
             ]
             if not apretado:
-                hijos.append(st.boton("Seleccionar",
+                hijos.append(st.boton(idi.t("Seleccionar"),
                                       lambda e: self.alternar_marcado()))
             hijos += [
                 ft.Container(expand=True),
@@ -326,7 +328,7 @@ class App:
         self.barra_carpetas.content = self._carpetas_menu()
 
     def _carpetas_menu(self):
-        opciones = [filas._item("Todas las carpetas", ft.Icons.FOLDER_OPEN,
+        opciones = [filas._item(idi.t("Todas las carpetas"), ft.Icons.FOLDER_OPEN,
                                 lambda e: self.elegir_carpeta(None))]
         if self.almacen.carpetas:
             opciones.append(ft.PopupMenuItem())
@@ -336,7 +338,7 @@ class App:
                 ft.Icons.CHECK if nombre == self.carpeta else ft.Icons.FOLDER,
                 lambda e, n=nombre: self.elegir_carpeta(n)))
         opciones.append(ft.PopupMenuItem())
-        opciones.append(filas._item("Nueva carpeta...",
+        opciones.append(filas._item(idi.t("Nueva carpeta..."),
                                     ft.Icons.CREATE_NEW_FOLDER_OUTLINED,
                                     lambda e: self.nueva_carpeta()))
         if self.carpeta:
@@ -350,7 +352,7 @@ class App:
                                         % self.carpeta,
                                         ft.Icons.FOLDER_DELETE_OUTLINED,
                                         lambda e: self.borrar_carpeta()))
-        etiqueta = self.carpeta or "Todas las carpetas"
+        etiqueta = self.carpeta or idi.t("Todas las carpetas")
         return ft.Container(
             content=ft.PopupMenuButton(
                 items=opciones,
@@ -415,15 +417,15 @@ class App:
         consulta = (self.buscador.value or "").strip()
         if consulta:
             items = self.indice.buscar(consulta)
-            aviso, icono = "Nada coincide con esa busqueda", ft.Icons.SEARCH
+            aviso, icono = idi.t("Nada coincide con esa busqueda"), ft.Icons.SEARCH
         elif self.pestana == "guardados":
             items = [(s, "g") for s in self.almacen.snippets
                      if not self.carpeta or s["categoria"] == self.carpeta]
-            aviso = "Vacio. Usa Nuevo para guardar un texto"
+            aviso = idi.t("Vacio. Usa Nuevo para guardar un texto")
             icono = ft.Icons.FOLDER_OPEN_OUTLINED
         else:
             items = [(h, "h") for h in self.almacen.hist_ordenado()]
-            aviso = "Copia algo y aparecera aqui"
+            aviso = idi.t("Copia algo y aparecera aqui")
             icono = ft.Icons.CONTENT_PASTE_OFF
 
         self.visibles = [d for d, _ in items]
@@ -465,9 +467,9 @@ class App:
 
         controles = []
         for clave, etiqueta, grupo, icono, color in (
-                ("marcadores", "Marcadores", marcadores,
+                ("marcadores", idi.t("Marcadores"), marcadores,
                  ft.Icons.BOOKMARK, st.C["acento"]),
-                ("notas", "Notas", notas,
+                ("notas", idi.t("Notas"), notas,
                  ft.Icons.STICKY_NOTE_2_OUTLINED, None)):
             if not grupo:
                 continue
@@ -632,8 +634,8 @@ class App:
                                  else ft.Icons.PAUSE)
         self.boton_pausa.icon_color = filas.ROJO if self.pausado \
             else st.C["medio"]
-        self.boton_pausa.tooltip = ("Reanudar la captura" if self.pausado
-                                    else "Pausar la captura")
+        self.boton_pausa.tooltip = (idi.t("Reanudar la captura") if self.pausado
+                                    else idi.t("Pausar la captura"))
         self.aviso_pausa.visible = self.pausado
         self.page.update()
 
@@ -826,7 +828,7 @@ class App:
             self.indice.invalidar()
             self.refrescar()
         vt.confirmar(self.page,
-                     "Vaciar el historial? Los fijados se quedan.", hacer)
+                     idi.t("Vaciar el historial? Los fijados se quedan."), hacer)
 
     def nueva_carpeta(self):
         def crear(nombre):
@@ -835,7 +837,7 @@ class App:
             self.pestana = "guardados"
             self.cambiar("guardados")
             self.agregar_lista(nombre)
-        vt.una_linea(self.page, "Nueva carpeta", "Nombre de la carpeta",
+        vt.una_linea(self.page, idi.t("Nueva carpeta"), idi.t("Nombre de la carpeta"),
                      crear)
 
     def renombrar_carpeta(self):
@@ -848,7 +850,7 @@ class App:
                 self.carpeta = nuevo
                 self.indice.invalidar()
                 self.refrescar()
-        vt.una_linea(self.page, "Renombrar carpeta", "Nuevo nombre",
+        vt.una_linea(self.page, idi.t("Renombrar carpeta"), idi.t("Nuevo nombre"),
                      renombrar, viejo)
 
     def editar_carpeta(self):
@@ -887,7 +889,7 @@ class App:
     def agregar_lista(self, carpeta=None):
         carpeta = carpeta or self.carpeta
         if not carpeta:
-            vt.confirmar(self.page, "Elige primero una carpeta.",
+            vt.confirmar(self.page, idi.t("Elige primero una carpeta."),
                          lambda: None, False)
             return
 
@@ -937,13 +939,17 @@ class App:
     def abrir_apariencia(self):
         vt.apariencia(self.page, st.C.get("nombre", "menta"),
                       self.atajo, self._aplicar_apariencia,
-                      self.tema)
+                      self.tema, self.idioma)
 
-    def _aplicar_apariencia(self, acento, atajo, tema="auto"):
+    def _aplicar_apariencia(self, acento, atajo, tema="auto",
+                            idioma="es"):
         self.almacen.poner_pref("acento", acento)
         if tema != self.tema:
             self.tema = tema
             self.almacen.poner_pref("tema", tema)
+        if idioma != self.idioma:
+            self.idioma = idi.poner(idioma)
+            self.almacen.poner_pref("idioma", self.idioma)
         st.aplicar(acento, self.tema)
         self.page.theme_mode = st.C["modo"]
 

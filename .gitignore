@@ -20,3 +20,11 @@ venv/
 # Windows
 Thumbs.db
 desktop.ini
+
+# Salida de la compilacion: 98 MB, se regenera con flet pack
+instalador/dist/
+instalador/*.spec
+build/
+errores.log*
+*.spec
+instalador/portable/

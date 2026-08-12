@@ -1,173 +1,287 @@
-<p align="center">
-  <img src="docs/logo.svg" alt="" width="88">
-</p>
+<div align="center">
 
-<h1 align="center">pastepad</h1>
+<img src="docs/banner.svg" alt="pastepad — gestor de portapapeles para Windows" width="880">
 
-<p align="center">
-  A clipboard manager for Windows.<br>
-  Keeps what you copy, stores what you choose to keep,<br>
-  and pastes it back where your cursor was.
-</p>
+<br>
 
-<p align="center">
-  <img src="https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078D4?style=flat-square" alt="Platform">
-  <img src="https://img.shields.io/badge/python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python">
-  <img src="https://img.shields.io/badge/ui-Flet-02569B?style=flat-square" alt="Flet">
-  <img src="https://img.shields.io/badge/license-MIT-22C55E?style=flat-square" alt="License">
-</p>
+[![Plataforma](https://img.shields.io/badge/Windows-10%20%7C%2011-2DD4A7?style=for-the-badge&logo=windows&logoColor=white&labelColor=0B0B0D)](#instalar)
+[![Python](https://img.shields.io/badge/Python-3.10+-2DD4A7?style=for-the-badge&logo=python&logoColor=white&labelColor=0B0B0D)](https://www.python.org/downloads/)
+[![Licencia](https://img.shields.io/badge/Licencia-MIT-2DD4A7?style=for-the-badge&labelColor=0B0B0D)](LICENSE)
+[![Idiomas](https://img.shields.io/badge/Idiomas-ES%20·%20EN%20·%20PT%20·%20FR-2DD4A7?style=for-the-badge&labelColor=0B0B0D)](#idiomas)
+
+**Windows guarda 25 cosas en el portapapeles y las pierde al reiniciar.**
+<br>
+pastepad guarda 80, más lo que archives en tus carpetas, y no se pierde nunca.
+
+</div>
 
 ---
 
-Windows keeps 25 clipboard entries and drops them on restart. This keeps
-80, plus anything you save into your own folders, which never expires.
+<div align="center">
 
-Press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd> anywhere. Type two
-letters, hit <kbd>Enter</kbd>, and the text lands in the field you were
-working in.
+### Pulsa <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd> donde estés
 
-## What it does
+Escribe dos letras · <kbd>Enter</kbd> · el texto aparece donde estaba el cursor
 
-**Automatic history.** Everything you copy shows up under Recent — text
-and screenshots. Pin the ones you use often and they stay at the top,
-safe from the cleanup that trims the rest.
+</div>
 
-**Your own folders.** Saved holds what you decide to keep, in a
-dropdown or as chips — your choice. Rename or delete a folder with
-everything inside from the same menu.
+<br>
 
-**Search that ranks.** Types across both tabs at once. Words come in
-any order, accents are ignored, and title matches rank above matches
-buried in the body.
+<div align="center">
+  <img src="docs/capturas/reciente.png" alt="Pestaña Reciente" width="300">
+  <img src="docs/capturas/guardados.png" alt="Guardados, con marcadores y notas separados" width="300">
+  <img src="docs/capturas/apariencia.png" alt="Diálogo de apariencia" width="300">
+</div>
 
-**Fill-in templates.** Write `[[anything]]` in a saved text and the app
-asks for it before pasting:
+<div align="center">
+  <sub><b>Reciente</b> — todo lo que copias &nbsp;·&nbsp; <b>Guardados</b> — marcadores y notas, aparte &nbsp;·&nbsp; <b>Apariencia</b> — 12 fondos, 18 acentos</sub>
+</div>
+
+<br>
+
+## Qué hace
+
+<div align="center">
+  <img src="docs/caracteristicas.svg" alt="Historial, plantillas, marcadores, búsqueda, formato y privacidad" width="880">
+</div>
+
+<br>
+
+**Plantillas con huecos.** Escribe `[[algo]]` en un texto guardado y el
+programa te lo pregunta antes de pegar:
 
 ```
-Hi [[name]], following up on [[topic]] from [[date]].
+Hola [[nombre]], te escribo sobre [[tema]] del día [[fecha]].
 ```
 
-**Live links.** If what you copied is a web address and nothing else,
-the row shows a link icon and its domain. One click opens it in the
-browser.
+**Marcadores aparte de las notas.** En Guardados, los enlaces van en su
+propio grupo plegable. No es decoración: un marcador se abre en el
+navegador y una nota se pega. Son dos gestos distintos, y mezclados
+obligan a leer la lista entera.
 
-**Rich text.** Pastes with font, size, bold and colour into Word and
-Outlook. Plain text everywhere else.
+**Respeta los gestores de contraseñas.** Windows define
+[formatos de portapapeles](https://learn.microsoft.com/es-es/windows/win32/dataxchg/clipboard-formats)
+con los que un programa dice «esto no lo guardes». KeePass, Bitwarden,
+el Administrador de credenciales y el incógnito de Chrome los usan.
+pastepad honra los cuatro y descarta ese contenido.
 
-**Bulk import.** Paste ten names and choose: one note per line, or all
-of it in a single note.
+## Instalar
 
-**Respects password managers.** Windows defines
-[clipboard formats](https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats)
-that let an app say "do not record this". KeePass, Bitwarden, Windows
-Credential Manager and Chrome's incognito mode all use them. pastepad
-honours all four and doesn't even open the clipboard when one is
-present.
+Descarga la carpeta `instalador` y doble clic en **`instalar.bat`**.
 
-## Install
+No pide administrador. Se instala en `%LOCALAPPDATA%\pastepad`, arranca
+con Windows y crea un acceso en el menú inicio.
 
-**From source:**
+> [!NOTE]
+> Se instala ahí y no en *Archivos de programa* a propósito: pastepad
+> guarda sus datos junto al ejecutable, y en *Archivos de programa*
+> Windows bloquea la escritura **sin avisar**. Arrancaría pero no podría
+> guardar nada.
+
+<details>
+<summary><b>Desde el código fuente</b></summary>
+
+<br>
 
 ```powershell
 pip install -r requirements.txt
 python main.py
 ```
 
-Python 3.10 or newer from [python.org](https://www.python.org/downloads/).
-Check **Add python.exe to PATH** on the first installer screen.
+Python 3.10 o superior desde [python.org](https://www.python.org/downloads/).
+Marca **Add python.exe to PATH** en la primera pantalla.
 
-**Build an executable:**
+</details>
+
+<details>
+<summary><b>Compilar el ejecutable</b></summary>
+
+<br>
 
 ```powershell
-flet build windows --project pastepad --build-version 3.0.0
+.\build.bat
 ```
 
-Or double-click `build.bat`, which runs the tests first and stops if any
-fail.
+Corre las pruebas, empaqueta con `flet pack` y calcula el SHA256. Usa
+`flet pack` y no `flet build` porque el segundo descarga el SDK de
+Flutter entero, más de un giga.
 
-Run it as administrator. Windows blocks global hotkeys from reaching a
-normal process while an elevated window has focus.
+</details>
 
-## Usage
+<details>
+<summary><b>Windows Defender lo marca — ¿por qué?</b></summary>
 
-| Key | Action |
-|---|---|
-| <kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>V</kbd> | Open the panel at the cursor |
-| Type | Filter as you go |
-| <kbd>↑</kbd> <kbd>↓</kbd> | Move through results |
-| <kbd>Enter</kbd> | Paste |
-| <kbd>Esc</kbd> | Close |
+<br>
 
-A single click on a row pastes it. The `···` button on the right opens
-that entry's menu: open, paste, paste plain, copy, pin, edit, delete.
+La primera vez saldrá *"Windows protegió su PC"*. **Más información →
+Ejecutar de todas formas.**
 
-Six one-handed shortcut combinations are offered in the appearance
-dialog, along with the accent colour, panel size and folder style.
+Que quede claro: **la licencia MIT y ser código abierto no evitan este
+aviso.** SmartScreen no mira la licencia ni el código. Solo mira si el
+binario está firmado y cuánta gente lo ha descargado sin problemas.
 
-Click into the field you want to fill **before** opening the panel. The
-app records which window had focus and hands it back before pasting.
+| Opción | Efecto | Coste |
+|---|---|---|
+| Aceptar el aviso | Un clic, una vez | 0 |
+| Publicar el hash SHA256 | Verificable, el aviso sigue | 0 |
+| Certificado de firma | Lo reduce, no lo elimina de golpe | 200–400 USD/año |
+| Microsoft Store | Lo quita del todo | Cuenta de desarrollador |
 
-## Layout
+Los certificados EV ya **no** dan reputación instantánea. Eso dejó de
+funcionar hace años.
+
+</details>
+
+## Uso
+
+| Tecla | Acción |
+|:--|:--|
+| <kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>V</kbd> | Abre el panel junto al cursor |
+| Escribir | Filtra sobre la marcha |
+| <kbd>↑</kbd> <kbd>↓</kbd> | Mueve la selección |
+| <kbd>Enter</kbd> | Pega |
+| <kbd>Esc</kbd> | Cierra |
+
+Haz clic en el campo que quieres rellenar **antes** de abrir el panel.
+pastepad recuerda qué ventana tenía el foco y se lo devuelve antes de
+pegar.
+
+**Para cerrarlo del todo** (la X solo lo esconde):
+
+```powershell
+taskkill /IM pastepad.exe /F
+```
+
+## Idiomas
+
+Español · English · Português · Français
+
+Se elige en **Apariencia → Idioma** y se guarda entre sesiones.
+
+Añadir uno es añadir un diccionario en
+[`pastepad/idiomas.py`](pastepad/idiomas.py). La clave es el texto en
+español, no un identificador inventado: el código se sigue leyendo sin
+ir a buscar qué significa `btn.paste.plain`, y lo que falte por traducir
+sale en español en vez de dejar un hueco.
+
+## Dónde viven tus datos
+
+En `%LOCALAPPDATA%\pastepad`, en archivos planos que puedes copiar:
 
 ```
-main.py               entry point
-pastepad/
-  config.py           constants, paths, sizes
-  registro.py         the only writer of errores.log
-  modelo.py           the data and its rules
-  busqueda.py         ranked search with a normalisation cache
-  windows.py          clipboard, focus, window, autostart
-  estilo.py           live colours and reusable pieces
-  filas.py            the list rows
-  ventanas.py         the dialogs
-  app.py              coordinates the above
-prueba.py             19 tests — run with `python prueba.py`
-docs/FUNCIONES.md     all 133 functions, three lines each
-```
-
-`modelo.py`, `busqueda.py` and `windows.py` import neither Flet nor
-tkinter. That's why the tests run without opening a window — and why
-migrating the whole UI from tkinter to Flet reused 40% of the code
-untouched.
-
-## Where your data lives
-
-Next to the executable, in plain files you can copy or back up:
-
-```
-snippets.json     saved texts and folders
-historial.json    automatic history
-config.json       colour, size, shortcut, folder style
-imagenes\         copied screenshots
+snippets.json     textos guardados y carpetas
+historial.json    historial automático
+config.json       idioma, tema, color, atajo, tamaño
+imagenes\         capturas copiadas
 ```
 
 > [!WARNING]
-> **The history is stored unencrypted.** Password-manager content is
-> excluded automatically, but anything else sensitive you copy during
-> the day does get written down. The broom button empties it and the
-> pause button stops capture entirely. See [SECURITY.md](SECURITY.md).
+> **El historial se guarda sin cifrar.** El contenido de los gestores de
+> contraseñas se descarta automáticamente, pero cualquier otra cosa
+> sensible que copies sí queda escrita. La escoba lo vacía y el botón de
+> pausa detiene la captura. Ver [SECURITY.md](SECURITY.md).
 
-> [!TIP]
-> **Don't put the folder inside OneDrive.** Sync can lock the JSON
-> files mid-write and you lose whatever you just saved.
+## Decisiones que quizá sorprendan
 
-## Why another one
+<details>
+<summary><b>El atajo global no usa la librería <code>keyboard</code></b></summary>
 
-[Ditto](https://github.com/sabrogden/Ditto) and
-[CopyQ](https://github.com/hluk/CopyQ) are excellent and have years of
-work behind them. This exists because my daily work needed two things
-neither does out of the box: fill-in templates for notes I retype
-constantly, and rich-text paste that survives into Outlook.
+<br>
 
-## Built with
+Usa `RegisterHotKey` de la API de Windows. La librería instala un hook
+`WH_KEYBOARD_LL`, y Windows lo desengancha **en silencio** si el callback
+tarda más de 300 ms (`LowLevelHooksTimeout`): el atajo respondía unas
+cuantas veces y después moría sin dejar rastro ni excepción.
 
-Python and [Flet](https://flet.dev), which renders through Flutter on
-the GPU — that's where the rounded corners, shadows and transitions
-come from. Plus pywin32 for the clipboard and window handling, and
-keyboard for the global shortcut.
+Con `RegisterHotKey` no hay hook, y además Windows avisa si otro programa
+ya tiene la combinación — cosa que la librería nunca reportaba.
 
-Notes on architecture and past decisions are in [CLAUDE.md](CLAUDE.md).
+</details>
 
-## License
+<details>
+<summary><b>Guardar es diferido</b></summary>
 
-[MIT](LICENSE)
+<br>
+
+La captura automática acumula en memoria y baja a disco cada 3 segundos.
+Antes cada copia reescribía el JSON entero: **7,8 ms y más de un megabyte
+por cada <kbd>Ctrl</kbd>+<kbd>C</kbd>**, y en el peor caso 16 MB.
+
+Ahora son 0,020 ms. Lo que haces a propósito —fijar, borrar, vaciar— sí
+se escribe al instante: diferir eso sería perderlo si el programa muere.
+
+</details>
+
+<details>
+<summary><b>El portapapeles solo se lee cuando cambia</b></summary>
+
+<br>
+
+Windows tiene un contador (`GetClipboardSequenceNumber`) que sube con
+cada copia. Leerlo cuesta una llamada; abrir el portapapeles cuesta
+muchísimo más.
+
+</details>
+
+<details>
+<summary><b>Un enlace se abre, no se pega</b></summary>
+
+<br>
+
+Si la entrada es solo una dirección web, el clic abre el navegador. Un
+párrafo que menciona una URL de paso no cuenta — ver `modelo.es_enlace()`,
+tiene pruebas.
+
+</details>
+
+## Estructura
+
+```
+main.py               arranque — llama a ft.run()
+pastepad/
+  config.py           constantes, límites y rutas     [sin flet]
+  idiomas.py          los textos en 4 idiomas         [sin flet]
+  registro.py         errores.log — el único que escribe
+  modelo.py           los datos y sus reglas          [sin flet]
+  busqueda.py         ranking con caché               [sin flet]
+  windows.py          portapapeles, foco, atajo global
+  estilo.py           colores, medidas y piezas
+  filas.py            las tarjetas de la lista
+  ventanas.py         los diálogos
+  app.py              coordina todo lo anterior
+prueba.py             19 pruebas — corren sin abrir ventana
+instalador/           instalar.bat, desinstalar.bat
+docs/
+  ESPECIFICACION-UI.md    la interfaz al detalle
+  FUNCIONES.md            cada función, tres líneas
+  maquetas/               las 20 maquetas SVG de referencia
+```
+
+Los cinco módulos marcados no importan ninguna librería gráfica. Por eso
+las pruebas corren sin abrir ventana, y por eso migrar de tkinter a Flet
+reutilizó el 40% del código sin tocarlo.
+
+## Por qué otro más
+
+[Ditto](https://github.com/sabrogden/Ditto) y
+[CopyQ](https://github.com/hluk/CopyQ) son excelentes y llevan años de
+trabajo detrás. Este existe porque mi día a día necesitaba dos cosas que
+ninguno da de serie: plantillas con huecos para notas que reescribo
+constantemente, y pegado con formato que sobreviva hasta Outlook.
+
+## Hecho con
+
+Python y [Flet](https://flet.dev), que dibuja a través de Flutter por
+GPU — de ahí las esquinas suaves, las sombras y las transiciones. Más
+pywin32 para el portapapeles, las ventanas y el atajo global.
+
+Notas de arquitectura en [CLAUDE.md](CLAUDE.md).
+
+<div align="center">
+<br>
+<sub>
+
+**[MIT](LICENSE)** · Hecho por [Jose Miguel Ortiz](https://github.com/Josemgu)
+
+</sub>
+</div>

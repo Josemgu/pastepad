@@ -11,6 +11,7 @@ nombre: Python no sabria cual de los dos importar.
 import flet as ft
 
 from pastepad import estilo as st
+from pastepad import idiomas as idi
 from pastepad import registro
 from pastepad import windows as win
 from pastepad.app import App
@@ -26,6 +27,7 @@ def arrancar(page: ft.Page):
     """
     try:
         almacen = Almacen()
+        idi.poner(almacen.pref("idioma", idi.IDIOMA_DEF))
         st.aplicar(almacen.pref("acento", "menta"),
                    almacen.pref("tema", st.TEMA_DEF))
         if almacen.pref("autoarranque", "si") == "si":

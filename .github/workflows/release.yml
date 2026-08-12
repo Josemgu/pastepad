@@ -23,35 +23,46 @@ jobs:
           python-version: '3.12'
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |
+          pip install -r requirements.txt
+          pip install pyinstaller
 
       - name: Run tests
         run: python prueba.py
 
-      # Flet trae su propio empaquetador y no usa PyInstaller: mete el
-      # motor de Flutter en el binario, que es lo que dibuja la interfaz.
+      # flet pack y no flet build: el segundo compila con el SDK de
+      # Flutter, mas de un giga de descarga en cada ejecucion del CI.
       - name: Build
         run: |
-          flet build windows --project pastepad --product pastepad `
-            --company "Jose Miguel Ortiz" --copyright "MIT License" `
-            --build-version 3.0.0
+          flet pack main.py --onedir --name pastepad `
+            --icon docs/pastepad.ico `
+            --product-name pastepad `
+            --file-description "pastepad - gestor de portapapeles" `
+            --product-version 3.0.0 --file-version 3.0.0 `
+            --company-name "Jose Miguel Ortiz" `
+            --copyright "MIT License" `
+            --distpath instalador/dist -y
 
-      - name: Checksum
+      # Se publica el zip entero y no el .exe suelto: el ejecutable
+      # necesita las dependencias que hay a su lado, y ademas asi el
+      # instalador viaja con el.
+      - name: Empaquetar y firmar el hash
         run: |
-          $exe = Get-ChildItem build\windows -Recurse -Filter pastepad.exe |
-                 Select-Object -First 1
-          if (-not $exe) { throw "No se genero pastepad.exe" }
+          $exe = "instalador\dist\pastepad\pastepad.exe"
+          if (-not (Test-Path $exe)) { throw "No se genero pastepad.exe" }
           New-Item -ItemType Directory -Force dist | Out-Null
-          Copy-Item $exe.FullName dist\pastepad.exe -Force
-          $h = (Get-FileHash dist\pastepad.exe -Algorithm SHA256).Hash
-          "$h  pastepad.exe" | Out-File -Encoding ascii dist\SHA256.txt
+          Compress-Archive -Force -DestinationPath dist\pastepad-3.0.0.zip `
+            -Path instalador\dist\pastepad, instalador\instalar.bat,
+                  instalador\desinstalar.bat, instalador\LEEME.txt
+          $h = (Get-FileHash dist\pastepad-3.0.0.zip -Algorithm SHA256).Hash
+          "$h  pastepad-3.0.0.zip" | Out-File -Encoding ascii dist\SHA256.txt
           Write-Host "SHA256: $h"
 
       - uses: actions/upload-artifact@v4
         with:
           name: pastepad
           path: |
-            dist/pastepad.exe
+            dist/pastepad-3.0.0.zip
             dist/SHA256.txt
 
       - name: Publish release
@@ -59,10 +70,11 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist/pastepad.exe
+            dist/pastepad-3.0.0.zip
             dist/SHA256.txt
           body: |
-            Descarga `pastepad.exe` y ejecutalo. No necesita instalacion.
+            Descarga el zip, descomprimelo y ejecuta `instalar.bat`.
+            No pide administrador.
 
             Windows Defender puede marcarlo la primera vez: es un falso
             positivo habitual con ejecutables recien compilados y sin
@@ -73,5 +85,5 @@ jobs:
             Verifica la descarga comparando el hash:
 
             ```powershell
-            Get-FileHash pastepad.exe -Algorithm SHA256
+            Get-FileHash pastepad-3.0.0.zip -Algorithm SHA256
             ```

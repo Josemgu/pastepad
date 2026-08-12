@@ -9,6 +9,7 @@ import flet as ft
 
 from . import config as cfg
 from . import estilo as st
+from . import idiomas as idi
 from . import modelo
 
 
@@ -41,7 +42,7 @@ def _resumen(dato, es_hist):
     """
     if es_hist:
         if dato.get("tipo") == "imagen":
-            return ("Imagen copiada", "captura", False,
+            return (idi.t("Imagen copiada"), idi.t("captura"), False,
                     ft.Icons.IMAGE_OUTLINED)
         texto = dato.get("texto", "")
         if modelo.es_enlace(texto):
@@ -166,28 +167,28 @@ class Fila(ft.Container):
 
         opciones = []
         if enlace:
-            opciones.append(opcion("Abrir en el navegador",
+            opciones.append(opcion(idi.t("Abrir en el navegador"),
                                    ft.Icons.OPEN_IN_NEW, "abrir"))
             opciones.append(ft.PopupMenuItem())
         opciones += [
-            opcion("Pegar", ft.Icons.CONTENT_PASTE, "pegar"),
-            opcion("Pegar sin formato", ft.Icons.FORMAT_CLEAR, "pegar_plano"),
-            opcion("Copiar", ft.Icons.COPY_ALL, "copiar"),
+            opcion(idi.t("Pegar"), ft.Icons.CONTENT_PASTE, "pegar"),
+            opcion(idi.t("Pegar sin formato"), ft.Icons.FORMAT_CLEAR, "pegar_plano"),
+            opcion(idi.t("Copiar"), ft.Icons.COPY_ALL, "copiar"),
             ft.PopupMenuItem(),
         ]
         if es_hist:
             opciones.append(opcion(
-                "Quitar de arriba" if fijada else "Fijar arriba",
+                idi.t("Quitar de arriba") if fijada else idi.t("Fijar arriba"),
                 ft.Icons.PUSH_PIN_OUTLINED, "fijar"))
             if self.dato.get("tipo") == "texto":
-                opciones.append(opcion("Editar y guardar...",
+                opciones.append(opcion(idi.t("Editar y guardar..."),
                                        ft.Icons.EDIT_OUTLINED, "editar"))
         else:
-            opciones.append(opcion("Editar...", ft.Icons.EDIT_OUTLINED,
+            opciones.append(opcion(idi.t("Editar..."), ft.Icons.EDIT_OUTLINED,
                                    "editar"))
         opciones += [
             ft.PopupMenuItem(),
-            _item("Borrar", ft.Icons.DELETE_OUTLINE,
+            _item(idi.t("Borrar"), ft.Icons.DELETE_OUTLINE,
                   lambda e: self.acciones("borrar", self.dato), True)]
 
         return ft.PopupMenuButton(

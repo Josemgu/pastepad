@@ -280,3 +280,25 @@ def campo(marcador, al_cambiar=None, al_enviar=None, valor="", lineas=1,
                                              vertical=8 if una else 12),
         multiline=not una, min_lines=lineas, max_lines=lineas,
         text_style=ft.TextStyle(font_family=cfg.FUENTE_ALT))
+
+
+def desplegable(valor, opciones, al_cambiar=None, visibles=4):
+    """Lista desplegable con el aspecto del tema.
+
+    menu_height limita el menu a `visibles` filas y deja el resto tras
+    scroll: con doce idiomas o doce atajos, un menu sin tope se sale de
+    la pantalla y las ultimas opciones no se alcanzan.
+    """
+    d = ft.Dropdown(
+        value=valor,
+        options=[ft.DropdownOption(o) for o in opciones],
+        menu_height=visibles * 44,
+        border_radius=R_CONTROL, filled=True, bgcolor=C["tarjeta"],
+        border_color=ft.Colors.TRANSPARENT,
+        focused_border_color=C["acento"], text_size=T_MENOR,
+        color=C["texto"],
+        content_padding=ft.Padding.symmetric(horizontal=12, vertical=10))
+    if al_cambiar:
+        # on_change no se acepta en el constructor de esta version.
+        d.on_change = al_cambiar
+    return d

@@ -9,6 +9,7 @@ import flet as ft
 
 from . import config as cfg
 from . import estilo as st
+from . import idiomas as idi
 from . import modelo
 
 
@@ -46,7 +47,7 @@ def cerrar(page, dialogo=None):
 
 def texto_nuevo(page, carpetas, al_guardar, snippet=None, inicial=""):
     """Crear o editar un texto guardado. Sin campos obligatorios."""
-    opciones = list(carpetas) or ["Mis textos"]
+    opciones = list(carpetas) or [idi.t("Mis textos")]
     elegida = ft.Dropdown(
         value=snippet["categoria"] if snippet else opciones[0],
         options=[ft.DropdownOption(c) for c in opciones],
@@ -57,13 +58,13 @@ def texto_nuevo(page, carpetas, al_guardar, snippet=None, inicial=""):
         content_padding=ft.Padding.symmetric(horizontal=12, vertical=10))
 
     valor = (modelo.texto_de(snippet["runs"]) if snippet else inicial)
-    caja = st.campo("Escribe o pega aqui", valor=valor, lineas=10)
+    caja = st.campo(idi.t("Escribe o pega aqui"), valor=valor, lineas=10)
 
     # Un marcador no es otro tipo de dato: es un guardado cuyo texto es
     # solo una URL. Lo unico que cambia es el formulario, y por eso el
     # titulo si se pide a mano: "https://..." no sirve de nombre.
     enlace_url = st.campo("https://ejemplo.com/pagina")
-    enlace_titulo = st.campo("Como quieres llamarlo")
+    enlace_titulo = st.campo(idi.t("Como quieres llamarlo"))
     es_marcador = modelo.es_enlace(valor)
     if es_marcador:
         enlace_url.value = valor.strip()
@@ -72,17 +73,17 @@ def texto_nuevo(page, carpetas, al_guardar, snippet=None, inicial=""):
     modo = {"enlace": es_marcador}
     zona_texto = ft.Column([caja], tight=True, visible=not es_marcador)
     zona_enlace = ft.Column([
-        st.texto("Direccion", st.T_MINI, st.C["medio"]), enlace_url,
-        st.texto("Titulo", st.T_MINI, st.C["medio"]), enlace_titulo,
+        st.texto(idi.t("Direccion"), st.T_MINI, st.C["medio"]), enlace_url,
+        st.texto(idi.t("Titulo"), st.T_MINI, st.C["medio"]), enlace_titulo,
     ], spacing=st.E1, tight=True, visible=es_marcador)
 
     tipos = ft.Row(spacing=st.E1)
 
     def pintar_tipos():
         tipos.controls = [
-            st.pildora("Texto", lambda e: poner_tipo(False),
+            st.pildora(idi.t("Texto"), lambda e: poner_tipo(False),
                        not modo["enlace"]),
-            st.pildora("Enlace", lambda e: poner_tipo(True),
+            st.pildora(idi.t("Enlace"), lambda e: poner_tipo(True),
                        modo["enlace"]),
         ]
 
@@ -96,7 +97,7 @@ def texto_nuevo(page, carpetas, al_guardar, snippet=None, inicial=""):
     pintar_tipos()
 
     def guardar(e):
-        carpeta = elegida.value or "Mis textos"
+        carpeta = elegida.value or idi.t("Mis textos")
         if modo["enlace"]:
             url = (enlace_url.value or "").strip()
             if url:
@@ -117,17 +118,17 @@ def texto_nuevo(page, carpetas, al_guardar, snippet=None, inicial=""):
 
     cuerpo = ft.Column([
         tipos,
-        ft.Row([st.texto("Guardar en", st.T_MENOR, st.C["medio"]), elegida],
+        ft.Row([st.texto(idi.t("Guardar en"), st.T_MENOR, st.C["medio"]), elegida],
                spacing=st.E3),
         zona_texto,
         zona_enlace,
-        st.texto("Escribe [[algo]] y el programa te lo preguntara al pegar",
+        st.texto(idi.t("Escribe [[algo]] y el programa te lo preguntara al pegar"),
                  st.T_MINI, st.C["tenue"]),
     ], spacing=st.E3, tight=True)
 
-    d = _marco(page, "Nuevo texto" if not snippet else "Editar texto", cuerpo,
-               [st.boton("Cancelar", lambda e: cerrar(page)),
-                st.boton("Guardar", guardar, "acento")])
+    d = _marco(page, idi.t("Nuevo texto") if not snippet else idi.t("Editar texto"), cuerpo,
+               [st.boton(idi.t("Cancelar"), lambda e: cerrar(page)),
+                st.boton(idi.t("Guardar"), guardar, "acento")])
     abrir(page, d)
     return d
 
@@ -147,8 +148,8 @@ def una_linea(page, titulo, etiqueta, al_aceptar, valor=""):
     cuerpo = ft.Column([st.texto(etiqueta, st.T_MINI, st.C["medio"]), caja],
                        spacing=st.E1, tight=True)
     d = _marco(page, titulo, cuerpo,
-               [st.boton("Cancelar", lambda e: cerrar(page)),
-                st.boton("Aceptar", aceptar, "acento")], 360)
+               [st.boton(idi.t("Cancelar"), lambda e: cerrar(page)),
+                st.boton(idi.t("Aceptar"), aceptar, "acento")], 360)
     abrir(page, d)
     return d
 
@@ -166,28 +167,28 @@ def campos(page, nombres, al_aceptar):
         [ft.Column([st.texto(n, st.T_MINI, st.C["medio"]), cajas[n]],
                    spacing=st.E1, tight=True) for n in nombres],
         spacing=st.E3, tight=True, scroll=ft.ScrollMode.AUTO)
-    d = _marco(page, "Completar antes de pegar", cuerpo,
-               [st.boton("Cancelar", lambda e: cerrar(page)),
-                st.boton("Pegar", aceptar, "acento")], 380)
+    d = _marco(page, idi.t("Completar antes de pegar"), cuerpo,
+               [st.boton(idi.t("Cancelar"), lambda e: cerrar(page)),
+                st.boton(idi.t("Pegar"), aceptar, "acento")], 380)
     abrir(page, d)
     return d
 
 
 def lista_masiva(page, carpeta, al_aceptar):
     """Pega varias cosas: una nota por linea, o todo junto."""
-    caja = st.campo("Pega aqui tu lista", lineas=9)
+    caja = st.campo(idi.t("Pega aqui tu lista"), lineas=9)
     modo = ft.RadioGroup(
         value="separado",
         content=ft.Column([
-            ft.Radio(value="separado", label="Una nota por cada linea",
+            ft.Radio(value="separado", label=idi.t("Una nota por cada linea"),
                      fill_color=st.C["acento"], label_style=ft.TextStyle(
                          size=st.T_MENOR, color=st.C["texto"])),
-            ft.Radio(value="junto", label="Todo junto en una sola nota",
+            ft.Radio(value="junto", label=idi.t("Todo junto en una sola nota"),
                      fill_color=st.C["acento"], label_style=ft.TextStyle(
                          size=st.T_MENOR, color=st.C["texto"])),
         ], spacing=0, tight=True))
     limpiar = ft.Checkbox(
-        label="Quitar numeracion y vinetas", value=True,
+        label=idi.t("Quitar numeracion y vinetas"), value=True,
         fill_color=st.C["acento"],
         label_style=ft.TextStyle(size=st.T_MENOR, color=st.C["medio"]))
 
@@ -237,27 +238,50 @@ def lista_masiva(page, carpeta, al_aceptar):
     cuerpo = ft.Column([caja, modo, limpiar], spacing=st.E2, tight=True)
     d = _marco(page, "Agregar a " + carpeta, cuerpo,
                [contador, ft.Container(expand=True),
-                st.boton("Cancelar", lambda e: cerrar(page)),
-                st.boton("Agregar", aceptar, "acento")], 480)
+                st.boton(idi.t("Cancelar"), lambda e: cerrar(page)),
+                st.boton(idi.t("Agregar"), aceptar, "acento")], 480)
     abrir(page, d)
     return d
 
 
-NOMBRES_TEMA = {"auto": "Segun Windows", "oscuro": "Oscuro",
-                "medianoche": "Medianoche", "grafito": "Grafito",
-                "bosque": "Bosque", "claro": "Claro", "papel": "Papel",
-                "niebla": "Niebla", "arena": "Arena", "lila": "Lila",
-                "salvia": "Salvia", "rubor": "Rubor"}
+# La clave es el identificador del tema; la etiqueta se traduce al
+# pedirla y no aqui: un diccionario a nivel de modulo se evaluaria una
+# sola vez al importar, y al cambiar de idioma seguiria en el viejo.
+CLAVES_TEMA = ("auto", "oscuro", "medianoche", "grafito", "bosque",
+               "claro", "papel", "niebla", "arena", "lila", "salvia",
+               "rubor")
 
 
-def apariencia(page, acento, atajo, al_aplicar, tema="auto"):
+def nombre_tema(codigo):
+    return idi.t({"auto": "Segun Windows", "oscuro": "Oscuro",
+                  "medianoche": "Medianoche", "grafito": "Grafito",
+                  "bosque": "Bosque", "claro": "Claro", "papel": "Papel",
+                  "niebla": "Niebla", "arena": "Arena", "lila": "Lila",
+                  "salvia": "Salvia", "rubor": "Rubor"}.get(codigo, codigo))
+
+
+def apariencia(page, acento, atajo, al_aplicar, tema="auto",
+               idioma="es"):
     """Fondo, color de acento y atajo.
 
     Ya no hay selector de tamano: la ventana se estira arrastrando sus
     bordes, como cualquier otra, y el tamano se recuerda solo. Tampoco
     hay estilo de carpetas: el modo "fichas" se retiro por no usarse.
     """
-    elegido = {"acento": acento, "tema": tema}
+    elegido = {"acento": acento, "tema": tema, "idioma": idioma}
+
+    # Desplegable y no pastillas: cuatro idiomas hoy, y la lista solo va
+    # a crecer. Las pastillas dentro de una fila con wrap no declaran su
+    # ancho y Flutter dejaba un bloque gris en su sitio.
+    _por_nombre = {v: k for k, v in idi.NOMBRES.items()}
+    lenguas = st.desplegable(idi.NOMBRES.get(idioma, idi.NOMBRES["es"]),
+                             list(idi.NOMBRES.values()))
+
+    def poner_idioma(e):
+        elegido["idioma"] = _por_nombre.get(lenguas.value, "es")
+
+    lenguas.on_change = poner_idioma
+
 
     temas = ft.Row(spacing=st.E2, run_spacing=st.E2, wrap=True)
 
@@ -276,7 +300,7 @@ def apariencia(page, acento, atajo, al_aplicar, tema="auto"):
             izq, der = paleta["fondo"], paleta["tarjeta"]
         return ft.Container(
             width=44, height=36, border_radius=10, ink=True,
-            tooltip=NOMBRES_TEMA[nombre],
+            tooltip=nombre_tema(nombre),
             on_click=lambda e, t=nombre: poner_tema(t),
             border=ft.Border.all(2, st.C["acento"] if puesto
                                  else st.C["borde"]),
@@ -323,14 +347,9 @@ def apariencia(page, acento, atajo, al_aplicar, tema="auto"):
         pintar_bolas()
         page.update()
 
-    combinaciones = ft.Dropdown(
-        value=cfg.ATAJOS.get(atajo, cfg.ATAJOS[cfg.ATAJO_DEF]),
-        options=[ft.DropdownOption(v) for v in cfg.ATAJOS.values()],
-        border_radius=st.R_CONTROL, filled=True, bgcolor=st.C["tarjeta"],
-        border_color=ft.Colors.TRANSPARENT,
-        focused_border_color=st.C["acento"], text_size=st.T_MENOR,
-        color=st.C["texto"],
-        content_padding=ft.Padding.symmetric(horizontal=12, vertical=10))
+    combinaciones = st.desplegable(
+        cfg.ATAJOS.get(atajo, cfg.ATAJOS[cfg.ATAJO_DEF]),
+        list(cfg.ATAJOS.values()))
 
     pintar_temas()
     pintar_bolas()
@@ -342,7 +361,8 @@ def apariencia(page, acento, atajo, al_aplicar, tema="auto"):
                 atajo_nuevo = clave
                 break
         cerrar(page)
-        al_aplicar(elegido["acento"], atajo_nuevo, elegido["tema"])
+        al_aplicar(elegido["acento"], atajo_nuevo,
+                   elegido["tema"], elegido["idioma"])
 
     def seccion(titulo, control):
         return ft.Column([st.texto(titulo, st.T_MINI, st.C["medio"]), control],
@@ -351,15 +371,16 @@ def apariencia(page, acento, atajo, al_aplicar, tema="auto"):
     # Con doce temas y dieciocho colores el dialogo pasa de alto: sin
     # scroll, el atajo quedaba fuera de la ventana y no se alcanzaba.
     cuerpo = ft.Column([
-        seccion("Fondo", temas),
-        seccion("Color de acento", bolas),
-        seccion("Atajo para abrir", combinaciones),
+        seccion(idi.t("Idioma"), lenguas),
+        seccion(idi.t("Fondo"), temas),
+        seccion(idi.t("Color de acento"), bolas),
+        seccion(idi.t("Atajo para abrir"), combinaciones),
     ], spacing=st.E4, tight=True, scroll=ft.ScrollMode.AUTO,
         height=min(420, max(260, (page.window.height or 560) - 200)))
 
-    d = _marco(page, "Apariencia", cuerpo,
-               [st.boton("Cancelar", lambda e: cerrar(page)),
-                st.boton("Aplicar", aplicar, "acento")], 400)
+    d = _marco(page, idi.t("Apariencia"), cuerpo,
+               [st.boton(idi.t("Cancelar"), lambda e: cerrar(page)),
+                st.boton(idi.t("Aplicar"), aplicar, "acento")], 400)
     abrir(page, d)
     return d
 
@@ -392,7 +413,7 @@ def editar_carpeta(page, carpeta, elementos, al_aplicar):
                              else ft.Icons.DELETE_OUTLINE,
                              lambda e, x=elemento: alternar(x), 16,
                              st.C["medio"] if fuera else st.ROJO,
-                             "Recuperar" if fuera else "Quitar", False, 30),
+                             idi.t("Recuperar") if fuera else idi.t("Quitar"), False, 30),
                 ], spacing=st.E2,
                     vertical_alignment=ft.CrossAxisAlignment.CENTER),
                 bgcolor=st.C["tarjeta"], border_radius=st.R_CONTROL,
@@ -400,7 +421,7 @@ def editar_carpeta(page, carpeta, elementos, al_aplicar):
                 height=38, opacity=0.45 if fuera else 1.0))
         if not elementos:
             filas_ui.controls.append(
-                st.texto("La carpeta esta vacia", st.T_MINI, st.C["tenue"]))
+                st.texto(idi.t("La carpeta esta vacia"), st.T_MINI, st.C["tenue"]))
 
     def alternar(elemento):
         # Marcar y desmarcar en vez de borrar al momento: nada se pierde
@@ -418,15 +439,15 @@ def editar_carpeta(page, carpeta, elementos, al_aplicar):
         al_aplicar(nuevo, fuera)
 
     cuerpo = ft.Column([
-        st.texto("Nombre de la carpeta", st.T_MINI, st.C["medio"]),
+        st.texto(idi.t("Nombre de la carpeta"), st.T_MINI, st.C["medio"]),
         nombre,
-        st.texto("Contenido", st.T_MINI, st.C["medio"]),
+        st.texto(idi.t("Contenido"), st.T_MINI, st.C["medio"]),
         filas_ui,
     ], spacing=st.E2, tight=True)
 
-    d = _marco(page, "Editar carpeta", cuerpo,
-               [st.boton("Cancelar", lambda e: cerrar(page)),
-                st.boton("Guardar", guardar, "acento")], 400)
+    d = _marco(page, idi.t("Editar carpeta"), cuerpo,
+               [st.boton(idi.t("Cancelar"), lambda e: cerrar(page)),
+                st.boton(idi.t("Guardar"), guardar, "acento")], 400)
     abrir(page, d)
     return d
 
@@ -436,11 +457,11 @@ def confirmar(page, mensaje, al_confirmar, peligro=True):
         cerrar(page)
         al_confirmar()
 
-    d = _marco(page, "Confirmar",
+    d = _marco(page, idi.t("Confirmar"),
                ft.Column([st.texto(mensaje, st.T_CUERPO, st.C["texto"],
                                    lineas=4)], tight=True),
-               [st.boton("Cancelar", lambda e: cerrar(page)),
-                st.boton("Si, borrar" if peligro else "Aceptar", si,
+               [st.boton(idi.t("Cancelar"), lambda e: cerrar(page)),
+                st.boton(idi.t("Si, borrar") if peligro else idi.t("Aceptar"), si,
                          "peligro" if peligro else "acento")], 360)
     abrir(page, d)
     return d

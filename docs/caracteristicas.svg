@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 200" width="880" height="200" role="img" aria-label="Las seis cosas que hace pastepad">
+<title>Caracteristicas de pastepad</title>
+<desc>Seis tarjetas: historial, plantillas, marcadores, busqueda, texto con formato y privacidad.</desc>
+
+<defs>
+  <style>
+    .t  { font-family: "Segoe UI", Inter, system-ui, sans-serif; }
+    .h  { font-size: 13px; font-weight: 600; fill: #F4F4F5; }
+    .d  { font-size: 11px; fill: #9C9CA6; }
+    .c  { fill: #141417; stroke: #242429; }
+  </style>
+</defs>
+
+<rect width="880" height="200" fill="#0B0B0D" rx="20"/>
+
+<!-- 1. historial -->
+<g transform="translate(24,24)">
+  <rect class="c" width="272" height="72" rx="14"/>
+  <rect x="16" y="20" width="32" height="32" rx="10" fill="#052E23"/>
+  <path d="M25 30h14M25 36h14M25 42h9" stroke="#2DD4A7" stroke-width="2.4" stroke-linecap="round"/>
+  <text class="t h" x="60" y="34">80 entradas</text>
+  <text class="t d" x="60" y="50">Windows guarda 25 y las pierde al reiniciar</text>
+</g>
+
+<!-- 2. plantillas -->
+<g transform="translate(304,24)">
+  <rect class="c" width="272" height="72" rx="14"/>
+  <rect x="16" y="20" width="32" height="32" rx="10" fill="#3A2606"/>
+  <path d="M26 29h12M26 35h12M26 41h6" stroke="#F5A524" stroke-width="2.4" stroke-linecap="round"/>
+  <circle cx="41" cy="41" r="3" fill="#F5A524"/>
+  <text class="t h" x="60" y="34">Plantillas con huecos</text>
+  <text class="t d" x="60" y="50">Escribe [[algo]] y te lo pregunta al pegar</text>
+</g>
+
+<!-- 3. marcadores -->
+<g transform="translate(584,24)">
+  <rect class="c" width="272" height="72" rx="14"/>
+  <rect x="16" y="20" width="32" height="32" rx="10" fill="#052F42"/>
+  <path d="M27 27h10a2 2 0 0 1 2 2v16l-7-5-7 5V29a2 2 0 0 1 2-2z" fill="none" stroke="#38BDF8" stroke-width="2.2" stroke-linejoin="round"/>
+  <text class="t h" x="60" y="34">Marcadores aparte</text>
+  <text class="t d" x="60" y="50">Los enlaces en su propio grupo plegable</text>
+</g>
+
+<!-- 4. busqueda -->
+<g transform="translate(24,104)">
+  <rect class="c" width="272" height="72" rx="14"/>
+  <rect x="16" y="20" width="32" height="32" rx="10" fill="#1E1046"/>
+  <circle cx="30" cy="34" r="7" fill="none" stroke="#9B7BF7" stroke-width="2.2"/>
+  <path d="M35 39l6 6" stroke="#9B7BF7" stroke-width="2.4" stroke-linecap="round"/>
+  <text class="t h" x="60" y="34">Busqueda que ordena</text>
+  <text class="t d" x="60" y="50">Sin tildes, en cualquier orden, por relevancia</text>
+</g>
+
+<!-- 5. formato -->
+<g transform="translate(304,104)">
+  <rect class="c" width="272" height="72" rx="14"/>
+  <rect x="16" y="20" width="32" height="32" rx="10" fill="#3F0A16"/>
+  <text x="32" y="44" text-anchor="middle" font-family="Georgia, serif" font-size="20" font-weight="700" fill="#FB7185">B</text>
+  <text class="t h" x="60" y="34">Texto con formato</text>
+  <text class="t d" x="60" y="50">Negrita y color hasta en Word y Outlook</text>
+</g>
+
+<!-- 6. privacidad -->
+<g transform="translate(584,104)">
+  <rect class="c" width="272" height="72" rx="14"/>
+  <rect x="16" y="20" width="32" height="32" rx="10" fill="#04291C"/>
+  <path d="M32 25l9 4v7c0 6-4 10-9 12-5-2-9-6-9-12v-7z" fill="none" stroke="#34D399" stroke-width="2.2" stroke-linejoin="round"/>
+  <path d="M28 35l3 3 5-6" stroke="#34D399" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <text class="t h" x="60" y="34">Respeta tus contrasenias</text>
+  <text class="t d" x="60" y="50">Descarta lo que marcan KeePass y Bitwarden</text>
+</g>
+</svg>

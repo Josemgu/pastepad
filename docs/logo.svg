@@ -1,9 +1,30 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="pastepad logo">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="pastepad">
 <title>pastepad</title>
-<desc>A blue rounded square holding three stacked rows; the top row is highlighted, standing for the entry you pick from the list.</desc>
-<rect width="128" height="128" rx="28" fill="#3B82F6"/>
-<rect x="26" y="28" width="76" height="23" rx="8" fill="#FFFFFF"/>
-<rect x="36" y="36" width="38" height="7" rx="3.5" fill="#3B82F6"/>
-<rect x="26" y="59" width="76" height="17" rx="7" fill="#FFFFFF" opacity="0.45"/>
-<rect x="26" y="82" width="76" height="17" rx="7" fill="#FFFFFF" opacity="0.26"/>
+<desc>Portapapeles en verde menta con tres filas apiladas; la de arriba resaltada, que es la entrada elegida de la lista.</desc>
+
+<defs>
+  <linearGradient id="menta" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#34E0B4"/>
+    <stop offset="60%" stop-color="#2DD4A7"/>
+    <stop offset="100%" stop-color="#17A883"/>
+  </linearGradient>
+</defs>
+
+<rect width="128" height="128" rx="30" fill="url(#menta)"/>
+
+<!-- pinza del portapapeles -->
+<rect x="50" y="13" width="28" height="15" rx="7" fill="#052E23"/>
+
+<!-- la fila elegida, con su filo a la izquierda -->
+<rect x="26" y="36" width="76" height="26" rx="9" fill="#FFFFFF"/>
+<rect x="33" y="43" width="4" height="12" rx="2" fill="#2DD4A7"/>
+<rect x="43" y="44" width="40" height="5" rx="2.5" fill="#0B3B2E"/>
+<rect x="43" y="53" width="24" height="4" rx="2" fill="#2DD4A7"/>
+
+<!-- las otras dos, cada vez mas apagadas -->
+<rect x="26" y="68" width="76" height="20" rx="8" fill="#FFFFFF" opacity="0.42"/>
+<rect x="35" y="76" width="42" height="4" rx="2" fill="#052E23" opacity="0.55"/>
+
+<rect x="26" y="94" width="76" height="20" rx="8" fill="#FFFFFF" opacity="0.22"/>
+<rect x="35" y="102" width="30" height="4" rx="2" fill="#052E23" opacity="0.45"/>
 </svg>
