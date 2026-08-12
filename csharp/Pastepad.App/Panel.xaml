@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Window
+    x:Class="Pastepad.App.Panel"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:Pastepad.App"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="pastepad"
+    mc:Ignorable="d">
+
+    <!--
+        Mica es el material de Fluent Design que usa el propio Win+V. En
+        Windows 10, con la transparencia desactivada o en ahorro de
+        bateria, Windows lo sustituye solo por un color plano.
+    -->
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
+
+    <Grid Padding="12" RowSpacing="10">
+        <Grid.KeyboardAccelerators>
+            <!--  Escape esconde el panel, como hace el propio Win+V.  -->
+            <KeyboardAccelerator Invoked="Escape_Invoked" Key="Escape" />
+        </Grid.KeyboardAccelerators>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBox
+            x:Name="Buscador"
+            Grid.Row="0"
+            KeyDown="Buscador_KeyDown"
+            PlaceholderText="Buscar"
+            TextChanged="Buscador_TextChanged" />
+
+        <ListView
+            x:Name="Lista"
+            Grid.Row="1"
+            IsItemClickEnabled="True"
+            ItemClick="Lista_ItemClick"
+            KeyDown="Lista_KeyDown"
+            SelectionMode="Single">
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="local:Fila">
+                    <Grid
+                        Padding="4,8"
+                        ColumnSpacing="10"
+                        RightTapped="Fila_RightTapped">
+                        <Grid.ContextFlyout>
+                            <MenuFlyout>
+                                <MenuFlyoutItem Click="Fijar_Click" Text="Fijar o soltar" />
+                                <MenuFlyoutItem Click="Borrar_Click" Text="Borrar" />
+                            </MenuFlyout>
+                        </Grid.ContextFlyout>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <FontIcon
+                            Grid.Column="0"
+                            FontSize="14"
+                            Glyph="{x:Bind Icono}"
+                            Opacity="0.7" />
+
+                        <TextBlock
+                            Grid.Column="1"
+                            MaxLines="2"
+                            Text="{x:Bind Resumen}"
+                            TextTrimming="CharacterEllipsis"
+                            TextWrapping="Wrap" />
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
+        <TextBlock
+            x:Name="Aviso"
+            Grid.Row="2"
+            Foreground="{ThemeResource SystemFillColorCautionBrush}"
+            Style="{StaticResource CaptionTextBlockStyle}"
+            TextWrapping="Wrap"
+            Visibility="Collapsed" />
+    </Grid>
+</Window>

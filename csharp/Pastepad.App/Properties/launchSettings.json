@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Pastepad.App (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "Pastepad.App (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
