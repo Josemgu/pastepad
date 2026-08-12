@@ -1,86 +1,87 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 260" width="880" height="260" role="img" aria-label="pastepad - gestor de portapapeles para Windows">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 300" width="900" height="300" role="img" aria-label="pastepad — everything you copy, one shortcut away">
 <title>pastepad</title>
-<desc>Banner: el nombre, la frase corta y una miniatura del panel con dos filas.</desc>
+<desc>Banner: el nombre, la promesa en una linea, las teclas del atajo y una vista del panel con dos entradas.</desc>
 
 <defs>
-  <linearGradient id="fondo" x1="0" y1="0" x2="1" y2="1">
-    <stop offset="0%" stop-color="#101014"/>
-    <stop offset="55%" stop-color="#0B0B0D"/>
-    <stop offset="100%" stop-color="#07120F"/>
+  <linearGradient id="lienzo" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%"   stop-color="#F4FBF8"/>
+    <stop offset="55%"  stop-color="#EAF6F1"/>
+    <stop offset="100%" stop-color="#DDF0E7"/>
   </linearGradient>
-  <linearGradient id="menta" x1="0" y1="0" x2="1" y2="0">
-    <stop offset="0%" stop-color="#2DD4A7"/>
-    <stop offset="100%" stop-color="#22B58D"/>
+  <linearGradient id="menta" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%"   stop-color="#34E0B4"/>
+    <stop offset="100%" stop-color="#17A883"/>
   </linearGradient>
-  <linearGradient id="brillo" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0%" stop-color="#2DD4A7" stop-opacity="0.16"/>
-    <stop offset="100%" stop-color="#2DD4A7" stop-opacity="0"/>
-  </linearGradient>
-  <clipPath id="marco"><rect x="0" y="0" width="880" height="260" rx="22"/></clipPath>
+  <filter id="flota" x="-30%" y="-30%" width="160%" height="160%">
+    <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#0B3B2E" flood-opacity="0.16"/>
+  </filter>
+  <clipPath id="marco"><rect width="900" height="300" rx="24"/></clipPath>
 </defs>
 
 <g clip-path="url(#marco)">
-  <rect width="880" height="260" fill="url(#fondo)"/>
-  <circle cx="700" cy="20" r="190" fill="url(#brillo)"/>
+  <rect width="900" height="300" fill="url(#lienzo)"/>
 
-  <!-- rejilla tenue, del grid de 4px de la interfaz -->
-  <g stroke="#1B1B1F" stroke-width="1" opacity="0.55">
-    <path d="M0 64h880M0 128h880M0 192h880"/>
-    <path d="M560 0v260M624 0v260M688 0v260M752 0v260M816 0v260"/>
+  <!-- burbujas suaves de fondo -->
+  <circle cx="806" cy="-30" r="150" fill="#2DD4A7" opacity="0.10"/>
+  <circle cx="70"  cy="290" r="110" fill="#2DD4A7" opacity="0.08"/>
+  <circle cx="640" cy="270" r="60"  fill="#F5A524" opacity="0.10"/>
+
+  <!-- logo -->
+  <g transform="translate(56,52)">
+    <rect width="60" height="60" rx="18" fill="url(#menta)"/>
+    <rect x="23" y="7" width="14" height="8" rx="4" fill="#052E23"/>
+    <rect x="13" y="19" width="34" height="13" rx="5" fill="#FFFFFF"/>
+    <rect x="17" y="23" width="3" height="5" rx="1.5" fill="#2DD4A7"/>
+    <rect x="24" y="24" width="17" height="3" rx="1.5" fill="#0B3B2E"/>
+    <rect x="13" y="36" width="34" height="9" rx="4" fill="#FFFFFF" opacity="0.55"/>
+    <rect x="13" y="49" width="34" height="4" rx="2" fill="#FFFFFF" opacity="0.3"/>
   </g>
 
-  <!-- marca -->
-  <g transform="translate(56,58)">
-    <rect x="0" y="0" width="52" height="52" rx="15" fill="url(#menta)"/>
-    <rect x="13" y="12" width="21" height="27" rx="5" fill="none" stroke="#052E23" stroke-width="2.6"/>
-    <rect x="20" y="7" width="12" height="7" rx="3" fill="#052E23"/>
-    <path d="M24 24h13M24 31h9" stroke="#052E23" stroke-width="2.6" stroke-linecap="round"/>
+  <text x="132" y="86" font-family="Segoe UI, Inter, system-ui, sans-serif"
+        font-size="50" font-weight="700" fill="#0B3B2E" letter-spacing="-1.5">pastepad</text>
+
+  <text x="56" y="150" font-family="Segoe UI, Inter, system-ui, sans-serif"
+        font-size="19" font-weight="500" fill="#2A4F44">Everything you copy, one shortcut away.</text>
+  <text x="56" y="178" font-family="Segoe UI, Inter, system-ui, sans-serif"
+        font-size="14" font-weight="400" fill="#5C7A6D">Windows forgets 25 clips on restart. This one keeps 80 — and your own folders forever.</text>
+
+  <!-- las teclas -->
+  <g transform="translate(56,206)" font-family="Segoe UI, Inter, system-ui, sans-serif">
+    <rect width="52" height="34" rx="9" fill="#FFFFFF" stroke="#C9E3D8"/>
+    <text x="26" y="22" font-size="12" font-weight="600" fill="#2A4F44" text-anchor="middle">Ctrl</text>
+    <text x="60" y="22" font-size="14" fill="#8AA99B">+</text>
+    <rect x="74" width="58" height="34" rx="9" fill="#FFFFFF" stroke="#C9E3D8"/>
+    <text x="103" y="22" font-size="12" font-weight="600" fill="#2A4F44" text-anchor="middle">Shift</text>
+    <text x="142" y="22" font-size="14" fill="#8AA99B">+</text>
+    <rect x="156" width="40" height="34" rx="9" fill="#FFFFFF" stroke="#C9E3D8"/>
+    <text x="176" y="22" font-size="12" font-weight="600" fill="#2A4F44" text-anchor="middle">V</text>
+    <text x="212" y="22" font-size="13" fill="#5C7A6D">anywhere you type</text>
   </g>
 
-  <text x="128" y="86" font-family="Segoe UI, Inter, system-ui, sans-serif"
-        font-size="46" font-weight="600" fill="#F4F4F5" letter-spacing="-1">pastepad</text>
-  <text x="128" y="118" font-family="Segoe UI, Inter, system-ui, sans-serif"
-        font-size="16" font-weight="400" fill="#9C9CA6">Gestor de portapapeles para Windows</text>
+  <!-- el panel, flotando -->
+  <g transform="translate(600,44)" filter="url(#flota)">
+    <rect width="256" height="212" rx="20" fill="#0B0B0D"/>
 
-  <text x="56" y="168" font-family="Segoe UI, Inter, system-ui, sans-serif"
-        font-size="14" fill="#6B6B75">Guarda lo que copias. Lo pega donde estaba el cursor.</text>
+    <rect x="16" y="18" width="224" height="30" rx="10" fill="#1B1B1F"/>
+    <circle cx="34" cy="33" r="5.5" fill="none" stroke="#6B6B75" stroke-width="1.7"/>
+    <path d="M38 37l5 5" stroke="#6B6B75" stroke-width="1.7" stroke-linecap="round"/>
+    <text x="52" y="37" font-family="Segoe UI, sans-serif" font-size="11" fill="#6B6B75">Search everything</text>
 
-  <!-- pastillas de caracteristicas -->
-  <g font-family="Segoe UI, Inter, system-ui, sans-serif" font-size="12" font-weight="500">
-    <rect x="56"  y="190" width="104" height="28" rx="14" fill="#1B1B1F" stroke="#242429"/>
-    <text x="108" y="208" fill="#9C9CA6" text-anchor="middle">80 entradas</text>
-    <rect x="168" y="190" width="112" height="28" rx="14" fill="#1B1B1F" stroke="#242429"/>
-    <text x="224" y="208" fill="#9C9CA6" text-anchor="middle">Plantillas</text>
-    <rect x="288" y="190" width="104" height="28" rx="14" fill="#1B1B1F" stroke="#242429"/>
-    <text x="340" y="208" fill="#9C9CA6" text-anchor="middle">Marcadores</text>
-    <rect x="400" y="190" width="116" height="28" rx="14" fill="#052E23" stroke="#2DD4A7"/>
-    <text x="458" y="208" fill="#2DD4A7" text-anchor="middle">Ctrl+Shift+V</text>
-  </g>
+    <rect x="16" y="56" width="108" height="24" rx="12" fill="url(#menta)"/>
+    <text x="70" y="72" font-family="Segoe UI, sans-serif" font-size="11" font-weight="600" fill="#052E23" text-anchor="middle">Recent</text>
+    <rect x="132" y="56" width="108" height="24" rx="12" fill="#1B1B1F"/>
+    <text x="186" y="72" font-family="Segoe UI, sans-serif" font-size="11" fill="#9C9CA6" text-anchor="middle">Saved</text>
 
-  <!-- miniatura del panel -->
-  <g transform="translate(600,42)">
-    <rect x="0" y="0" width="232" height="186" rx="18" fill="#0B0B0D" stroke="#242429"/>
-    <rect x="14" y="16" width="204" height="26" rx="9" fill="#141417"/>
-    <circle cx="30" cy="29" r="5" fill="none" stroke="#6B6B75" stroke-width="1.6"/>
-    <path d="M34 33l4 4" stroke="#6B6B75" stroke-width="1.6" stroke-linecap="round"/>
-    <text x="46" y="33" font-family="Segoe UI, sans-serif" font-size="10" fill="#6B6B75">Buscar en todo</text>
+    <rect x="16" y="90" width="224" height="40" rx="13" fill="url(#menta)"/>
+    <rect x="25" y="100" width="3" height="20" rx="1.5" fill="#FFFFFF"/>
+    <text x="38" y="108" font-family="Segoe UI, sans-serif" font-size="11" font-weight="600" fill="#052E23">Monthly invoice report</text>
+    <text x="38" y="122" font-family="Segoe UI, sans-serif" font-size="9" fill="#052E23" opacity="0.75">30 characters</text>
 
-    <rect x="14" y="50" width="98" height="20" rx="10" fill="url(#menta)"/>
-    <text x="63" y="64" font-family="Segoe UI, sans-serif" font-size="10" font-weight="500" fill="#052E23" text-anchor="middle">Reciente</text>
-    <rect x="118" y="50" width="100" height="20" rx="10" fill="#1B1B1F"/>
-    <text x="168" y="64" font-family="Segoe UI, sans-serif" font-size="10" fill="#9C9CA6" text-anchor="middle">Guardados</text>
+    <rect x="16" y="136" width="224" height="40" rx="13" fill="#1B1B1F"/>
+    <text x="26" y="154" font-family="Segoe UI, sans-serif" font-size="11" fill="#F4F4F5">Hi [[name]], about [[topic]]</text>
+    <text x="26" y="168" font-family="Segoe UI, sans-serif" font-size="9" fill="#6B6B75">fill-in template</text>
 
-    <rect x="14" y="80" width="204" height="34" rx="11" fill="url(#menta)"/>
-    <rect x="22" y="89" width="3" height="16" rx="1.5" fill="#FFFFFF"/>
-    <text x="34" y="97" font-family="Segoe UI, sans-serif" font-size="10" font-weight="500" fill="#052E23">Reporte mensual</text>
-    <text x="34" y="109" font-family="Segoe UI, sans-serif" font-size="8" fill="#052E23" opacity="0.75">29 caracteres</text>
-
-    <rect x="14" y="120" width="204" height="34" rx="11" fill="#1B1B1F"/>
-    <text x="22" y="137" font-family="Segoe UI, sans-serif" font-size="10" fill="#F4F4F5">Hola [[nombre]]...</text>
-    <text x="22" y="149" font-family="Segoe UI, sans-serif" font-size="8" fill="#6B6B75">86 caracteres</text>
-
-    <line x1="14" y1="166" x2="218" y2="166" stroke="#242429"/>
-    <rect x="160" y="172" width="58" height="0.1" fill="none"/>
+    <rect x="16" y="182" width="224" height="16" rx="8" fill="#1B1B1F" opacity="0.6"/>
   </g>
 </g>
 </svg>
