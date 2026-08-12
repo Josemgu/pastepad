@@ -18,6 +18,7 @@ está marcado como tal y tiene un paso o un plan B que lo cubre.
 | 3 — la cáscara | Montado y verificado por el qa: **el pegado pasa** (12/12), atajo 30/30 dos veces, instancia única, bandeja, bordes. Queda 1 fallo abierto (ver abajo) |
 | 4 — la interfaz | Sin empezar |
 | 5 — publicar y medir | Sin empezar |
+| 6 — retirar la versión en Python | Sin empezar. **No antes de cerrar el 4**: hoy es la fuente del diseño |
 
 Solución en `csharp/Pastepad.sln`. Las pruebas corren con
 `dotnet test csharp/Pastepad.Nucleo.Pruebas`, sin ventana y sin el
@@ -215,8 +216,14 @@ de `reservar_instancia()` funciona sin depender del SDK.
   dependencias a un temporal en el primer arranque: no es un binario
   cerrado.
 - **Instalación en `%LOCALAPPDATA%`**: se copia la carpeta de salida.
-  La documentación sugiere WiX o Inno Setup para envolverla; Inno Setup
-  ya se usa en el repo.
+  La documentación sugiere WiX o Inno Setup para envolverla.
+
+  **Corrección al plan original**, comprobada el 12 ago 2026: decía que
+  «Inno Setup ya se usa en el repo». **No es cierto.** En `instalador/`
+  hay `instalar.bat`, `desinstalar.bat`, un `LEEME.txt` y la salida de
+  PyInstaller. No hay ningún `.iss`. Así que el instalador del paso 5
+  se elige de cero: o se traducen esos `.bat`, o se monta Inno Setup
+  por primera vez.
 - **P/Invoke**: [`Microsoft.Windows.CsWin32`][d23], generador de código
   de Microsoft. Se listan las funciones en `NativeMethods.txt` y genera
   las firmas correctas — evita el tipo de error que reventó el
@@ -302,7 +309,8 @@ con la tabla de la sección 2 del documento.
 ### Paso 5 — Publicar y medir
 
 `WindowsPackageType=None` y `WindowsAppSDKSelfContained=true`,
-instalador Inno Setup a `%LOCALAPPDATA%\pastepad`, autoarranque por
+instalador a `%LOCALAPPDATA%\pastepad` —por decidir: traducir los
+`.bat` que ya hay o montar Inno Setup—, autoarranque por
 `HKCU\...\Run`. Medir memoria residente, tiempo de apertura del panel y
 arranque en frío. Native AOT **al final y como experimento medido**, no
 como premisa: si aporta poco o reaparece el cuelgue documentado tras
@@ -311,6 +319,50 @@ navegar, se deja fuera. La versión sale del tag, no escrita a mano.
 **Cómo se sabe que quedó bien:** el `.exe` instalado —no el proyecto en
 depuración— pasa las pruebas del paso 1 y del paso 3 en una máquina
 limpia, movido de carpeta al menos una vez.
+
+### Paso 6 — Retirar la versión en Python
+
+**No antes de tiempo.** Mientras la interfaz se esté migrando, esos
+archivos son la fuente: el diseñador lee `estilo.py` para la paleta,
+`filas.py` para el grupo de marcadores y `ventanas.py` para los
+diálogos. Borrarlos ahora sería quedarse sin especificación a mitad de
+camino.
+
+**Cuándo:** cuando el paso 4 esté cerrado y el qa confirme paridad de
+funciones. Antes de publicar la release del paso 5, no después.
+
+**Qué se va:**
+
+```
+main.py  prueba.py  requirements.txt  build.bat
+pastepad.spec  pastepad-portable.spec
+pastepad/*.py        los diez módulos y el __init__
+build/               salida de PyInstaller
+instalador/dist/     el ejecutable viejo y su _internal
+.venv/
+```
+
+**Qué se queda, y por qué:**
+
+| | |
+|---|---|
+| `docs/mockups/` y `docs/ESPECIFICACION-UI.md` | El diseño no cambia con el lenguaje |
+| `TRASPASO.md` y `PLAN.md` | La memoria de por qué está hecho así |
+| `CHANGELOG.md`, `LICENSE`, `SECURITY.md`, `.github/` | No dependen de la implementación |
+| `README.md` y `docs/README.es.md` | Hay que **actualizarlos**, no borrarlos: hablan de Flet y de 80–150 MB |
+| `instalador/*.bat` y `LEEME.txt` | Se decide en el paso 5 si se traducen o se sustituyen |
+
+**Qué hacer con `docs/FUNCIONES.md`:** documenta las 133 funciones de
+la versión en Python. Mientras dure la migración es la lista de
+comprobación de qué falta por portar. Se retira con el resto, no antes.
+
+**Cómo se sabe que quedó bien:** `dotnet test` sigue en verde, la
+aplicación arranca desde una copia limpia del repo, y `grep -r "\.py"`
+no devuelve referencias vivas en documentación ni en scripts.
+
+**Antes de borrar, un tag.** La versión en Python fue tres años de
+trabajo y es la única referencia de comportamiento si algo se nos pasó.
+Que quede recuperable con un nombre, no solo en el historial.
 
 ---
 
@@ -343,8 +395,8 @@ limpia, movido de carpeta al menos una vez.
   requisito de instalar en `%LOCALAPPDATA%` con instalador propio.
 - **`PublishSingleFile`.** Extrae a un temporal en el primer arranque,
   así que no da lo que promete el nombre y añade una variable al
-  arranque en frío, que ya es lo más lento. Inno Setup sobre la carpeta
-  hace el mismo trabajo con menos magia.
+  arranque en frío, que ya es lo más lento. Un instalador sobre la
+  carpeta hace el mismo trabajo con menos magia.
 - **Traducir `idiomas.py` y `estilo.py` ahora.** Son datos, no lógica;
   van con el paso 4.
 - **Pruebas de interfaz automatizadas.** Con 19 pruebas de modelo y una
