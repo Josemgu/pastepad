@@ -325,6 +325,59 @@ def marco_hueco(hwnd, ancho, alto, radio=18, grosor=2):
         pass
 
 
+VK_CONTROL, VK_V = 0x11, 0x56
+KEYEVENTF_KEYUP = 0x0002
+
+
+VK_SHIFT, VK_MENU = 0x10, 0x12
+
+
+def pegar_con_teclado():
+    """Manda Ctrl+V con la API de Windows.
+
+    La libreria keyboard esta ocupada escuchando el atajo global;
+    pedirle que ademas escriba puede dejarla sin responder.
+    """
+    if not HAY_WIN32:
+        return False
+    try:
+        user32 = ctypes.windll.user32
+        # El atajo lleva Shift o Alt, y pueden seguir pulsadas: si no se
+        # sueltan primero, el destino recibe Ctrl+Shift+V y no Ctrl+V.
+        for tecla in (VK_SHIFT, VK_MENU):
+            user32.keybd_event(tecla, 0, KEYEVENTF_KEYUP, 0)
+        time.sleep(0.02)
+        user32.keybd_event(VK_CONTROL, 0, 0, 0)
+        user32.keybd_event(VK_V, 0, 0, 0)
+        time.sleep(0.03)
+        user32.keybd_event(VK_V, 0, KEYEVENTF_KEYUP, 0)
+        user32.keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0)
+        return True
+    except Exception:
+        return False
+
+
+def puntero():
+    """Donde esta el raton ahora mismo, en pixeles de pantalla."""
+    if HAY_WIN32:
+        try:
+            return win32api.GetCursorPos()
+        except Exception:
+            pass
+    return (0, 0)
+
+
+def pantalla():
+    """Ancho y alto del escritorio completo."""
+    if HAY_WIN32:
+        try:
+            user32 = ctypes.windll.user32
+            return user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
+        except Exception:
+            pass
+    return (1920, 1080)
+
+
 def area_util(x, y, ancho_pantalla, alto_pantalla):
     """El area del monitor donde esta el punto, sin la barra de tareas."""
     if HAY_WIN32:

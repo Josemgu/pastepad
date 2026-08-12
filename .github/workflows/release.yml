@@ -23,24 +23,26 @@ jobs:
           python-version: '3.12'
 
       - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-          pip install pyinstaller
+        run: pip install -r requirements.txt
 
       - name: Run tests
         run: python prueba.py
 
+      # Flet trae su propio empaquetador y no usa PyInstaller: mete el
+      # motor de Flutter en el binario, que es lo que dibuja la interfaz.
       - name: Build
         run: |
-          pyinstaller --onefile --noconsole --name pastepad `
-            --icon docs/pastepad.ico `
-            --add-data "docs/pastepad.ico;." `
-            --version-file version.txt `
-            --collect-all customtkinter `
-            main.pyw
+          flet build windows --project pastepad --product pastepad `
+            --company "Jose Miguel Ortiz" --copyright "MIT License" `
+            --build-version 3.0.0
 
       - name: Checksum
         run: |
+          $exe = Get-ChildItem build\windows -Recurse -Filter pastepad.exe |
+                 Select-Object -First 1
+          if (-not $exe) { throw "No se genero pastepad.exe" }
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Copy-Item $exe.FullName dist\pastepad.exe -Force
           $h = (Get-FileHash dist\pastepad.exe -Algorithm SHA256).Hash
           "$h  pastepad.exe" | Out-File -Encoding ascii dist\SHA256.txt
           Write-Host "SHA256: $h"
@@ -63,9 +65,10 @@ jobs:
             Descarga `pastepad.exe` y ejecutalo. No necesita instalacion.
 
             Windows Defender puede marcarlo la primera vez: es un falso
-            positivo conocido de PyInstaller. El binario se compila en un
-            runner limpio de GitHub Actions a partir de este codigo, y el
-            registro de la compilacion es publico.
+            positivo habitual con ejecutables recien compilados y sin
+            firmar. El binario se compila en un runner limpio de GitHub
+            Actions a partir de este codigo, y el registro de la
+            compilacion es publico.
 
             Verifica la descarga comparando el hash:
 

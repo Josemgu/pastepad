@@ -1,4 +1,9 @@
-customtkinter>=5.2
+# La interfaz usa la API de Flet 1.0 (publicada como 0.70.0.dev y
+# posteriores): ft.run(), page.show_dialog()/pop_dialog() y las clases
+# Padding/Border/Alignment. En 0.28 nada de eso existe todavia — los
+# ayudantes en minusculas (ft.padding.symmetric) se eliminaron en esta
+# linea, asi que un piso mas bajo revienta en el primer arranque.
+flet>=0.70
 keyboard>=0.13
 pyperclip>=1.8
 pywin32>=306

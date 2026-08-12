@@ -6,7 +6,7 @@ import os
 import sys
 
 APP = "pastepad"
-VERSION = "2.0.0"
+VERSION = "3.0.0"
 
 # --- ventana
 TAMANOS = {"mini": (300, 380), "chico": (340, 460),
@@ -34,6 +34,12 @@ CARPETAS_DEF = CARPETAS_MENU
 # --- limites
 MAX_HIST = 80
 MAX_CARACTERES = 200_000
+
+# Anota en errores.log el estado del panel en cada pulsacion del atajo.
+# Esta puesto mientras siga abierto el fallo de "el atajo responde una
+# sola vez": es lo que permite ver si self.visible se desincroniza de la
+# ventana real. Ponlo en False cuando ese fallo este cerrado.
+TRAZA_ATAJO = True
 
 # --- tipografia
 FUENTE = "Segoe UI Variable Display"   # Windows 11

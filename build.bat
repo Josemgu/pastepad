@@ -1,10 +1,9 @@
 @echo off
-REM Genera pastepad.exe (un solo archivo, sin consola).
-REM Doble clic para ejecutar.
+REM Genera el ejecutable con Flet.
+REM Flet trae su propio empaquetador: no usa PyInstaller.
 
 echo Instalando dependencias...
 pip install -r requirements.txt
-pip install pyinstaller
 
 echo.
 echo Ejecutando las pruebas...
@@ -18,13 +17,10 @@ if errorlevel 1 (
 
 echo.
 echo Generando el ejecutable...
-pyinstaller --onefile --noconsole --name pastepad ^
-  --icon docs\pastepad.ico ^
-  --add-data "docs\pastepad.ico;." ^
-  --version-file version.txt ^
-  --collect-all customtkinter ^
-  main.pyw
+flet build windows --project pastepad --product pastepad ^
+  --company "Jose Miguel Ortiz" --copyright "MIT License" ^
+  --build-version 3.0.0
 
 echo.
-echo Listo. El programa esta en la carpeta "dist".
+echo Listo. El programa esta en build\windows.
 pause
