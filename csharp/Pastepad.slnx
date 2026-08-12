@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="Pastepad.App/Pastepad.App.csproj">
+    <Platform Project="x86" />
+  </Project>
+  <Project Path="Pastepad.Nucleo.Pruebas/Pastepad.Nucleo.Pruebas.csproj" />
+  <Project Path="Pastepad.Nucleo/Pastepad.Nucleo.csproj" />
+  <Project Path="PruebaAtajo/PruebaAtajo.csproj" />
+</Solution>
