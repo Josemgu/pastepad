@@ -27,6 +27,9 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
 
+      - name: Run tests
+        run: python prueba.py
+
       - name: Build
         run: |
           pyinstaller --onefile --noconsole --name pastepad `
@@ -34,7 +37,7 @@ jobs:
             --add-data "docs/pastepad.ico;." `
             --version-file version.txt `
             --collect-all customtkinter `
-            pastepad.pyw
+            main.pyw
 
       - name: Checksum
         run: |

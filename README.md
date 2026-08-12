@@ -121,7 +121,7 @@ to PATH** on the first installer screen — nothing works without it.
 
 ```powershell
 pip install -r requirements.txt
-python pastepad.pyw
+python main.pyw
 ```
 
 </details>
@@ -137,7 +137,7 @@ pyinstaller --onefile --noconsole --name pastepad ^
   --icon docs\pastepad.ico ^
   --version-file version.txt ^
   --collect-all customtkinter ^
-  pastepad.pyw
+  main.pyw
 ```
 
 Or just double-click `build.bat`. The result lands in `dist\`.
@@ -162,7 +162,7 @@ Full step-by-step walkthrough in Spanish:
 
 | Key | Action |
 |---|---|
-| <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>V</kbd> | Open the panel at the cursor |
+| <kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>V</kbd> | Open the panel at the cursor |
 | Type | Filter as you go |
 | <kbd>↑</kbd> <kbd>↓</kbd> | Move through results |
 | <kbd>Enter</kbd> | Paste |
@@ -173,6 +173,10 @@ A single click on a row pastes it. The three icons on the right — pin,
 edit, delete — act on that row instead. **Seleccionar** turns on
 multi-select: tick several rows, then **Borrar (n)** removes them
 together.
+
+The shortcut is left-hand only by default, so you can keep the mouse
+where it is. Six combinations are offered in the appearance dialog if
+another program has claimed the default.
 
 Click into the field you want to fill **before** opening the panel. The
 app records which window had focus and hands it back before sending the
@@ -219,6 +223,25 @@ Move that folder to another machine and everything comes with it.
 work behind them. I built this because my daily work needed two things
 neither one does out of the box: fill-in templates for notes I retype
 constantly, and rich-text paste that survives into Outlook.
+
+## Layout
+
+```
+main.pyw            entry point
+pastepad/
+  config.py         colours, sizes, paths — no tkinter import
+  modelo.py         the data and its rules — no tkinter import
+  windows.py        clipboard, focus, window region, autostart
+  busqueda.py       ranked search with a normalisation cache
+  tema.py           live colours and the reusable widgets
+  lista.py          the row list, drawn on a canvas
+  dialogos.py       the popups
+  panel.py          coordinates the above
+prueba.py           tests — run with `python prueba.py`
+```
+
+`modelo` and `busqueda` never import tkinter, which is why the tests run
+without opening a window.
 
 ## Built with
 

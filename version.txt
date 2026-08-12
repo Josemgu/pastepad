@@ -3,8 +3,8 @@
 # es una de las cosas que suben la sospecha de los antivirus.
 VSVersionInfo(
   ffi=FixedFileInfo(
-    filevers=(1, 2, 0, 0),
-    prodvers=(1, 2, 0, 0),
+    filevers=(2, 0, 0, 0),
+    prodvers=(2, 0, 0, 0),
     mask=0x3f,
     flags=0x0,
     OS=0x40004,
@@ -18,12 +18,12 @@ VSVersionInfo(
         '040904B0',
         [StringStruct('CompanyName', 'Jose Miguel Ortiz'),
          StringStruct('FileDescription', 'pastepad - clipboard manager'),
-         StringStruct('FileVersion', '1.2.0'),
+         StringStruct('FileVersion', '2.0.0'),
          StringStruct('InternalName', 'pastepad'),
          StringStruct('LegalCopyright', 'MIT License'),
          StringStruct('OriginalFilename', 'pastepad.exe'),
          StringStruct('ProductName', 'pastepad'),
-         StringStruct('ProductVersion', '1.2.0')])
+         StringStruct('ProductVersion', '2.0.0')])
     ]),
     VarFileInfo([VarStruct('Translation', [1033, 1200])])
   ]
