@@ -43,26 +43,49 @@ jobs:
             --copyright "MIT License" `
             --distpath instalador/dist -y
 
-      # Se publica el zip entero y no el .exe suelto: el ejecutable
-      # necesita las dependencias que hay a su lado, y ademas asi el
-      # instalador viaja con el.
-      - name: Empaquetar y firmar el hash
+      # Un solo archivo con todo dentro. Es la version que no se puede
+      # romper: separar el .exe de su carpeta _internal da el error de
+      # "no se encuentra python311.dll", y aqui no hay carpeta que
+      # separar.
+      - name: Build portable
+        run: |
+          flet pack main.py --name pastepad-portable `
+            --icon docs/pastepad.ico `
+            --product-name pastepad `
+            --file-description "pastepad - gestor de portapapeles" `
+            --product-version 3.0.0 --file-version 3.0.0 `
+            --company-name "Jose Miguel Ortiz" `
+            --copyright "MIT License" `
+            --distpath instalador/portable -y
+
+      # Se publica el zip entero y no el .exe suelto: en la version
+      # instalable el ejecutable necesita las dependencias que hay a su
+      # lado, y ademas asi el instalador viaja con el.
+      - name: Empaquetar y firmar los hashes
         run: |
           $exe = "instalador\dist\pastepad\pastepad.exe"
-          if (-not (Test-Path $exe)) { throw "No se genero pastepad.exe" }
+          $port = "instalador\portable\pastepad-portable.exe"
+          if (-not (Test-Path $exe))  { throw "No se genero pastepad.exe" }
+          if (-not (Test-Path $port)) { throw "No se genero el portable" }
           New-Item -ItemType Directory -Force dist | Out-Null
           Compress-Archive -Force -DestinationPath dist\pastepad-3.0.0.zip `
             -Path instalador\dist\pastepad, instalador\instalar.bat,
                   instalador\desinstalar.bat, instalador\LEEME.txt
-          $h = (Get-FileHash dist\pastepad-3.0.0.zip -Algorithm SHA256).Hash
-          "$h  pastepad-3.0.0.zip" | Out-File -Encoding ascii dist\SHA256.txt
-          Write-Host "SHA256: $h"
+          Copy-Item $port dist\pastepad-3.0.0-portable.exe -Force
+          $lineas = @()
+          foreach ($f in "pastepad-3.0.0.zip", "pastepad-3.0.0-portable.exe") {
+            $h = (Get-FileHash "dist\$f" -Algorithm SHA256).Hash
+            $lineas += "$h  $f"
+            Write-Host "$f  ->  $h"
+          }
+          $lineas | Out-File -Encoding ascii dist\SHA256.txt
 
       - uses: actions/upload-artifact@v4
         with:
           name: pastepad
           path: |
             dist/pastepad-3.0.0.zip
+            dist/pastepad-3.0.0-portable.exe
             dist/SHA256.txt
 
       - name: Publish release
@@ -71,18 +94,34 @@ jobs:
         with:
           files: |
             dist/pastepad-3.0.0.zip
+            dist/pastepad-3.0.0-portable.exe
             dist/SHA256.txt
           body: |
-            Descarga el zip, descomprimelo y ejecuta `instalar.bat`.
-            No pide administrador.
+            ## Dos formas de instalarlo
 
-            Windows Defender puede marcarlo la primera vez: es un falso
-            positivo habitual con ejecutables recien compilados y sin
-            firmar. El binario se compila en un runner limpio de GitHub
-            Actions a partir de este codigo, y el registro de la
-            compilacion es publico.
+            **`pastepad-3.0.0.zip`** — la recomendada.
+            Descomprimelo y ejecuta `instalar.bat`. No pide
+            administrador. Arranca con Windows y sale en el menu inicio.
 
-            Verifica la descarga comparando el hash:
+            **`pastepad-3.0.0-portable.exe`** — un solo archivo.
+            Lo ejecutas donde sea, sin instalar nada. Llevalo en un
+            pendrive. Pesa mas porque trae el interprete de Python
+            entero dentro, y por eso no se puede romper: no hay carpeta
+            que se pueda separar del ejecutable.
+
+            Ninguna de las dos necesita que tengas Python instalado.
+
+            ## Windows Defender
+
+            Va a salir "Windows protegio su PC" la primera vez. Mas
+            informacion -> Ejecutar de todas formas.
+
+            No es que el archivo tenga nada raro: SmartScreen avisa de
+            cualquier ejecutable sin firmar hasta que acumula
+            descargas. Se compila en un runner limpio de GitHub Actions
+            a partir de este codigo, y el registro es publico.
+
+            ## Verificar la descarga
 
             ```powershell
             Get-FileHash pastepad-3.0.0.zip -Algorithm SHA256
