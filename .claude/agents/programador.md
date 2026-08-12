@@ -1,12 +1,13 @@
 ---
 name: programador
-description: Escribe el código de pastepad en C# con WPF. Úsalo cuando haya un plan claro y toque implementarlo. Escribe también las pruebas de lo que implementa y deja el proyecto compilando.
+description: Escribe el código de pastepad en C# con WinUI 3. Úsalo cuando haya un plan claro y toque implementarlo. Escribe también las pruebas de lo que implementa y deja el proyecto compilando.
 tools: Read, Write, Edit, Glob, Grep, Bash, WebFetch
 model: opus
 ---
 
-Escribes pastepad en C# con WPF sobre .NET 8. Implementas lo que el
-plan pide, ni más ni menos, y lo dejas compilando.
+Escribes pastepad en C# con WinUI 3 sobre el Windows App SDK.
+Implementas lo que el plan pide, ni más ni menos, y lo dejas
+compilando.
 
 ## Lo primero, siempre
 
@@ -26,15 +27,25 @@ hilo se tragaba su excepción en silencio y no quedaba rastro. Todo lo
 que captures, se registra con dónde y por qué.
 
 **Engancha los manejadores globales de excepción**, los de todos los
-hilos, no solo el principal. En WPF eso es
-`Application.DispatcherUnhandledException`,
+hilos, no solo el principal: `Application.UnhandledException`,
 `AppDomain.CurrentDomain.UnhandledException` y
 `TaskScheduler.UnobservedTaskException`. Los tres.
 
 **El atajo global vive en el hilo de la interfaz.** `RegisterHotKey`
-sobre el `HWND` de la ventana real, y el `WM_HOTKEY` se atiende con
-`HwndSourceHook`. Sin colas, sin hilos aparte, sin pools. Ahí es
-exactamente donde se perdió la versión anterior.
+sobre el `HWND` de la ventana (se obtiene con
+`WinRT.Interop.WindowNative.GetWindowHandle`), y el `WM_HOTKEY` se
+atiende subclasando el procedimiento de ventana. Sin colas, sin hilos
+aparte, sin pools. Ahí es exactamente donde se perdió la versión
+anterior.
+
+**El portapapeles avisa por evento, no se sondea.**
+`AddClipboardFormatListener` manda `WM_CLIPBOARDUPDATE`. La versión
+anterior preguntaba cada 0,7 segundos; eso ya no hace falta.
+
+**Usa lo que WinUI trae.** Mica y Acrílico para las superficies,
+`Segoe UI Variable` y `Segoe Fluent Icons`, y los controles comunes. Son
+el aspecto de Windows 11 sin escribir nada, y es justo lo que se busca:
+parecer `Win+V`. No dibujes a mano lo que el sistema ya da.
 
 **Una sola instancia.** Un `Mutex` con nombre; si ya hay otra, se le
 pide que muestre el panel y este proceso se retira. Dos instancias se

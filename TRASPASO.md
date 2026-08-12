@@ -66,26 +66,44 @@ nativa de Windows.
 
 ---
 
-## Recomendación de lenguaje
+## El lenguaje: C# con WinUI 3
 
-**C# con WPF sobre .NET 8.**
+**Decidido tras evaluarlo, no por costumbre.** Microsoft lo señala como
+la vía preferente para aplicaciones nuevas y nativas de Windows; WPF
+queda para bases de código ya existentes.
 
 | Por qué | |
 |---|---|
-| Aspecto | `Win+V` está hecho en XAML. Mismo lenguaje visual, gratis |
-| Memoria | 40–70 MB residente, contra 207 |
-| Atajo global | `RegisterHotKey` + `HwndSourceHook` en la ventana real. Sin hilos, sin colas, sin pools |
-| Portapapeles | `System.Windows.Clipboard` y `AddClipboardFormatListener`: avisa por evento en vez de sondear cada 0,7 s |
-| Publicar | Ejecutable único autocontenido, sin pedir runtime |
-| Firma | El certificado gratuito de SignPath aplica igual |
+| **Aspecto** | Mica y Acrílico nativos. Son los materiales de Fluent Design que usa `Win+V`: no hay que imitarlos, ya están |
+| **Escalado DPI** | Automático y por monitor. WPF, Win32 y WinForms **no** lo hacen: sin trabajo extra salen borrosos |
+| **Tipografía e iconos** | `Segoe UI Variable` y `Segoe Fluent Icons`, los de Windows 11, de serie |
+| **Tema claro/oscuro** | Cambia solo, sin código |
+| **Memoria** | 15–20% por debajo de WPF en apps equivalentes. Contra los 207 MB de Flet, entre 40 y 60 |
+| **Atajo global** | `RegisterHotKey` sobre el `HWND` de la ventana. Sin hilos, sin colas, sin pools — ahí es donde se perdió la versión anterior |
+| **Portapapeles** | `AddClipboardFormatListener` avisa **por evento**: se acaba el sondeo cada 0,7 s |
+| **Native AOT** | Su compatibilidad va por delante de la de WPF, que arrastra reflexión en el binding |
+| **Firma** | El certificado gratuito de SignPath aplica igual |
 
-**Alternativas consideradas y por qué no:**
+**El riesgo, dicho claro:** WinUI 3 tiene ecosistema menos maduro que
+WPF —menos controles de terceros, menos respuestas para casos raros—.
 
-- **C++/Win32**: lo más ligero (~15 MB) pero mucho más lento de
-  escribir, y el acabado hay que dibujarlo a mano.
-- **Rust/Tauri o Go/Wails**: la interfaz es web, vuelve el peso (~80 MB)
-  y el arranque.
-- **CustomTkinter**: bajaría a ~60 MB, pero se deforma al redimensionar
+Se acepta por un motivo concreto: **la parte que puede romperse (el
+atajo y el portapapeles) es Win32 puro y es idéntica en los dos.** La
+inmadurez de WinUI no toca lo arriesgado; solo afecta a lo visual, que
+es justo donde WinUI gana.
+
+**Alternativas evaluadas y descartadas:**
+
+- **WPF** — más maduro, pero el aspecto de Windows 11 hay que
+  construirlo a mano y el DPI exige trabajo extra. Es la red de
+  seguridad si WinUI 3 estorbara.
+- **C++/Win32** — lo más ligero (~15 MB) y máximo control, pero el
+  acabado se dibuja a mano y son meses.
+- **Rust/Tauri o Go/Wails** — la interfaz es web: vuelve el peso (~80 MB)
+  y el arranque lento que se acaba de dejar atrás.
+- **Avalonia o MAUI** — multiplataforma que no se necesita, y no tienen
+  el aspecto de Windows 11.
+- **CustomTkinter** — bajaría a ~60 MB, pero se deforma al redimensionar
   y los bordes salen rasposos. Ya se abandonó una vez por eso.
 
 ---

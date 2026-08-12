@@ -43,6 +43,15 @@ estaba el cursor.
 **Que no deje basura:** cierra el programa y comprueba que no queda
 ningún proceso vivo.
 
+**Propio de WinUI 3, que se olvida y rompe en casa del usuario:**
+
+- En una máquina **sin el runtime del Windows App SDK** instalado. Si se
+  publica dependiente del framework, ahí no arranca.
+- Con el **escalado de pantalla al 125% y al 150%**, y moviendo la
+  ventana entre dos monitores con escalados distintos.
+- Con el sistema en **tema claro y en tema oscuro**, cambiándolo con el
+  programa abierto.
+
 ## Cómo reportas
 
 Un fallo se reporta con **los pasos exactos para reproducirlo** y con lo
