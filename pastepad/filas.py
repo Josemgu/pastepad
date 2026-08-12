@@ -49,7 +49,7 @@ def _resumen(dato, es_hist):
             return (modelo.una_linea(texto, 80), modelo.dominio_de(texto),
                     True, ft.Icons.LINK)
         return (modelo.una_linea(texto, 80) or "—",
-                "%d caracteres" % len(texto), False, None)
+                idi.t("%d caracteres") % len(texto), False, None)
 
     texto = modelo.texto_de(dato.get("runs", []))
     carpeta = dato.get("categoria", "")

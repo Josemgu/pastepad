@@ -21,6 +21,19 @@ NOMBRES = {
 IDIOMA_DEF = "es"
 
 EN = {
+    # --- textos con numero dentro
+    '%d caracteres': '%d characters',
+    'Borrar (%d)': 'Delete (%d)',
+    'Editar %s...': 'Edit %s...',
+    'Renombrar %s': 'Rename %s',
+    'Eliminar %s y su contenido': 'Delete %s and its contents',
+    'Eliminar la carpeta %s?': 'Delete folder %s?',
+    'Eliminar la carpeta %s y sus %d textos? Esto no se puede deshacer.': 'Delete folder %s and its %d texts? This cannot be undone.',
+    'Eliminar la carpeta %s y su texto? Esto no se puede deshacer.': 'Delete folder %s and its text? This cannot be undone.',
+    'Borrar %d elementos? Esto no se puede deshacer.': 'Delete %d items? This cannot be undone.',
+    'Borrar %d elemento? Esto no se puede deshacer.': 'Delete this item? This cannot be undone.',
+    '%d notas': '%d notes',
+    '%d nota': '%d note',
     # --- panel
     "Buscar en todo": "Search everything",
     "Reciente": "Recent",
@@ -114,6 +127,19 @@ EN = {
 }
 
 PT = {
+    # --- textos con numero dentro
+    '%d caracteres': '%d caracteres',
+    'Borrar (%d)': 'Excluir (%d)',
+    'Editar %s...': 'Editar %s...',
+    'Renombrar %s': 'Renomear %s',
+    'Eliminar %s y su contenido': 'Excluir %s e seu conteudo',
+    'Eliminar la carpeta %s?': 'Excluir a pasta %s?',
+    'Eliminar la carpeta %s y sus %d textos? Esto no se puede deshacer.': 'Excluir a pasta %s e seus %d textos? Isso nao pode ser desfeito.',
+    'Eliminar la carpeta %s y su texto? Esto no se puede deshacer.': 'Excluir a pasta %s e seu texto? Isso nao pode ser desfeito.',
+    'Borrar %d elementos? Esto no se puede deshacer.': 'Excluir %d itens? Isso nao pode ser desfeito.',
+    'Borrar %d elemento? Esto no se puede deshacer.': 'Excluir este item? Isso nao pode ser desfeito.',
+    '%d notas': '%d notas',
+    '%d nota': '%d nota',
     "Buscar en todo": "Procurar em tudo",
     "Reciente": "Recentes", "Guardados": "Salvos",
     "Seleccionar": "Selecionar", "Nuevo": "Novo", "Todos": "Todos",
@@ -172,6 +198,19 @@ PT = {
 }
 
 FR = {
+    # --- textos con numero dentro
+    '%d caracteres': '%d caracteres',
+    'Borrar (%d)': 'Supprimer (%d)',
+    'Editar %s...': 'Modifier %s...',
+    'Renombrar %s': 'Renommer %s',
+    'Eliminar %s y su contenido': 'Supprimer %s et son contenu',
+    'Eliminar la carpeta %s?': 'Supprimer le dossier %s ?',
+    'Eliminar la carpeta %s y sus %d textos? Esto no se puede deshacer.': 'Supprimer le dossier %s et ses %d textes ? Action irreversible.',
+    'Eliminar la carpeta %s y su texto? Esto no se puede deshacer.': 'Supprimer le dossier %s et son texte ? Action irreversible.',
+    'Borrar %d elementos? Esto no se puede deshacer.': 'Supprimer %d elements ? Action irreversible.',
+    'Borrar %d elemento? Esto no se puede deshacer.': 'Supprimer cet element ? Action irreversible.',
+    '%d notas': '%d notes',
+    '%d nota': '%d note',
     "Buscar en todo": "Rechercher partout",
     "Reciente": "Recent", "Guardados": "Enregistres",
     "Seleccionar": "Selectionner", "Nuevo": "Nouveau", "Todos": "Tout",

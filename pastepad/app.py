@@ -268,7 +268,7 @@ class App:
         if self.marcando:
             hijos = [
                 st.boton(idi.t("Todos"), lambda e: self.marcar_todos()),
-                st.boton("Borrar (%d)" % len(self.marcados),
+                st.boton(idi.t("Borrar (%d)") % len(self.marcados),
                          lambda e: self.borrar_marcados(), "peligro"),
                 ft.Container(expand=True),
                 st.boton(idi.t("Cancelar"), lambda e: self.alternar_marcado()),
@@ -342,13 +342,13 @@ class App:
                                     ft.Icons.CREATE_NEW_FOLDER_OUTLINED,
                                     lambda e: self.nueva_carpeta()))
         if self.carpeta:
-            opciones.append(filas._item("Editar %s..." % self.carpeta,
+            opciones.append(filas._item(idi.t("Editar %s...") % self.carpeta,
                                         ft.Icons.TUNE,
                                         lambda e: self.editar_carpeta()))
-            opciones.append(filas._item("Renombrar %s" % self.carpeta,
+            opciones.append(filas._item(idi.t("Renombrar %s") % self.carpeta,
                                         ft.Icons.DRIVE_FILE_RENAME_OUTLINE,
                                         lambda e: self.renombrar_carpeta()))
-            opciones.append(filas._item("Eliminar %s y su contenido"
+            opciones.append(filas._item(idi.t("Eliminar %s y su contenido")
                                         % self.carpeta,
                                         ft.Icons.FOLDER_DELETE_OUTLINED,
                                         lambda e: self.borrar_carpeta()))
@@ -875,9 +875,14 @@ class App:
             return
         nombre = self.carpeta
         cuantos = len(self.almacen.contenido_de(nombre))
-        aviso = ("Eliminar la carpeta %s y sus %d texto%s? Esto no se puede "
-                 "deshacer." % (nombre, cuantos, "" if cuantos == 1 else "s")
-                 if cuantos else "Eliminar la carpeta %s?" % nombre)
+        if not cuantos:
+            aviso = idi.t("Eliminar la carpeta %s?") % nombre
+        elif cuantos == 1:
+            aviso = idi.t("Eliminar la carpeta %s y su texto? Esto no se "
+                          "puede deshacer.") % nombre
+        else:
+            aviso = idi.t("Eliminar la carpeta %s y sus %d textos? Esto no "
+                          "se puede deshacer.") % (nombre, cuantos)
 
         def hacer():
             self.almacen.borrar_carpeta(nombre)
@@ -929,10 +934,10 @@ class App:
             self.marcando = False
             self.marcados.clear()
             self.refrescar()
-        vt.confirmar(self.page, "Borrar %d elemento%s? Esto no se puede "
-                                "deshacer." % (len(elegidos),
-                                               "" if len(elegidos) == 1
-                                               else "s"), hacer)
+        aviso = (idi.t("Borrar %d elemento? Esto no se puede deshacer.")
+                 if len(elegidos) == 1
+                 else idi.t("Borrar %d elementos? Esto no se puede deshacer."))
+        vt.confirmar(self.page, aviso % len(elegidos), hacer)
 
     # ------------------------------------------------------ apariencia
 

@@ -237,7 +237,8 @@ def lista_masiva(page, carpeta, al_aceptar):
     def contar(e=None):
         """Dice cuantas notas van a salir, antes de pulsar Agregar."""
         n = 1 if modo.value == "junto" and extraer() else len(extraer())
-        contador.value = "%d nota%s" % (n, "" if n == 1 else "s")
+        contador.value = (idi.t("%d nota") if n == 1
+                          else idi.t("%d notas")) % n
         contador.update()
 
     caja.on_change = contar
