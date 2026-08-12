@@ -17,6 +17,15 @@ __pycache__/
 .venv/
 venv/
 
+# C# / .NET — salidas de compilacion, se regeneran con dotnet build
+bin/
+obj/
+*.user
+.vs/
+
+# El log de la prueba del atajo se escribe junto al ejecutable
+csharp/**/prueba-atajo.log
+
 # Windows
 Thumbs.db
 desktop.ini
