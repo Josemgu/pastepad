@@ -30,10 +30,26 @@ def _marco(page, titulo, cuerpo, acciones, ancho=460):
                        ft.FontWeight.W_500),
         content=ft.Container(content=cuerpo,
                              width=max(240, min(ancho, disponible))),
-        actions=acciones,
+        # Los botones van dentro de una fila propia y no sueltos en
+        # actions: Flutter los mete en un OverflowBar que los apila en
+        # vertical en cuanto sospecha que no caben, y el pie pasaba a
+        # ocupar el doble de alto y tapaba el final del contenido.
+        actions=[ft.Row(acciones, spacing=st.E2, tight=True,
+                        alignment=ft.MainAxisAlignment.END)],
         actions_alignment=ft.MainAxisAlignment.END,
         content_padding=ft.Padding.symmetric(horizontal=st.E4,
                                              vertical=st.E2))
+
+
+def alto_util(page, tope=440):
+    """Cuanto puede medir el cuerpo de un dialogo sin que se salga.
+
+    Del alto de la ventana hay que descontar lo que el propio dialogo se
+    queda: los margenes que Flutter le reserva arriba y abajo, la banda
+    del titulo y la de los botones. Son unos 290 px; con menos, el pie
+    acababa encima del contenido.
+    """
+    return max(200, min(tope, (page.window.height or 560) - 290))
 
 
 def abrir(page, dialogo):
@@ -376,7 +392,7 @@ def apariencia(page, acento, atajo, al_aplicar, tema="auto",
         seccion(idi.t("Color de acento"), bolas),
         seccion(idi.t("Atajo para abrir"), combinaciones),
     ], spacing=st.E4, tight=True, scroll=ft.ScrollMode.AUTO,
-        height=min(420, max(260, (page.window.height or 560) - 200)))
+        height=alto_util(page))
 
     d = _marco(page, idi.t("Apariencia"), cuerpo,
                [st.boton(idi.t("Cancelar"), lambda e: cerrar(page)),
@@ -398,7 +414,8 @@ def editar_carpeta(page, carpeta, elementos, al_aplicar):
     condenados = set()
     filas_ui = ft.Column(spacing=st.E1, tight=True,
                          scroll=ft.ScrollMode.AUTO,
-                         height=min(240, 44 * max(1, len(elementos))))
+                         height=min(alto_util(page, 240),
+                                    44 * max(1, len(elementos))))
 
     def pintar():
         filas_ui.controls = []
