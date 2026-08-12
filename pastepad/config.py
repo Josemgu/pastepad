@@ -12,7 +12,7 @@ import os
 import sys
 
 APP = "pastepad"
-VERSION = "3.0.0"
+VERSION = "3.0.1"
 
 # --- ventana
 TAMANOS = {"mini": (300, 380), "chico": (340, 460),

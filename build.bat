@@ -27,7 +27,7 @@ flet pack main.py --onedir --name pastepad ^
   --icon docs/pastepad.ico ^
   --product-name pastepad ^
   --file-description "pastepad - gestor de portapapeles" ^
-  --product-version 3.0.0 --file-version 3.0.0 ^
+  --product-version 3.0.1 --file-version 3.0.1 ^
   --company-name "Jose Miguel Ortiz" ^
   --copyright "MIT License" ^
   --distpath instalador/dist -y
@@ -44,7 +44,7 @@ flet pack main.py --name pastepad-portable ^
   --icon docs/pastepad.ico ^
   --product-name pastepad ^
   --file-description "pastepad - gestor de portapapeles" ^
-  --product-version 3.0.0 --file-version 3.0.0 ^
+  --product-version 3.0.1 --file-version 3.0.1 ^
   --company-name "Jose Miguel Ortiz" ^
   --copyright "MIT License" ^
   --distpath instalador/portable -y

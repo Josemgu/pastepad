@@ -27,6 +27,17 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
 
+      # La version sale del tag, no escrita a mano en doce sitios: se
+      # publico una release con binarios viejos justamente por eso.
+      - name: Averiguar la version
+        id: v
+        shell: pwsh
+        run: |
+          $t = "${{ github.ref_name }}" -replace '^v', ''
+          if (-not $t -or $t -eq "main") { $t = "0.0.0-dev" }
+          "version=$t" | Out-File -Append $env:GITHUB_OUTPUT
+          Write-Host "version: $t"
+
       - name: Run tests
         run: python prueba.py
 
@@ -38,7 +49,8 @@ jobs:
             --icon docs/pastepad.ico `
             --product-name pastepad `
             --file-description "pastepad - gestor de portapapeles" `
-            --product-version 3.0.0 --file-version 3.0.0 `
+            --product-version ${{ steps.v.outputs.version }} `
+            --file-version ${{ steps.v.outputs.version }} `
             --company-name "Jose Miguel Ortiz" `
             --copyright "MIT License" `
             --distpath instalador/dist -y
@@ -53,7 +65,8 @@ jobs:
             --icon docs/pastepad.ico `
             --product-name pastepad `
             --file-description "pastepad - gestor de portapapeles" `
-            --product-version 3.0.0 --file-version 3.0.0 `
+            --product-version ${{ steps.v.outputs.version }} `
+            --file-version ${{ steps.v.outputs.version }} `
             --company-name "Jose Miguel Ortiz" `
             --copyright "MIT License" `
             --distpath instalador/portable -y
@@ -68,12 +81,12 @@ jobs:
           if (-not (Test-Path $exe))  { throw "No se genero pastepad.exe" }
           if (-not (Test-Path $port)) { throw "No se genero el portable" }
           New-Item -ItemType Directory -Force dist | Out-Null
-          Compress-Archive -Force -DestinationPath dist\pastepad-3.0.0.zip `
+          Compress-Archive -Force -DestinationPath dist\pastepad-${{ steps.v.outputs.version }}.zip `
             -Path instalador\dist\pastepad, instalador\instalar.bat,
                   instalador\desinstalar.bat, instalador\LEEME.txt
-          Copy-Item $port dist\pastepad-3.0.0-portable.exe -Force
+          Copy-Item $port dist\pastepad-${{ steps.v.outputs.version }}-portable.exe -Force
           $lineas = @()
-          foreach ($f in "pastepad-3.0.0.zip", "pastepad-3.0.0-portable.exe") {
+          foreach ($f in "pastepad-${{ steps.v.outputs.version }}.zip", "pastepad-${{ steps.v.outputs.version }}-portable.exe") {
             $h = (Get-FileHash "dist\$f" -Algorithm SHA256).Hash
             $lineas += "$h  $f"
             Write-Host "$f  ->  $h"
@@ -84,8 +97,8 @@ jobs:
         with:
           name: pastepad
           path: |
-            dist/pastepad-3.0.0.zip
-            dist/pastepad-3.0.0-portable.exe
+            dist/pastepad-${{ steps.v.outputs.version }}.zip
+            dist/pastepad-${{ steps.v.outputs.version }}-portable.exe
             dist/SHA256.txt
 
       - name: Publish release
@@ -93,17 +106,17 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist/pastepad-3.0.0.zip
-            dist/pastepad-3.0.0-portable.exe
+            dist/pastepad-${{ steps.v.outputs.version }}.zip
+            dist/pastepad-${{ steps.v.outputs.version }}-portable.exe
             dist/SHA256.txt
           body: |
             ## Dos formas de instalarlo
 
-            **`pastepad-3.0.0.zip`** — la recomendada.
+            **`pastepad-${{ steps.v.outputs.version }}.zip`** — la recomendada.
             Descomprimelo y ejecuta `instalar.bat`. No pide
             administrador. Arranca con Windows y sale en el menu inicio.
 
-            **`pastepad-3.0.0-portable.exe`** — un solo archivo.
+            **`pastepad-${{ steps.v.outputs.version }}-portable.exe`** — un solo archivo.
             Lo ejecutas donde sea, sin instalar nada. Llevalo en un
             pendrive. Pesa mas porque trae el interprete de Python
             entero dentro, y por eso no se puede romper: no hay carpeta
@@ -124,5 +137,5 @@ jobs:
             ## Verificar la descarga
 
             ```powershell
-            Get-FileHash pastepad-3.0.0.zip -Algorithm SHA256
+            Get-FileHash pastepad-${{ steps.v.outputs.version }}.zip -Algorithm SHA256
             ```
