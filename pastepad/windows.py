@@ -331,6 +331,141 @@ def area_util(x, y, ancho_pantalla, alto_pantalla):
     return (0, 0, ancho_pantalla, alto_pantalla)
 
 
+# --------------------------------------------------- una sola instancia
+
+# Nombre unico del candado y del aviso. Van con un GUID para que no
+# choquen con nada mas del sistema.
+CANDADO = "Local\\pastepad-3ff1c0de-instancia-unica"
+AVISO_MOSTRAR = "pastepad-3ff1c0de-mostrate"
+ERROR_YA_EXISTE = 183          # ERROR_ALREADY_EXISTS
+
+
+CLASE_BUZON = "pastepad_buzon_3ff1c0de"
+HWND_MESSAGE = -3
+_handle_candado = None
+_wndproc = None          # hay que conservarlo o Python lo recolecta
+
+
+def reservar_instancia():
+    """True si somos el primero. False si ya hay otro pastepad abierto.
+
+    Sin esto, abrir el programa dos veces deja dos procesos peleandose:
+    Windows solo le da el atajo global a uno, y el segundo se queda como
+    una ventana muda que no responde a nada. Desde fuera parece que el
+    programa "se abre una vez y ya no vuelve a salir".
+    """
+    if not HAY_WIN32:
+        return True
+    try:
+        k32 = ctypes.windll.kernel32
+        # El handle se guarda a nivel de modulo a proposito: si el
+        # recolector lo cierra, Windows suelta el candado y deja entrar
+        # a un segundo proceso.
+        global _handle_candado
+        _handle_candado = k32.CreateMutexW(None, True, CANDADO)
+        return k32.GetLastError() != ERROR_YA_EXISTE
+    except Exception:
+        return True
+
+
+def pedir_que_se_muestre():
+    """Le dice a la instancia que ya estaba abierta que saque el panel.
+
+    Se busca su buzon por el nombre de clase. Es una ventana sin pixeles
+    (HWND_MESSAGE), que existe solo para recibir esto.
+    """
+    if not HAY_WIN32:
+        return False
+    try:
+        user32 = ctypes.windll.user32
+        user32.FindWindowExW.argtypes = [wintypes.HWND, wintypes.HWND,
+                                         wintypes.LPCWSTR, wintypes.LPCWSTR]
+        user32.FindWindowExW.restype = wintypes.HWND
+        hwnd = user32.FindWindowExW(wintypes.HWND(HWND_MESSAGE), None,
+                                    CLASE_BUZON, None)
+        if not hwnd:
+            return False
+        return bool(user32.PostMessageW(hwnd, 0x0400 + 7, 0, 0))
+    except Exception:
+        return False
+
+
+def abrir_buzon(al_pedir):
+    """Crea el buzon que escucha a las instancias que lleguen despues.
+
+    Una ventana solo-mensajes y no una difusion a todo el escritorio:
+    PostMessage a HWND_BROADCAST se entrega a ventanas de verdad, no a
+    colas de hilo, asi que un bucle suelto nunca lo recibiria.
+    """
+    if not HAY_WIN32:
+        return
+
+    def bucle():
+        global _wndproc
+        user32 = ctypes.windll.user32
+        PROC = ctypes.WINFUNCTYPE(ctypes.c_longlong, wintypes.HWND,
+                                  ctypes.c_uint, ctypes.c_size_t,
+                                  ctypes.c_ssize_t)
+
+        def proc(hwnd, msg, wp, lp):
+            if msg == 0x0400 + 7:          # WM_USER + 7
+                try:
+                    al_pedir()
+                except Exception:
+                    pass
+                return 0
+            return user32.DefWindowProcW(hwnd, msg, wp, lp)
+
+        _wndproc = PROC(proc)
+
+        class WNDCLASS(ctypes.Structure):
+            _fields_ = [("style", ctypes.c_uint), ("lpfnWndProc", PROC),
+                        ("cbClsExtra", ctypes.c_int),
+                        ("cbWndExtra", ctypes.c_int),
+                        ("hInstance", wintypes.HANDLE),
+                        ("hIcon", wintypes.HANDLE),
+                        ("hCursor", wintypes.HANDLE),
+                        ("hbrBackground", wintypes.HANDLE),
+                        ("lpszMenuName", wintypes.LPCWSTR),
+                        ("lpszClassName", wintypes.LPCWSTR)]
+
+        wc = WNDCLASS()
+        wc.lpfnWndProc = _wndproc
+        wc.lpszClassName = CLASE_BUZON
+        wc.hInstance = ctypes.windll.kernel32.GetModuleHandleW(None)
+        if not user32.RegisterClassW(ctypes.byref(wc)):
+            return
+
+        # Hay que declarar los tipos: sin esto, ctypes intenta pasar el
+        # -3 de HWND_MESSAGE como entero sin signo y revienta con
+        # "int too long to convert", asi que el buzon no llegaba a
+        # existir y la segunda instancia no encontraba a quien avisar.
+        user32.CreateWindowExW.argtypes = [
+            wintypes.DWORD, wintypes.LPCWSTR, wintypes.LPCWSTR,
+            wintypes.DWORD, ctypes.c_int, ctypes.c_int, ctypes.c_int,
+            ctypes.c_int, wintypes.HWND, wintypes.HMENU,
+            wintypes.HINSTANCE, wintypes.LPVOID]
+        user32.CreateWindowExW.restype = wintypes.HWND
+
+        hwnd = user32.CreateWindowExW(
+            0, CLASE_BUZON, CLASE_BUZON, 0, 0, 0, 0, 0,
+            wintypes.HWND(HWND_MESSAGE), None, wc.hInstance, None)
+        if not hwnd:
+            return
+        msg = wintypes.MSG()
+        while True:
+            try:
+                r = user32.GetMessageW(ctypes.byref(msg), None, 0, 0)
+                if r in (0, -1):
+                    break
+                user32.TranslateMessage(ctypes.byref(msg))
+                user32.DispatchMessageW(ctypes.byref(msg))
+            except Exception:
+                time.sleep(0.2)
+
+    threading.Thread(target=bucle, daemon=True, name="buzon").start()
+
+
 # ------------------------------------------------------------ atajo global
 
 MOD_ALT, MOD_CONTROL, MOD_SHIFT, MOD_WIN = 0x0001, 0x0002, 0x0004, 0x0008

@@ -8,6 +8,8 @@ Se llama main y no pastepad para no chocar con el paquete del mismo
 nombre: Python no sabria cual de los dos importar.
 """
 
+import sys
+
 import flet as ft
 
 from pastepad import estilo as st
@@ -32,7 +34,10 @@ def arrancar(page: ft.Page):
                    almacen.pref("tema", st.TEMA_DEF))
         if almacen.pref("autoarranque", "si") == "si":
             win.autoarranque(True)
-        App(page, almacen)
+        app = App(page, almacen)
+        # Abrir el programa otra vez, en vez de arrancar un segundo que
+        # no podria conseguir el atajo, saca el panel de este.
+        win.abrir_buzon(app.pedir_panel)
     except Exception:
         registro.fallo("arrancar")
         raise
@@ -40,4 +45,12 @@ def arrancar(page: ft.Page):
 
 if __name__ == "__main__":
     registro.instalar()
+    if not win.reservar_instancia():
+        # Ya hay un pastepad abierto. Se le pide que salga a la vista y
+        # este proceso se retira: dos instancias se pelean por el atajo
+        # global y la que pierde queda muerta en pantalla.
+        win.pedir_que_se_muestre()
+        registro.anotar("ya habia otra instancia; se le pidio mostrarse",
+                        "arranque")
+        sys.exit(0)
     ft.run(arrancar)

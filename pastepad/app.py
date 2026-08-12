@@ -189,6 +189,26 @@ class App:
     def alternar(self):
         self.mostrar() if not self.visible else self.ocultar()
 
+    def pedir_panel(self):
+        """Saca el panel porque alguien intento abrir el programa otra vez.
+
+        A diferencia de alternar(), esto nunca esconde: quien hace doble
+        clic en el icono quiere verlo, no que desaparezca.
+        """
+        try:
+            registro.anotar("otra instancia pidio el panel (visible=%s)"
+                            % self.visible, "pedir_panel")
+            self.destino = None
+            if not self.visible:
+                self.mostrar()
+            else:
+                self.page.window.focused = True
+                self.page.update()
+            registro.anotar("panel mostrado, visible=%s" % self.visible,
+                            "pedir_panel")
+        except Exception:
+            registro.fallo("pedir_panel")
+
     # ------------------------------------------------------ interfaz
 
     def _construir(self):
@@ -255,8 +275,42 @@ class App:
             bgcolor=st.C["fondo"], border_radius=st.R_PANEL,
             border=ft.Border.all(1, st.C["borde"]), expand=True)
 
-        self.page.add(self.raiz)
+        self.page.add(self._con_bordes(self.raiz))
         self._pintar_pie()
+
+    def _con_bordes(self, panel):
+        """Pone el panel bajo ocho franjas que lo dejan redimensionar.
+
+        Van en un Stack por encima del contenido: una ventana sin marco
+        no tiene bordes de sistema que agarrar, asi que hay que ponerlos.
+        Son transparentes; lo unico que se nota es que el cursor cambia.
+        """
+        g = st.GROSOR_BORDE
+        B = ft.WindowResizeEdge
+        p = self.page
+        return ft.Stack([
+            panel,
+            # lados
+            ft.Container(content=st.borde_redimension(p, B.TOP, alto=g),
+                         top=0, left=g, right=g),
+            ft.Container(content=st.borde_redimension(p, B.BOTTOM, alto=g),
+                         bottom=0, left=g, right=g),
+            ft.Container(content=st.borde_redimension(p, B.LEFT, ancho=g),
+                         left=0, top=g, bottom=g),
+            ft.Container(content=st.borde_redimension(p, B.RIGHT, ancho=g),
+                         right=0, top=g, bottom=g),
+            # esquinas, que van encima de los lados
+            ft.Container(content=st.borde_redimension(p, B.TOP_LEFT, g, g),
+                         top=0, left=0),
+            ft.Container(content=st.borde_redimension(p, B.TOP_RIGHT, g, g),
+                         top=0, right=0),
+            ft.Container(content=st.borde_redimension(p, B.BOTTOM_LEFT,
+                                                      g, g),
+                         bottom=0, left=0),
+            ft.Container(content=st.borde_redimension(p, B.BOTTOM_RIGHT,
+                                                      g, g),
+                         bottom=0, right=0),
+        ], expand=True)
 
     def _pintar_pie(self):
         # Con la ventana estrecha no caben icono + dos botones con texto:

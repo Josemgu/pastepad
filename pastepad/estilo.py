@@ -180,6 +180,36 @@ def aplicar(acento=None, tema=None):
     return claro
 
 
+GROSOR_BORDE = 6        # franja sensible al arrastre, en pixeles
+
+
+def borde_redimension(page, lado, ancho=None, alto=None):
+    """Una franja invisible que redimensiona la ventana al arrastrarla.
+
+    Una ventana sin marco no tiene bordes de sistema, y por eso no se
+    puede estirar aunque resizable este en True: no hay nada que agarrar.
+    Windows dibuja esos bordes; aqui hay que ponerlos a mano.
+
+    El cursor cambia solo al pasar por encima, que es lo que le dice al
+    usuario que ahi se puede tirar.
+    """
+    cursores = {
+        ft.WindowResizeEdge.LEFT: ft.MouseCursor.RESIZE_LEFT_RIGHT,
+        ft.WindowResizeEdge.RIGHT: ft.MouseCursor.RESIZE_LEFT_RIGHT,
+        ft.WindowResizeEdge.TOP: ft.MouseCursor.RESIZE_UP_DOWN,
+        ft.WindowResizeEdge.BOTTOM: ft.MouseCursor.RESIZE_UP_DOWN,
+        ft.WindowResizeEdge.TOP_LEFT: ft.MouseCursor.RESIZE_UP_LEFT,
+        ft.WindowResizeEdge.TOP_RIGHT: ft.MouseCursor.RESIZE_UP_RIGHT,
+        ft.WindowResizeEdge.BOTTOM_LEFT: ft.MouseCursor.RESIZE_DOWN_LEFT,
+        ft.WindowResizeEdge.BOTTOM_RIGHT: ft.MouseCursor.RESIZE_DOWN_RIGHT,
+    }
+    return ft.GestureDetector(
+        content=ft.Container(width=ancho, height=alto,
+                             bgcolor=ft.Colors.TRANSPARENT),
+        mouse_cursor=cursores.get(lado, ft.MouseCursor.BASIC),
+        on_pan_start=lambda e, l=lado: page.window.start_resizing(l))
+
+
 def sombra(intensidad=1.0):
     """Sombra suave: es lo que separa una tarjeta del fondo sin bordes."""
     return ft.BoxShadow(
