@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 560" width="380" height="560" role="img" aria-label="Panel - modo Seleccionar">
+<title>pastepad seleccion multiple</title>
+<desc>Cada fila con casilla de marcar a la izquierda; pie con Todos, Borrar (n) y Cancelar.</desc>
+
+<rect x="0" y="0" width="380" height="560" rx="20" fill="#0B0B0D" stroke="#242429" stroke-width="1"/>
+<text x="16" y="26" font-family="Segoe UI" font-size="11" font-weight="400" fill="#6B6B75" text-anchor="start">Ctrl + Shift + V</text>
+<circle cx="300" cy="20" r="10" fill="#1B1B1F"/>
+<text x="300" y="24" font-family="Segoe UI" font-size="9" font-weight="400" fill="#9C9CA6" text-anchor="middle">II</text>
+<circle cx="330" cy="20" r="10" fill="#1B1B1F"/>
+<text x="330" y="24" font-family="Segoe UI" font-size="9" font-weight="400" fill="#9C9CA6" text-anchor="middle">@</text>
+<circle cx="360" cy="20" r="10" fill="#1B1B1F"/>
+<text x="360" y="24" font-family="Segoe UI" font-size="9" font-weight="400" fill="#9C9CA6" text-anchor="middle">x</text>
+<rect x="16" y="38" width="348" height="42" rx="12" fill="#141417" />
+<text x="32" y="64" font-family="Segoe UI" font-size="13" font-weight="400" fill="#6B6B75" text-anchor="start">◎  Buscar en todo</text>
+<rect x="16" y="90" width="172" height="30" rx="15" fill="#2DD4A7" />
+<text x="102" y="109" font-family="Segoe UI" font-size="12" font-weight="500" fill="#052E23" text-anchor="middle">Reciente</text>
+<rect x="192" y="90" width="172" height="30" rx="15" fill="#1B1B1F" />
+<text x="278" y="109" font-family="Segoe UI" font-size="12" font-weight="400" fill="#9C9CA6" text-anchor="middle">Guardados</text>
+<rect x="16" y="132" width="348" height="56" rx="14" fill="#1B1B1F" />
+<text x="28" y="165" font-family="Segoe UI" font-size="17" font-weight="400" fill="#2DD4A7" text-anchor="start">☑</text>
+<text x="50" y="154" font-family="Segoe UI" font-size="12.5" font-weight="400" fill="#F4F4F5" text-anchor="start">Reporte mensual de facturacion</text>
+<rect x="16" y="194" width="348" height="56" rx="14" fill="#1B1B1F" />
+<text x="28" y="227" font-family="Segoe UI" font-size="17" font-weight="400" fill="#2DD4A7" text-anchor="start">☑</text>
+<text x="50" y="216" font-family="Segoe UI" font-size="12.5" font-weight="400" fill="#F4F4F5" text-anchor="start">Hola [[nombre]], te escribo sobre.</text>
+<rect x="16" y="256" width="348" height="56" rx="14" fill="#1B1B1F" />
+<text x="28" y="289" font-family="Segoe UI" font-size="17" font-weight="400" fill="#6B6B75" text-anchor="start">☐</text>
+<text x="50" y="278" font-family="Segoe UI" font-size="12.5" font-weight="400" fill="#F4F4F5" text-anchor="start">Imagen copiada</text>
+<rect x="16" y="318" width="348" height="56" rx="14" fill="#1B1B1F" />
+<text x="28" y="351" font-family="Segoe UI" font-size="17" font-weight="400" fill="#6B6B75" text-anchor="start">☐</text>
+<text x="50" y="340" font-family="Segoe UI" font-size="12.5" font-weight="400" fill="#F4F4F5" text-anchor="start">git commit -m "fix: typo"</text>
+<line x1="16" y1="508" x2="364" y2="508" stroke="#242429" stroke-width="1"/>
+<rect x="16" y="522" width="56" height="26" rx="8" fill="#1B1B1F" />
+<text x="44" y="539" font-family="Segoe UI" font-size="11" font-weight="400" fill="#9C9CA6" text-anchor="middle">Todos</text>
+<rect x="80" y="522" width="90" height="26" rx="10" fill="#DC2626" />
+<text x="125" y="539" font-family="Segoe UI" font-size="11" font-weight="500" fill="#FFFFFF" text-anchor="middle">Borrar (2)</text>
+<rect x="284" y="522" width="80" height="26" rx="8" fill="#1B1B1F" />
+<text x="324" y="539" font-family="Segoe UI" font-size="11" font-weight="400" fill="#9C9CA6" text-anchor="middle">Cancelar</text>
+</svg>

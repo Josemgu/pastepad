@@ -4,6 +4,8 @@
 # ayudantes en minusculas (ft.padding.symmetric) se eliminaron en esta
 # linea, asi que un piso mas bajo revienta en el primer arranque.
 flet>=0.70
-keyboard>=0.13
+# keyboard: eliminada en la v3. Su hook WH_KEYBOARD_LL lo desengancha
+# Windows en silencio y el atajo moria. Ahora se usa RegisterHotKey.
+# Ver pastepad/windows.py, clase AtajoGlobal.
 pyperclip>=1.8
 pywin32>=306

@@ -26,7 +26,8 @@ def arrancar(page: ft.Page):
     """
     try:
         almacen = Almacen()
-        st.aplicar(almacen.pref("acento", "menta"))
+        st.aplicar(almacen.pref("acento", "menta"),
+                   almacen.pref("tema", st.TEMA_DEF))
         if almacen.pref("autoarranque", "si") == "si":
             win.autoarranque(True)
         App(page, almacen)

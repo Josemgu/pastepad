@@ -134,7 +134,12 @@ class Almacen:
     cuenta; ahora pasan por aqui, que es lo unico que toca el disco.
     """
 
+    # Cada cuanto se vuelca el historial pendiente, en segundos.
+    INTERVALO_VOLCADO = 3.0
+
     def __init__(self):
+        self._hist_sucio = False
+        self._ultimo_volcado = 0.0
         self.prefs = _leer(cfg.RUTA_PREFS, {})
         self.hist = _leer(cfg.RUTA_HIST, [])
         datos = _leer(cfg.RUTA_DATOS, {})
@@ -159,8 +164,34 @@ class Almacen:
         _escribir(cfg.RUTA_DATOS, {"categorias": self.carpetas,
                                    "snippets": self.snippets})
 
-    def guardar_hist(self):
+    def guardar_hist(self, ya=False):
+        """Marca el historial como pendiente; el disco puede esperar.
+
+        Antes cada copia reescribia el JSON entero. Con 80 entradas de
+        20 KB eso son 7,8 ms y 1,2 MB en cada Ctrl+C, y en el peor caso
+        (80 x 200 000 caracteres) 16 MB. Ahora se acumula y se vuelca
+        como mucho cada INTERVALO_VOLCADO segundos.
+
+        Con ya=True se escribe en el acto: lo que el usuario hizo a
+        proposito (fijar, borrar, vaciar) tiene que sobrevivir aunque el
+        programa muera un segundo despues. Lo que se difiere es solo la
+        captura automatica del portapapeles.
+        """
+        self._hist_sucio = True
+        if ya:
+            self.volcar(True)
+
+    def volcar(self, forzar=False):
+        """Escribe el historial pendiente. True si toco el disco."""
+        if not self._hist_sucio:
+            return False
+        ahora = time.time()
+        if not forzar and ahora - self._ultimo_volcado < self.INTERVALO_VOLCADO:
+            return False
         _escribir(cfg.RUTA_HIST, self.hist)
+        self._hist_sucio = False
+        self._ultimo_volcado = ahora
+        return True
 
     # ---- carpetas
 
@@ -241,7 +272,7 @@ class Almacen:
 
     def fijar(self, entrada):
         entrada["pin"] = not entrada.get("pin")
-        self.guardar_hist()
+        self.guardar_hist(True)
 
     def borrar(self, elemento):
         """Sirve para los dos tipos: el historial lleva 'tipo', los
@@ -252,7 +283,7 @@ class Almacen:
                 self.hist.remove(elemento)
             except ValueError:
                 return False
-            self.guardar_hist()
+            self.guardar_hist(True)
         else:
             try:
                 self.snippets.remove(elemento)
@@ -270,7 +301,7 @@ class Almacen:
             if not x.get("pin"):
                 self._borrar_imagen(x)
         self.hist = [x for x in self.hist if x.get("pin")]
-        self.guardar_hist()
+        self.guardar_hist(True)
 
     def hist_ordenado(self):
         return ([x for x in self.hist if x.get("pin")] +

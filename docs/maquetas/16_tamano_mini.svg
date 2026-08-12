@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 380" width="300" height="380" role="img" aria-label="Panel tamano Mini">
+<title>pastepad tamano mini</title>
+<desc>El panel mas pequeno: 300 por 380, mismos elementos pero con menos filas visibles.</desc>
+
+<rect x="0" y="0" width="300" height="380" rx="20" fill="#0B0B0D" stroke="#242429" stroke-width="1"/>
+<text x="16" y="26" font-family="Segoe UI" font-size="11" font-weight="400" fill="#6B6B75" text-anchor="start">Ctrl + Shift + V</text>
+<circle cx="300" cy="20" r="10" fill="#1B1B1F" />
+<text x="300" y="24" font-family="Segoe UI" font-size="9" font-weight="400" fill="#9C9CA6" text-anchor="middle">II</text>
+<circle cx="330" cy="20" r="10" fill="#1B1B1F" />
+<text x="330" y="24" font-family="Segoe UI" font-size="9" font-weight="400" fill="#9C9CA6" text-anchor="middle">@</text>
+<circle cx="360" cy="20" r="10" fill="#1B1B1F" />
+<text x="360" y="24" font-family="Segoe UI" font-size="9" font-weight="400" fill="#9C9CA6" text-anchor="middle">x</text>
+<rect x="14" y="34" width="272" height="38" rx="11" fill="#141417" />
+<text x="28" y="58" font-family="Segoe UI" font-size="12" font-weight="400" fill="#6B6B75" text-anchor="start">◎  Buscar</text>
+<rect x="14" y="82" width="134" height="28" rx="14" fill="#2DD4A7" />
+<text x="81" y="101" font-family="Segoe UI" font-size="11" font-weight="500" fill="#052E23" text-anchor="middle">Reciente</text>
+<rect x="154" y="82" width="134" height="28" rx="14" fill="#1B1B1F" />
+<text x="221" y="101" font-family="Segoe UI" font-size="11" font-weight="400" fill="#9C9CA6" text-anchor="middle">Guardados</text>
+<rect x="14" y="122" width="272" height="50" rx="12" fill="#2DD4A7" />
+<text x="24" y="151" font-family="Segoe UI" font-size="11.5" font-weight="400" fill="#052E23" text-anchor="start">Reporte mensual</text>
+<rect x="14" y="178" width="272" height="50" rx="12" fill="#1B1B1F" />
+<text x="24" y="207" font-family="Segoe UI" font-size="11.5" font-weight="400" fill="#F4F4F5" text-anchor="start">Hola [[nombre]]...</text>
+<rect x="14" y="234" width="272" height="50" rx="12" fill="#1B1B1F" />
+<text x="24" y="263" font-family="Segoe UI" font-size="11.5" font-weight="400" fill="#F4F4F5" text-anchor="start">Imagen copiada</text>
+<line x1="14" y1="334" x2="286" y2="334" stroke="#242429" stroke-width="1"/>
+<text x="28" y="361" font-family="Segoe UI" font-size="14" font-weight="400" fill="#9C9CA6" text-anchor="middle">⚇</text>
+<rect x="216" y="347" width="72" height="24" rx="8" fill="#2DD4A7" />
+<text x="252" y="363" font-family="Segoe UI" font-size="10.5" font-weight="500" fill="#052E23" text-anchor="middle">+ Nuevo</text>
+</svg>

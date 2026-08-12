@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 220" width="380" height="220" role="img" aria-label="Cabecera con pausa activa">
+<title>pastepad captura en pausa</title>
+<desc>Solo la cabecera: el aviso rojo 'En pausa' a la izquierda y el icono cambiado a play en rojo, a la derecha.</desc>
+
+<rect x="0" y="0" width="380" height="220" rx="20" fill="#0B0B0D" stroke="#242429" stroke-width="1"/>
+<text x="16" y="26" font-family="Segoe UI" font-size="11" font-weight="400" fill="#6B6B75" text-anchor="start">Ctrl + Shift + V</text>
+<text x="150" y="26" font-family="Segoe UI" font-size="11" font-weight="500" fill="#EF4444" text-anchor="start">● En pausa</text>
+<circle cx="300" cy="20" r="10" fill="#1B1B1F" stroke="#EF4444" stroke-width="1"/>
+<text x="300" y="24" font-family="Segoe UI" font-size="9" font-weight="400" fill="#EF4444" text-anchor="middle">▶</text>
+<circle cx="330" cy="20" r="10" fill="#1B1B1F" />
+<text x="330" y="24" font-family="Segoe UI" font-size="9" font-weight="400" fill="#9C9CA6" text-anchor="middle">@</text>
+<circle cx="360" cy="20" r="10" fill="#1B1B1F" />
+<text x="360" y="24" font-family="Segoe UI" font-size="9" font-weight="400" fill="#9C9CA6" text-anchor="middle">x</text>
+<rect x="16" y="50" width="348" height="42" rx="12" fill="#141417" />
+<text x="32" y="76" font-family="Segoe UI" font-size="13" font-weight="400" fill="#6B6B75" text-anchor="start">◎  Buscar en todo</text>
+<text x="16" y="150" font-family="Segoe UI" font-size="11" font-weight="400" fill="#6B6B75" text-anchor="start">Mientras esta en pausa, el vigilante del</text>
+<text x="16" y="166" font-family="Segoe UI" font-size="11" font-weight="400" fill="#6B6B75" text-anchor="start">portapapeles no anota nada nuevo. El boton</text>
+<text x="16" y="182" font-family="Segoe UI" font-size="11" font-weight="400" fill="#6B6B75" text-anchor="start">pasa de icono de pausa a icono de play, en rojo.</text>
+</svg>

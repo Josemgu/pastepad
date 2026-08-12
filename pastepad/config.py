@@ -10,9 +10,9 @@ VERSION = "3.0.0"
 
 # --- ventana
 TAMANOS = {"mini": (300, 380), "chico": (340, 460),
-           "mediano": (380, 560), "grande": (470, 720)}
+           "mediano": (380, 560), "grande": (470, 700)}
 TAMANO_DEF = "mediano"
-MIN_ANCHO, MIN_ALTO = 290, 340
+MIN_ANCHO, MIN_ALTO = 300, 340
 MAX_ANCHO, MAX_ALTO = 720, 1100
 AGARRE = 18          # lado del triangulo de la esquina para estirar
 
@@ -26,10 +26,6 @@ ATAJOS = {
     "ctrl+alt+v": "Ctrl + Alt + V",
 }
 ATAJO_DEF = "ctrl+shift+v"
-
-# --- como se ven las carpetas
-CARPETAS_FICHAS, CARPETAS_MENU = "fichas", "menu"
-CARPETAS_DEF = CARPETAS_MENU
 
 # --- limites
 MAX_HIST = 80

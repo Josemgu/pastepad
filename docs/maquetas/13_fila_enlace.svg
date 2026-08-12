@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 300" width="380" height="300" role="img" aria-label="Fila con enlace">
+<title>pastepad fila enlace</title>
+<desc>Tres filas: un enlace normal, un enlace fijado y activo, y un texto comun sin icono de enlace para comparar.</desc>
+
+<rect x="0" y="0" width="380" height="300" rx="20" fill="#0B0B0D" stroke="#242429" stroke-width="1"/>
+<text x="16" y="30" font-family="Segoe UI" font-size="12" font-weight="500" fill="#F4F4F5" text-anchor="start">Detalle de una fila con enlace</text>
+<rect x="16" y="50" width="348" height="56" rx="14" fill="#1B1B1F" />
+<text x="28" y="72" font-family="Segoe UI" font-size="13" font-weight="400" fill="#2DD4A7" text-anchor="start">🔗</text>
+<text x="48" y="72" font-family="Segoe UI" font-size="12.5" font-weight="400" fill="#F4F4F5" text-anchor="start">https://github.com/Josemgu/pastepad</text>
+<text x="48" y="90" font-family="Segoe UI" font-size="10" font-weight="400" fill="#2DD4A7" text-anchor="start">github.com</text>
+<text x="350" y="83" font-family="Segoe UI" font-size="15" font-weight="400" fill="#6B6B75" text-anchor="middle">⋯</text>
+<rect x="16" y="112" width="348" height="56" rx="14" fill="#2DD4A7" />
+<rect x="24" y="126" width="3" height="28" rx="2" fill="#FFFFFF" />
+<text x="46" y="134" font-family="Segoe UI" font-size="13" font-weight="400" fill="#052E23" text-anchor="start">🔗</text>
+<text x="66" y="134" font-family="Segoe UI" font-size="12.5" font-weight="500" fill="#052E23" text-anchor="start">https://docs.python.org/3</text>
+<text x="66" y="152" font-family="Segoe UI" font-size="10" font-weight="400" fill="#052E23" text-anchor="start">docs.python.org</text>
+<text x="334" y="145" font-family="Segoe UI" font-size="13" font-weight="400" fill="#FFFFFF" text-anchor="middle">⚑</text>
+<text x="360" y="145" font-family="Segoe UI" font-size="15" font-weight="400" fill="#FFFFFF" text-anchor="middle">⋯</text>
+<rect x="16" y="174" width="348" height="56" rx="14" fill="#1B1B1F" />
+<text x="22" y="196" font-family="Segoe UI" font-size="12.5" font-weight="400" fill="#F4F4F5" text-anchor="start">Reporte mensual de facturacion</text>
+<text x="22" y="214" font-family="Segoe UI" font-size="10" font-weight="400" fill="#6B6B75" text-anchor="start">29 caracteres</text>
+<text x="350" y="207" font-family="Segoe UI" font-size="15" font-weight="400" fill="#6B6B75" text-anchor="middle">⋯</text>
+<text x="16" y="264" font-family="Segoe UI" font-size="10.5" font-weight="400" fill="#6B6B75" text-anchor="start">El icono de enlace y el dominio solo aparecen</text>
+<text x="16" y="280" font-family="Segoe UI" font-size="10.5" font-weight="400" fill="#6B6B75" text-anchor="start">cuando el texto ES la URL completa, nada mas.</text>
+</svg>

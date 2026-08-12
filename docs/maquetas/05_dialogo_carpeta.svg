@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 190" width="360" height="190" role="img" aria-label="Dialogo - Nueva carpeta">
+<title>pastepad una_linea</title>
+<desc>Un solo campo de texto con etiqueta, botones Cancelar y Aceptar.</desc>
+
+<rect x="0" y="0" width="360" height="190" rx="20" fill="#141417" stroke="#242429" stroke-width="1"/>
+<text x="24" y="38" font-family="Segoe UI" font-size="15" font-weight="500" fill="#F4F4F5" text-anchor="start">Nueva carpeta</text>
+<text x="24" y="70" font-family="Segoe UI" font-size="10" font-weight="400" fill="#9C9CA6" text-anchor="start">Nombre de la carpeta</text>
+<rect x="24" y="80" width="312" height="36" rx="10" fill="#1B1B1F" />
+<text x="38" y="103" font-family="Segoe UI" font-size="12" font-weight="400" fill="#F4F4F5" text-anchor="start">Trabajo</text>
+<rect x="24" y="140" width="90" height="32" rx="10" fill="#1B1B1F" />
+<text x="69" y="161" font-family="Segoe UI" font-size="11" font-weight="400" fill="#F4F4F5" text-anchor="middle">Cancelar</text>
+<rect x="246" y="140" width="90" height="32" rx="10" fill="#2DD4A7" />
+<text x="291" y="161" font-family="Segoe UI" font-size="11" font-weight="500" fill="#052E23" text-anchor="middle">Aceptar</text>
+</svg>

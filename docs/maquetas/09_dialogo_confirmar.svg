@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 180" width="360" height="180" role="img" aria-label="Dialogo - Confirmar">
+<title>pastepad dialogo confirmar</title>
+<desc>Mensaje de advertencia, Cancelar y Si-borrar en rojo.</desc>
+
+<rect x="0" y="0" width="360" height="180" rx="20" fill="#141417" stroke="#242429" stroke-width="1"/>
+<text x="24" y="38" font-family="Segoe UI" font-size="15" font-weight="500" fill="#F4F4F5" text-anchor="start">Confirmar</text>
+<text x="24" y="68" font-family="Segoe UI" font-size="12" font-weight="400" fill="#F4F4F5" text-anchor="start">Eliminar la carpeta Trabajo y sus</text>
+<text x="24" y="86" font-family="Segoe UI" font-size="12" font-weight="400" fill="#F4F4F5" text-anchor="start">6 textos? Esto no se puede</text>
+<text x="24" y="104" font-family="Segoe UI" font-size="12" font-weight="400" fill="#F4F4F5" text-anchor="start">deshacer.</text>
+<rect x="24" y="130" width="90" height="32" rx="10" fill="#1B1B1F" />
+<text x="69" y="151" font-family="Segoe UI" font-size="11" font-weight="400" fill="#F4F4F5" text-anchor="middle">Cancelar</text>
+<rect x="236" y="130" width="100" height="32" rx="10" fill="#DC2626" />
+<text x="286" y="151" font-family="Segoe UI" font-size="11" font-weight="500" fill="#FFFFFF" text-anchor="middle">Si, borrar</text>
+</svg>

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 320" width="380" height="320" role="img" aria-label="Dialogo - Completar campos">
+<title>pastepad dialogo campos</title>
+<desc>Un campo de texto por cada [[marcador]] de la plantilla, con Cancelar y Pegar.</desc>
+
+<rect x="0" y="0" width="380" height="320" rx="20" fill="#141417" stroke="#242429" stroke-width="1"/>
+<text x="24" y="38" font-family="Segoe UI" font-size="14" font-weight="500" fill="#F4F4F5" text-anchor="start">Completar antes de pegar</text>
+<text x="24" y="70" font-family="Segoe UI" font-size="10" font-weight="400" fill="#9C9CA6" text-anchor="start">nombre</text>
+<rect x="24" y="80" width="332" height="32" rx="10" fill="#1B1B1F" />
+<text x="24" y="132" font-family="Segoe UI" font-size="10" font-weight="400" fill="#9C9CA6" text-anchor="start">tema</text>
+<rect x="24" y="142" width="332" height="32" rx="10" fill="#1B1B1F" />
+<text x="24" y="194" font-family="Segoe UI" font-size="10" font-weight="400" fill="#9C9CA6" text-anchor="start">fecha</text>
+<rect x="24" y="204" width="332" height="32" rx="10" fill="#1B1B1F" />
+<rect x="24" y="268" width="90" height="32" rx="10" fill="#1B1B1F" />
+<text x="69" y="289" font-family="Segoe UI" font-size="11" font-weight="400" fill="#F4F4F5" text-anchor="middle">Cancelar</text>
+<rect x="274" y="268" width="82" height="32" rx="10" fill="#2DD4A7" />
+<text x="315" y="289" font-family="Segoe UI" font-size="11" font-weight="500" fill="#052E23" text-anchor="middle">Pegar</text>
+</svg>

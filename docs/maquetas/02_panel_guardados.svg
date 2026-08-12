@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 560" width="380" height="560" role="img" aria-label="Panel - pestana Guardados">
+<title>pastepad panel, carpetas</title>
+<desc>Igual que Reciente pero con el desplegable de carpetas debajo de las pestanas y el pie con iconos de carpeta nueva, lista y Seleccionar.</desc>
+
+<rect x="0" y="0" width="380" height="560" rx="20" fill="#0B0B0D" stroke="#242429" stroke-width="1"/>
+<text x="16" y="26" font-family="Segoe UI" font-size="11" font-weight="400" fill="#6B6B75" text-anchor="start">Ctrl + Shift + V</text>
+<circle cx="300" cy="20" r="10" fill="#1B1B1F"/>
+<text x="300" y="24" font-family="Segoe UI" font-size="9" font-weight="400" fill="#9C9CA6" text-anchor="middle">II</text>
+<circle cx="330" cy="20" r="10" fill="#1B1B1F"/>
+<text x="330" y="24" font-family="Segoe UI" font-size="9" font-weight="400" fill="#9C9CA6" text-anchor="middle">@</text>
+<circle cx="360" cy="20" r="10" fill="#1B1B1F"/>
+<text x="360" y="24" font-family="Segoe UI" font-size="9" font-weight="400" fill="#9C9CA6" text-anchor="middle">x</text>
+<rect x="16" y="38" width="348" height="42" rx="12" fill="#141417" />
+<text x="32" y="64" font-family="Segoe UI" font-size="13" font-weight="400" fill="#6B6B75" text-anchor="start">◎  Buscar en todo</text>
+<rect x="16" y="90" width="172" height="30" rx="15" fill="#1B1B1F" />
+<text x="102" y="109" font-family="Segoe UI" font-size="12" font-weight="400" fill="#9C9CA6" text-anchor="middle">Reciente</text>
+<rect x="192" y="90" width="172" height="30" rx="15" fill="#2DD4A7" />
+<text x="278" y="109" font-family="Segoe UI" font-size="12" font-weight="500" fill="#052E23" text-anchor="middle">Guardados</text>
+<rect x="16" y="128" width="348" height="34" rx="10" fill="#2DD4A7" />
+<text x="30" y="150" font-family="Segoe UI" font-size="12" font-weight="500" fill="#052E23" text-anchor="start">📁  Trabajo</text>
+<text x="352" y="150" font-family="Segoe UI" font-size="13" font-weight="400" fill="#052E23" text-anchor="middle">▾</text>
+<rect x="16" y="176" width="348" height="56" rx="14" fill="#2DD4A7" />
+<rect x="24" y="190" width="3" height="28" rx="2" fill="#FFFFFF" />
+<text x="34" y="198" font-family="Segoe UI" font-size="12.5" font-weight="500" fill="#052E23" text-anchor="start">Plantilla de correo de seguimiento</text>
+<text x="34" y="216" font-family="Segoe UI" font-size="10" font-weight="400" fill="#052E23" text-anchor="start">Trabajo</text>
+<text x="350" y="209" font-family="Segoe UI" font-size="15" font-weight="400" fill="#052E23" text-anchor="middle">⋯</text>
+<rect x="16" y="238" width="348" height="56" rx="14" fill="#1B1B1F" />
+<text x="22" y="260" font-family="Segoe UI" font-size="12.5" font-weight="400" fill="#F4F4F5" text-anchor="start">Encabezado de reporte semanal</text>
+<text x="22" y="278" font-family="Segoe UI" font-size="10" font-weight="400" fill="#6B6B75" text-anchor="start">Trabajo</text>
+<text x="350" y="271" font-family="Segoe UI" font-size="15" font-weight="400" fill="#6B6B75" text-anchor="middle">⋯</text>
+<rect x="16" y="300" width="348" height="56" rx="14" fill="#1B1B1F" />
+<text x="22" y="322" font-family="Segoe UI" font-size="12.5" font-weight="400" fill="#F4F4F5" text-anchor="start">Comando de despliegue</text>
+<text x="22" y="340" font-family="Segoe UI" font-size="10" font-weight="400" fill="#6B6B75" text-anchor="start">Notas</text>
+<text x="350" y="333" font-family="Segoe UI" font-size="15" font-weight="400" fill="#6B6B75" text-anchor="middle">⋯</text>
+<rect x="16" y="362" width="348" height="56" rx="14" fill="#1B1B1F" />
+<text x="22" y="384" font-family="Segoe UI" font-size="12.5" font-weight="400" fill="#F4F4F5" text-anchor="start">Enlace a documentacion interna</text>
+<text x="22" y="402" font-family="Segoe UI" font-size="10" font-weight="400" fill="#6B6B75" text-anchor="start">docs.example.com</text>
+<text x="350" y="395" font-family="Segoe UI" font-size="15" font-weight="400" fill="#6B6B75" text-anchor="middle">⋯</text>
+<line x1="16" y1="508" x2="364" y2="508" stroke="#242429" stroke-width="1"/>
+<text x="30" y="538" font-family="Segoe UI" font-size="15" font-weight="400" fill="#9C9CA6" text-anchor="middle">📁+</text>
+<text x="60" y="538" font-family="Segoe UI" font-size="16" font-weight="400" fill="#9C9CA6" text-anchor="middle">≡</text>
+<rect x="84" y="522" width="94" height="26" rx="8" fill="#1B1B1F" />
+<text x="131" y="539" font-family="Segoe UI" font-size="11" font-weight="400" fill="#9C9CA6" text-anchor="middle">Seleccionar</text>
+<rect x="284" y="522" width="80" height="26" rx="10" fill="#2DD4A7" />
+<text x="324" y="539" font-family="Segoe UI" font-size="12" font-weight="500" fill="#052E23" text-anchor="middle">+ Nuevo</text>
+</svg>

@@ -12,7 +12,6 @@ import time
 import webbrowser
 
 import flet as ft
-import keyboard
 import pyperclip
 
 from . import config as cfg
@@ -44,14 +43,21 @@ class App:
         self.ultimo_texto = None
         self.visible = True
         self._seq = win.secuencia()
-        self._atajo_puesto = None
+        self._atajo_global = None
         self.cola = queue.Queue()
+        # Contadores para el latido: ver _latido().
+        self._pulsadas = 0
+        self._atendidas = 0
+        self._ultimo_latido = None
+        self.grupos_abiertos = {"marcadores": True, "notas": True}
 
         self.atajo = almacen.pref("atajo", cfg.ATAJO_DEF)
         if self.atajo not in cfg.ATAJOS:
             self.atajo = cfg.ATAJO_DEF
         self.pausado = bool(almacen.pref("pausado", False))
-        self.modo_carpetas = almacen.pref("carpetas", cfg.CARPETAS_DEF)
+        self.tema = almacen.pref("tema", st.TEMA_DEF)
+        if self.tema not in st.TEMAS:
+            self.tema = st.TEMA_DEF
         self.tamano = almacen.pref("tamano", cfg.TAMANO_DEF)
         if self.tamano not in cfg.TAMANOS:
             self.tamano = cfg.TAMANO_DEF
@@ -66,9 +72,21 @@ class App:
 
     # ------------------------------------------------------ ventana
 
+    def _medidas(self):
+        """El tamano guardado, o el del preset si nunca se arrastro.
+
+        Lo arrastrado manda sobre el preset: si el usuario se molesto en
+        ajustar la ventana a mano, es lo que quiere ver al abrirla.
+        """
+        ancho, alto = cfg.TAMANOS[self.tamano]
+        ancho = self.almacen.pref("ancho") or ancho
+        alto = self.almacen.pref("alto") or alto
+        return (max(cfg.MIN_ANCHO, min(int(ancho), cfg.MAX_ANCHO)),
+                max(cfg.MIN_ALTO, min(int(alto), cfg.MAX_ALTO)))
+
     def _preparar_ventana(self):
         p = self.page
-        ancho, alto = cfg.TAMANOS[self.tamano]
+        ancho, alto = self._medidas()
         p.title = cfg.APP
         p.window.frameless = True
         p.window.title_bar_hidden = True
@@ -76,8 +94,8 @@ class App:
         p.window.skip_task_bar = True
         p.window.resizable = True
         p.window.width, p.window.height = ancho, alto
-        p.window.min_width, p.window.min_height = 300, 340
-        p.window.max_width, p.window.max_height = 720, 1100
+        p.window.min_width, p.window.min_height = cfg.MIN_ANCHO, cfg.MIN_ALTO
+        p.window.max_width, p.window.max_height = cfg.MAX_ANCHO, cfg.MAX_ALTO
         p.window.bgcolor = ft.Colors.TRANSPARENT
         p.bgcolor = ft.Colors.TRANSPARENT
         p.padding = 0
@@ -90,6 +108,29 @@ class App:
         if e.type == ft.WindowEventType.BLUR and self.visible:
             # Un clic fuera cierra el panel, como hace Win+V.
             self.ocultar()
+        elif e.type == ft.WindowEventType.RESIZED:
+            self._guardar_medidas()
+        elif e.type == ft.WindowEventType.CLOSE:
+            # Ultima oportunidad de bajar a disco lo que quede pendiente.
+            self.almacen.volcar(True)
+
+    def _guardar_medidas(self):
+        """Recuerda el tamano al que se dejo la ventana.
+
+        Se engancha a RESIZED y no a RESIZE: el primero llega al soltar
+        el borde, el segundo en cada pixel del arrastre, y eso serian
+        cincuenta escrituras del JSON por segundo.
+        """
+        p = self.page
+        ancho, alto = p.window.width, p.window.height
+        if not ancho or not alto:
+            return
+        ancho, alto = int(ancho), int(alto)
+        if (ancho, alto) == (self.almacen.pref("ancho"),
+                             self.almacen.pref("alto")):
+            return
+        self.almacen.poner_pref("ancho", ancho)
+        self.almacen.poner_pref("alto", alto)
 
     def _al_teclado(self, e: ft.KeyboardEvent):
         if e.key == "Escape":
@@ -150,9 +191,13 @@ class App:
 
     def _construir(self):
         self.buscador = st.campo("Buscar en todo", self._al_buscar,
-                                 self._al_enviar)
-        self.lista = ft.ListView(spacing=st.E2, padding=ft.Padding.symmetric(
-            horizontal=st.E3, vertical=st.E1), expand=True, auto_scroll=False)
+                                 self._al_enviar,
+                                 icono_nombre=ft.Icons.SEARCH,
+                                 alto=st.ALTO_BUSCADOR)
+        self.lista = ft.ListView(
+            spacing=st.SEP_FILA,
+            padding=ft.Padding.symmetric(horizontal=st.E4, vertical=st.E1),
+            expand=True, auto_scroll=False)
 
         self.tab_reciente = st.pildora("Reciente",
                                        lambda e: self.cambiar("reciente"),
@@ -163,23 +208,31 @@ class App:
             160, ft.AnimationCurve.EASE_OUT))
         self.pie = ft.Container()
 
+        self.aviso_pausa = st.texto("● En pausa", st.T_MINI,
+                                    filas.ROJO, ft.FontWeight.W_500)
+        self.aviso_pausa.visible = self.pausado
+        self.boton_pausa = st.icono(
+            ft.Icons.PLAY_ARROW if self.pausado else ft.Icons.PAUSE,
+            lambda e: self.alternar_pausa(), 17,
+            filas.ROJO if self.pausado else None,
+            "Reanudar la captura" if self.pausado else "Pausar la captura",
+            True)
+
         cabecera = ft.WindowDragArea(
             ft.Container(
                 content=ft.Row([
                     st.texto(cfg.ATAJOS.get(self.atajo, self.atajo),
                              st.T_MINI, st.C["tenue"]),
+                    ft.Container(width=st.E3),
+                    self.aviso_pausa,
                     ft.Container(expand=True),
-                    st.icono(ft.Icons.PLAY_ARROW if self.pausado
-                             else ft.Icons.PAUSE,
-                             lambda e: self.alternar_pausa(), 17,
-                             "#EF4444" if self.pausado else None,
-                             "Pausar la captura"),
+                    self.boton_pausa,
                     st.icono(ft.Icons.PALETTE_OUTLINED,
                              lambda e: self.abrir_apariencia(), 17, None,
-                             "Apariencia"),
+                             "Apariencia", True),
                     st.icono(ft.Icons.CLOSE, lambda e: self.ocultar(), 17,
-                             None, "Cerrar"),
-                ], spacing=0),
+                             None, "Cerrar", True),
+                ], spacing=st.E1),
                 padding=ft.Padding.only(left=st.E4, right=st.E2, top=st.E2)),
             maximizable=False)
 
@@ -191,7 +244,7 @@ class App:
                                                           vertical=st.E2)),
                 ft.Container(content=ft.Row([self.tab_reciente,
                                              self.tab_guardados],
-                                            spacing=st.E2),
+                                            spacing=st.E1),
                              padding=ft.Padding.only(left=st.E4, right=st.E4)),
                 self.barra_carpetas,
                 self.lista,
@@ -204,6 +257,12 @@ class App:
         self._pintar_pie()
 
     def _pintar_pie(self):
+        # Con la ventana estrecha no caben icono + dos botones con texto:
+        # el ultimo se salia por la derecha y quedaba cortado. Al apretar,
+        # "Nuevo" se queda solo con el signo mas.
+        apretado = self._compacta()
+        etiqueta_nuevo = "" if apretado else "Nuevo"
+        lado = 30 if apretado else 36
         if self.marcando:
             hijos = [
                 st.boton("Todos", lambda e: self.marcar_todos()),
@@ -214,42 +273,57 @@ class App:
             ]
         elif self.pestana == "guardados":
             hijos = [
-                st.icono(ft.Icons.CREATE_NEW_FOLDER_OUTLINED,
-                         lambda e: self.nueva_carpeta(), 18, None,
-                         "Nueva carpeta"),
+                st.icono(ft.Icons.CREATE_NEW_FOLDER,
+                         lambda e: self.nueva_carpeta(), 18, filas.AMBAR,
+                         "Nueva carpeta", False, lado),
                 st.icono(ft.Icons.PLAYLIST_ADD,
                          lambda e: self.agregar_lista(), 18, None,
-                         "Agregar una lista"),
-                st.boton("Seleccionar", lambda e: self.alternar_marcado()),
+                         "Agregar una lista", False, lado),
+            ]
+            # En mini no cabe: la maqueta 16 deja solo el icono y Nuevo.
+            if not apretado:
+                hijos.append(st.boton("Seleccionar",
+                                      lambda e: self.alternar_marcado()))
+            hijos += [
                 ft.Container(expand=True),
-                st.boton("Nuevo", lambda e: self.nuevo(), "acento",
+                st.boton(etiqueta_nuevo, lambda e: self.nuevo(), "acento",
                          ft.Icons.ADD),
             ]
         else:
             hijos = [
                 st.icono(ft.Icons.CLEANING_SERVICES_OUTLINED,
                          lambda e: self.vaciar(), 18, None,
-                         "Vaciar el historial"),
-                st.boton("Seleccionar", lambda e: self.alternar_marcado()),
+                         "Vaciar el historial", False, lado),
+            ]
+            if not apretado:
+                hijos.append(st.boton("Seleccionar",
+                                      lambda e: self.alternar_marcado()))
+            hijos += [
                 ft.Container(expand=True),
-                st.boton("Nuevo", lambda e: self.nuevo(), "acento",
+                st.boton(etiqueta_nuevo, lambda e: self.nuevo(), "acento",
                          ft.Icons.ADD),
             ]
-        self.pie.content = ft.Row(hijos, spacing=st.E2,
-                                  vertical_alignment=ft.CrossAxisAlignment.CENTER)
-        self.pie.padding = ft.Padding.only(left=st.E3, right=st.E4,
-                                           top=st.E2, bottom=st.E3)
+        self.pie.content = ft.Column([
+            # La linea de las maquetas: separa el pie de la lista sin
+            # tener que meterle un fondo distinto.
+            ft.Container(height=1, bgcolor=st.C["borde"],
+                         margin=ft.Margin.only(left=st.E4, right=st.E4,
+                                               bottom=st.E3)),
+            ft.Row(hijos, spacing=st.E2,
+                   vertical_alignment=ft.CrossAxisAlignment.CENTER),
+        ], spacing=0, tight=True)
+        self.pie.padding = ft.Padding.only(left=st.E4, right=st.E4,
+                                           bottom=st.E3)
 
     def _pintar_carpetas(self):
         if self.pestana != "guardados":
             self.barra_carpetas.height = 0
             self.barra_carpetas.content = None
             return
-        self.barra_carpetas.height = 46
-        if self.modo_carpetas == cfg.CARPETAS_MENU:
-            self.barra_carpetas.content = self._carpetas_menu()
-        else:
-            self.barra_carpetas.content = self._carpetas_fichas()
+        # 58 y no 46: los 12 de arriba son el aire que separa la barra de
+        # las pestanas. Pegadas parecian un solo bloque.
+        self.barra_carpetas.height = 58
+        self.barra_carpetas.content = self._carpetas_menu()
 
     def _carpetas_menu(self):
         opciones = [filas._item("Todas las carpetas", ft.Icons.FOLDER_OPEN,
@@ -266,6 +340,9 @@ class App:
                                     ft.Icons.CREATE_NEW_FOLDER_OUTLINED,
                                     lambda e: self.nueva_carpeta()))
         if self.carpeta:
+            opciones.append(filas._item("Editar %s..." % self.carpeta,
+                                        ft.Icons.TUNE,
+                                        lambda e: self.editar_carpeta()))
             opciones.append(filas._item("Renombrar %s" % self.carpeta,
                                         ft.Icons.DRIVE_FILE_RENAME_OUTLINE,
                                         lambda e: self.renombrar_carpeta()))
@@ -279,9 +356,10 @@ class App:
                 items=opciones,
                 content=ft.Container(
                     content=ft.Row([
-                        ft.Icon(ft.Icons.FOLDER_OUTLINED, size=15,
-                                color=st.C["sobre"] if self.carpeta
-                                else st.C["medio"]),
+                        # La carpeta va siempre en ambar, encendida o no:
+                        # es la senia por la que se reconoce de un vistazo.
+                        ft.Icon(ft.Icons.FOLDER, size=15,
+                                color=filas.AMBAR),
                         st.texto(etiqueta, st.T_MENOR,
                                  st.C["sobre"] if self.carpeta
                                  else st.C["medio"]),
@@ -290,38 +368,38 @@ class App:
                                 color=st.C["sobre"] if self.carpeta
                                 else st.C["medio"]),
                     ], spacing=st.E2),
-                    bgcolor=st.C["acento"] if self.carpeta else st.C["tarjeta"],
-                    padding=ft.Padding.symmetric(horizontal=14, vertical=9),
-                    border_radius=st.R_CONTROL),
+                    bgcolor=st.C["acento"] if self.carpeta
+                    else st.C["tarjeta"],
+                    padding=ft.Padding.symmetric(horizontal=14, vertical=8),
+                    border_radius=10),
                 bgcolor=st.C["elevado"],
                 shape=ft.RoundedRectangleBorder(radius=12)),
-            padding=ft.Padding.only(left=st.E4, right=st.E4, bottom=st.E2))
-
-    def _carpetas_fichas(self):
-        fichas = [st.pildora("Todas",
-                             lambda e: self.elegir_carpeta(None),
-                             self.carpeta is None, False)]
-        for nombre in self.almacen.carpetas:
-            fichas.append(st.pildora(nombre,
-                                     lambda e, n=nombre: self.elegir_carpeta(n),
-                                     nombre == self.carpeta, False))
-        return ft.Container(
-            content=ft.Row(fichas, spacing=st.E2, scroll=ft.ScrollMode.HIDDEN),
-            padding=ft.Padding.only(left=st.E4, right=st.E4, bottom=st.E2))
+            padding=ft.Padding.only(left=st.E4, right=st.E4,
+                                    top=st.E3, bottom=st.E2))
 
     # ------------------------------------------------------ lista
 
     def cambiar(self, cual):
         self.pestana = cual
-        reciente = cual == "reciente"
-        for tab, activa in ((self.tab_reciente, reciente),
-                            (self.tab_guardados, not reciente)):
-            tab.bgcolor = st.C["acento"] if activa else st.C["tarjeta"]
-            tab.content.color = st.C["sobre"] if activa else st.C["medio"]
+        self._pintar_pestanas()
         if self.marcando:
             self.marcando = False
             self.marcados.clear()
         self.refrescar()
+
+    def _pintar_pestanas(self):
+        """Colorea la pestana activa.
+
+        Buscando no se resalta ninguna: la busqueda cruza las dos, y
+        dejar una encendida hacia creer que solo miraba ahi.
+        """
+        buscando = bool((self.buscador.value or "").strip())
+        reciente = self.pestana == "reciente"
+        for tab, activa in ((self.tab_reciente, reciente and not buscando),
+                            (self.tab_guardados,
+                             not reciente and not buscando)):
+            tab.bgcolor = st.C["acento"] if activa else st.C["tarjeta"]
+            tab.content.color = st.C["sobre"] if activa else st.C["medio"]
 
     def elegir_carpeta(self, nombre):
         self.carpeta = nombre
@@ -337,29 +415,86 @@ class App:
         consulta = (self.buscador.value or "").strip()
         if consulta:
             items = self.indice.buscar(consulta)
-            aviso = "Nada coincide con esa busqueda"
+            aviso, icono = "Nada coincide con esa busqueda", ft.Icons.SEARCH
         elif self.pestana == "guardados":
             items = [(s, "g") for s in self.almacen.snippets
                      if not self.carpeta or s["categoria"] == self.carpeta]
             aviso = "Vacio. Usa Nuevo para guardar un texto"
+            icono = ft.Icons.FOLDER_OPEN_OUTLINED
         else:
             items = [(h, "h") for h in self.almacen.hist_ordenado()]
             aviso = "Copia algo y aparecera aqui"
+            icono = ft.Icons.CONTENT_PASTE_OFF
 
         self.visibles = [d for d, _ in items]
         self.tipos = [t for _, t in items]
         if self.sel >= len(items):
             self.sel = 0
 
-        self.lista.controls = (
-            [filas.Fila(d, t, i == self.sel, self.marcando,
-                        id(d) in self.marcados, self._accion)
-             for i, (d, t) in enumerate(items)]
-            if items else [filas.vacio(aviso)])
+        compacta = self._compacta()
 
+        def tarjeta(i, d, t):
+            return filas.Fila(d, t, i == self.sel, self.marcando,
+                              id(d) in self.marcados, self._accion, compacta)
+
+        if not items:
+            self.lista.controls = [filas.vacio(aviso, icono)]
+        elif self.pestana == "guardados" and not consulta:
+            self.lista.controls = self._lista_agrupada(items, tarjeta)
+        else:
+            self.lista.controls = [tarjeta(i, d, t)
+                                   for i, (d, t) in enumerate(items)]
+
+        self._pintar_pestanas()
         self._pintar_carpetas()
         self._pintar_pie()
         self.page.update()
+
+    def _lista_agrupada(self, items, tarjeta):
+        """Guardados en dos grupos plegables: marcadores y notas.
+
+        Un marcador se abre en el navegador y una nota se pega: son dos
+        gestos distintos y mezclarlos obligaba a leer la lista entera
+        para encontrar cualquiera de los dos.
+        """
+        marcadores, notas = [], []
+        for i, (d, t) in enumerate(items):
+            texto = modelo.texto_de(d.get("runs", []))
+            (marcadores if modelo.es_enlace(texto) else notas).append(
+                (i, d, t))
+
+        controles = []
+        for clave, etiqueta, grupo, icono, color in (
+                ("marcadores", "Marcadores", marcadores,
+                 ft.Icons.BOOKMARK, st.C["acento"]),
+                ("notas", "Notas", notas,
+                 ft.Icons.STICKY_NOTE_2_OUTLINED, None)):
+            if not grupo:
+                continue
+            # Con un solo grupo la cabecera sobra: no hay nada que separar.
+            if marcadores and notas:
+                abierto = self.grupos_abiertos.get(clave, True)
+                controles.append(filas.cabecera_grupo(
+                    etiqueta, len(grupo), abierto,
+                    lambda e, c=clave: self._alternar_grupo(c),
+                    icono, color))
+                if not abierto:
+                    continue
+            controles += [tarjeta(i, d, t) for i, d, t in grupo]
+        return controles
+
+    def _alternar_grupo(self, clave):
+        self.grupos_abiertos[clave] = not self.grupos_abiertos.get(clave,
+                                                                   True)
+        self.refrescar()
+
+    def _compacta(self):
+        """True cuando la ventana esta tan estrecha que toca apretar.
+
+        Se mira el ancho real y no la preferencia de tamano: desde que
+        se puede arrastrar el borde, el preset ya no dice la verdad.
+        """
+        return (self.page.window.width or cfg.TAMANOS[self.tamano][0]) < 340
 
     def _mover(self, paso):
         if not self.visibles:
@@ -470,19 +605,12 @@ class App:
 
         Sin lo primero el pegado se va al vacio: al abrirse el panel, el
         campo donde estaba el cursor perdio el foco.
-
-        El Ctrl+V lo manda Windows directamente y no la libreria del
-        teclado: esa esta escuchando el atajo, y pedirle que ademas
-        escriba mientras escucha la deja colgada.
         """
         time.sleep(0.10)
         win.devolver_foco(destino)
         time.sleep(0.16)
         if not win.pegar_con_teclado():
-            try:
-                keyboard.send("ctrl+v")
-            except Exception:
-                registro.fallo("_enviar/keyboard.send")
+            registro.anotar("no se pudo mandar Ctrl+V", "_enviar")
 
     # ------------------------------------------------------ vigilancia
 
@@ -491,9 +619,22 @@ class App:
         self.almacen.poner_pref("pausado", self.pausado)
         if not self.pausado:
             self._seq = win.secuencia()
-        self._construir_cabecera_pausa()
+        self._pintar_pausa()
 
-    def _construir_cabecera_pausa(self):
+    def _pintar_pausa(self):
+        """Refleja el estado de pausa en la cabecera.
+
+        Hay que tocar las propiedades del boton una a una: se creo con
+        el icono ya resuelto, y un page.update() a secas no lo recalcula.
+        Antes solo se hacia eso, y el boton se quedaba siempre en pausa.
+        """
+        self.boton_pausa.icon = (ft.Icons.PLAY_ARROW if self.pausado
+                                 else ft.Icons.PAUSE)
+        self.boton_pausa.icon_color = filas.ROJO if self.pausado \
+            else st.C["medio"]
+        self.boton_pausa.tooltip = ("Reanudar la captura" if self.pausado
+                                    else "Pausar la captura")
+        self.aviso_pausa.visible = self.pausado
         self.page.update()
 
     def _vigilar(self):
@@ -508,6 +649,11 @@ class App:
         """
         while True:
             time.sleep(0.7)
+            if cfg.TRAZA_ATAJO:
+                self._latido()
+            # Aqui se paga la escritura diferida, fuera del camino de la
+            # copia: anotar() ya no toca el disco.
+            self.almacen.volcar()
             if self.pausado:
                 continue
             try:
@@ -537,6 +683,35 @@ class App:
                 # persistente escribiria cinco mil copias en una tarde.
                 registro.fallo("_vigilar", repetir=False)
 
+    def _latido(self):
+        """Testigo del hilo del atajo, escrito desde el vigilante.
+
+        _vigilar corre cada 0,7 s y no toca la interfaz, asi que sigue
+        vivo aunque _atender_cola se cuelgue: por eso es el que puede
+        contarlo. Solo escribe cuando algun contador cambia.
+
+        Como leerlo cuando el atajo deja de responder:
+
+        - pulsadas sube y atendidas se queda quieta -> alternar() no
+          volvio. El hilo esta colgado dentro de Flet.
+        - no sube ninguna de las dos -> WM_HOTKEY no esta llegando: mira
+          si otro programa se quedo con la combinacion.
+        - suben las dos y aun asi no se ve el panel -> el problema esta
+          en la ventana, no en el atajo.
+
+        Con esto se cerro el fallo del atajo que moria tras unas pocas
+        pulsaciones: las dos subian a la par y luego se paraban de golpe,
+        lo que descarto la interfaz y senalo al hook de keyboard.
+        """
+        estado = (self._pulsadas, self._atendidas)
+        if estado == self._ultimo_latido:
+            return
+        self._ultimo_latido = estado
+        registro.anotar(
+            "pulsadas=%d  atendidas=%d  en_cola=%d  visible=%s"
+            % (self._pulsadas, self._atendidas, self.cola.qsize(),
+               self.visible), "_latido")
+
     def _tras_anotar(self):
         self.indice.invalidar()
         if self.visible and self.pestana == "reciente" \
@@ -546,23 +721,24 @@ class App:
     # ------------------------------------------------------ atajo
 
     def registrar_atajo(self, combinacion=None):
-        if self._atajo_puesto:
-            try:
-                keyboard.remove_hotkey(self._atajo_puesto)
-            except Exception:
-                registro.fallo("registrar_atajo/remove_hotkey")
-            self._atajo_puesto = None
+        """Pone el atajo global. False si Windows no lo acepta.
+
+        Devolver False importa: es lo que impide guardar como preferencia
+        una combinacion que otro programa ya tiene cogida.
+        """
         combinacion = combinacion or self.atajo
-        try:
-            self._atajo_puesto = keyboard.add_hotkey(combinacion,
-                                                     self._pulsado)
+        if self._atajo_global is None:
+            self._atajo_global = win.AtajoGlobal(self._pulsado,
+                                                 registro.anotar)
+        if self._atajo_global.poner(combinacion):
             self.atajo = combinacion
             registro.anotar("atajo registrado: %s" % combinacion,
                             "registrar_atajo")
             return True
-        except Exception:
-            registro.fallo("registrar_atajo/add_hotkey")
-            return False
+        registro.anotar(
+            "Windows rechazo '%s'. Suele ser que otro programa ya lo "
+            "tiene cogido." % combinacion, "registrar_atajo")
+        return False
 
     def _pulsado(self):
         """Corre dentro del hilo del teclado.
@@ -571,6 +747,10 @@ class App:
         tarda, la libreria que escucha el teclado se atasca y el atajo
         deja de responder despues de la primera vez.
         """
+        # Solo un contador en memoria: nada de escribir al log aqui. Este
+        # callback tiene que salir en milisegundos o Windows desengancha
+        # el hook de teclado, que es una de las cosas que se investigan.
+        self._pulsadas += 1
         try:
             self.cola.put_nowait(win.ventana_activa())
         except Exception:
@@ -597,6 +777,10 @@ class App:
                 if not self.visible:
                     self.destino = hwnd
                 self.alternar()
+                # Solo se incrementa si alternar() VOLVIO. Si el log
+                # muestra pulsadas subiendo y atendidas clavada, es que
+                # se quedo colgado ahi dentro.
+                self._atendidas += 1
             except Exception:
                 registro.fallo("_atender_cola")
                 time.sleep(0.2)
@@ -667,6 +851,23 @@ class App:
         vt.una_linea(self.page, "Renombrar carpeta", "Nuevo nombre",
                      renombrar, viejo)
 
+    def editar_carpeta(self):
+        """Renombrar y limpiar la carpeta en un solo paso."""
+        if not self.carpeta:
+            return
+        viejo = self.carpeta
+        contenido = self.almacen.contenido_de(viejo)
+
+        def aplicar(nuevo, fuera):
+            if fuera:
+                self.almacen.borrar_varios(fuera)
+            if nuevo and nuevo != viejo:
+                if self.almacen.renombrar_carpeta(viejo, nuevo):
+                    self.carpeta = nuevo
+            self.indice.invalidar()
+            self.refrescar()
+        vt.editar_carpeta(self.page, viejo, contenido, aplicar)
+
     def borrar_carpeta(self):
         if not self.carpeta:
             return
@@ -734,22 +935,18 @@ class App:
     # ------------------------------------------------------ apariencia
 
     def abrir_apariencia(self):
-        vt.apariencia(self.page, st.C.get("nombre", "menta"), self.tamano,
-                      self.atajo, self.modo_carpetas, self._aplicar_apariencia)
+        vt.apariencia(self.page, st.C.get("nombre", "menta"),
+                      self.atajo, self._aplicar_apariencia,
+                      self.tema)
 
-    def _aplicar_apariencia(self, acento, tamano, atajo, carpetas):
+    def _aplicar_apariencia(self, acento, atajo, tema="auto"):
         self.almacen.poner_pref("acento", acento)
-        st.aplicar(acento)
+        if tema != self.tema:
+            self.tema = tema
+            self.almacen.poner_pref("tema", tema)
+        st.aplicar(acento, self.tema)
         self.page.theme_mode = st.C["modo"]
 
-        if carpetas != self.modo_carpetas:
-            self.modo_carpetas = carpetas
-            self.almacen.poner_pref("carpetas", carpetas)
-        if tamano != self.tamano and tamano in cfg.TAMANOS:
-            self.tamano = tamano
-            self.almacen.poner_pref("tamano", tamano)
-            ancho, alto = cfg.TAMANOS[tamano]
-            self.page.window.width, self.page.window.height = ancho, alto
         if atajo != self.atajo and self.registrar_atajo(atajo):
             self.almacen.poner_pref("atajo", atajo)
 

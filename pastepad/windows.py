@@ -7,8 +7,11 @@ nada de handles ni de estructuras del sistema.
 
 import ctypes
 import os
+import queue
 import sys
+import threading
 import time
+from ctypes import wintypes
 
 import pyperclip
 
@@ -388,6 +391,131 @@ def area_util(x, y, ancho_pantalla, alto_pantalla):
         except Exception:
             pass
     return (0, 0, ancho_pantalla, alto_pantalla)
+
+
+# ------------------------------------------------------------ atajo global
+
+MOD_ALT, MOD_CONTROL, MOD_SHIFT, MOD_WIN = 0x0001, 0x0002, 0x0004, 0x0008
+MOD_NOREPEAT = 0x4000
+WM_HOTKEY = 0x0312
+WM_RECARGAR = 0x0400 + 1          # WM_USER + 1
+
+_MODIFICADORES = {"ctrl": MOD_CONTROL, "control": MOD_CONTROL,
+                  "alt": MOD_ALT, "shift": MOD_SHIFT, "win": MOD_WIN}
+_TECLAS = {"space": 0x20, "espacio": 0x20, "enter": 0x0D, "return": 0x0D,
+           "tab": 0x09, "esc": 0x1B, "escape": 0x1B, "insert": 0x2D}
+
+
+def descomponer_atajo(texto):
+    """'ctrl+shift+v' -> (MOD_CONTROL|MOD_SHIFT, 0x56). None si no vale.
+
+    Exige al menos un modificador: Windows rechaza registrar una tecla
+    suelta, y ademas se la quitaria al resto del sistema.
+    """
+    mods, vk = 0, None
+    for parte in texto.lower().replace(" ", "").split("+"):
+        if not parte:
+            continue
+        if parte in _MODIFICADORES:
+            mods |= _MODIFICADORES[parte]
+        elif parte in _TECLAS:
+            vk = _TECLAS[parte]
+        elif len(parte) == 1:
+            vk = ord(parte.upper())
+        else:
+            return None
+    return (mods, vk) if vk and mods else None
+
+
+class AtajoGlobal:
+    """Atajo global con RegisterHotKey, sin hook de teclado.
+
+    La libreria keyboard instala un hook WH_KEYBOARD_LL, y Windows lo
+    desengancha en silencio si el callback tarda mas que
+    LowLevelHooksTimeout (300 ms por defecto). No avisa, no lanza, no
+    deja rastro: el atajo respondia unas cuantas veces y despues moria.
+    Se vio en errores.log, con las pulsaciones dejando de contarse de
+    golpe mientras el resto de la aplicacion seguia sana.
+
+    RegisterHotKey no usa hook. El sistema encola un WM_HOTKEY en el
+    hilo que lo registro, y ese hilo tiene que bombear su cola. Por eso
+    todo pasa aqui dentro, en un hilo propio: registrar y recibir tienen
+    que ocurrir en el mismo.
+    """
+
+    ID = 1
+
+    def __init__(self, al_pulsar, anotar=None):
+        self._al_pulsar = al_pulsar
+        self._anotar = anotar or (lambda *a: None)
+        self._pendiente = None
+        self._puesto = False
+        self._id_hilo = None
+        self._resultado = queue.Queue()
+        self._listo = threading.Event()
+        if HAY_WIN32:
+            self._hilo = threading.Thread(target=self._bucle, daemon=True,
+                                          name="atajo")
+            self._hilo.start()
+            self._listo.wait(3)
+
+    def poner(self, combinacion):
+        """Registra o cambia el atajo. True si Windows lo acepto."""
+        partes = descomponer_atajo(combinacion)
+        if not partes or not self._listo.is_set():
+            return False
+        self._pendiente = partes
+        while not self._resultado.empty():       # sobras de un intento previo
+            self._resultado.get_nowait()
+        if not ctypes.windll.user32.PostThreadMessageW(
+                self._id_hilo, WM_RECARGAR, 0, 0):
+            return False
+        try:
+            return self._resultado.get(timeout=3)
+        except queue.Empty:
+            return False
+
+    def soltar(self):
+        if HAY_WIN32 and self._puesto:
+            try:
+                ctypes.windll.user32.UnregisterHotKey(None, self.ID)
+            except Exception:
+                pass
+            self._puesto = False
+
+    def _registrar(self):
+        user32 = ctypes.windll.user32
+        if self._puesto:
+            user32.UnregisterHotKey(None, self.ID)
+            self._puesto = False
+        mods, vk = self._pendiente
+        # MOD_NOREPEAT: sin esto, mantener la combinacion pulsada la
+        # dispara en bucle y el panel parpadea.
+        self._puesto = bool(user32.RegisterHotKey(
+            None, self.ID, mods | MOD_NOREPEAT, vk))
+        return self._puesto
+
+    def _bucle(self):
+        user32 = ctypes.windll.user32
+        self._id_hilo = ctypes.windll.kernel32.GetCurrentThreadId()
+        msg = wintypes.MSG()
+        # Obliga a Windows a crear la cola de mensajes de este hilo antes
+        # de avisar de que esta listo: un PostThreadMessage a un hilo sin
+        # cola se pierde sin decir nada.
+        user32.PeekMessageW(ctypes.byref(msg), None, 0, 0, 0)
+        self._listo.set()
+        while True:
+            try:
+                r = user32.GetMessageW(ctypes.byref(msg), None, 0, 0)
+                if r in (0, -1):
+                    break
+                if msg.message == WM_HOTKEY:
+                    self._al_pulsar()
+                elif msg.message == WM_RECARGAR:
+                    self._resultado.put(self._registrar())
+            except Exception:
+                self._anotar("fallo en el bucle del atajo", "AtajoGlobal")
+                time.sleep(0.2)
 
 
 def tema_claro():
