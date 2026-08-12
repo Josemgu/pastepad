@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 440" width="480" height="440" role="img" aria-label="Lista masiva - escribiendo">
+<title>pastepad lista_masiva mientras se escribe</title>
+<desc>El area de texto del dialogo de lista masiva a mitad de pegar contenido, con el contador de notas actualizandose en el pie.</desc>
+
+<rect x="0" y="0" width="480" height="440" rx="20" fill="#141417" stroke="#242429" stroke-width="1"/>
+<text x="24" y="38" font-family="Segoe UI" font-size="15" font-weight="500" fill="#F4F4F5" text-anchor="start">Agregar a Trabajo</text>
+<rect x="24" y="58" width="432" height="150" rx="12" fill="#1B1B1F" stroke="#2DD4A7" stroke-width="1.5"/>
+<text x="38" y="80" font-family="Segoe UI" font-size="12" font-weight="400" fill="#F4F4F5" text-anchor="start">1. Ana Martinez</text>
+<text x="38" y="100" font-family="Segoe UI" font-size="12" font-weight="400" fill="#F4F4F5" text-anchor="start">2. Luis Torres</text>
+<text x="38" y="120" font-family="Segoe UI" font-size="12" font-weight="400" fill="#F4F4F5" text-anchor="start">3. Maria Fernandez</text>
+<text x="38" y="140" font-family="Segoe UI" font-size="12" font-weight="400" fill="#F4F4F5" text-anchor="start">4. Carlos Ruiz</text>
+<text x="38" y="160" font-family="Segoe UI" font-size="12" font-weight="400" fill="#F4F4F5" text-anchor="start">5. |</text>
+<circle cx="34" cy="232" r="7" fill="none" stroke="#2DD4A7" stroke-width="1.5"/>
+<circle cx="34" cy="232" r="3.2" fill="#2DD4A7" />
+<text x="50" y="237" font-family="Segoe UI" font-size="11" font-weight="400" fill="#F4F4F5" text-anchor="start">Una nota por cada linea</text>
+<circle cx="34" cy="258" r="7" fill="none" stroke="#6B6B75" stroke-width="1.5"/>
+<text x="50" y="263" font-family="Segoe UI" font-size="11" font-weight="400" fill="#F4F4F5" text-anchor="start">Todo junto en una sola nota</text>
+<rect x="27" y="284" width="14" height="14" rx="4" fill="#2DD4A7" />
+<text x="28" y="295" font-family="Segoe UI" font-size="11" font-weight="400" fill="#052E23" text-anchor="start">✓</text>
+<text x="50" y="296" font-family="Segoe UI" font-size="11" font-weight="400" fill="#9C9CA6" text-anchor="start">Quitar numeracion y vinetas</text>
+<text x="24" y="382" font-family="Segoe UI" font-size="11" font-weight="500" fill="#2DD4A7" text-anchor="start">5 notas</text>
+<rect x="272" y="370" width="90" height="32" rx="10" fill="#1B1B1F" />
+<text x="317" y="391" font-family="Segoe UI" font-size="11" font-weight="400" fill="#F4F4F5" text-anchor="middle">Cancelar</text>
+<rect x="374" y="370" width="86" height="32" rx="10" fill="#2DD4A7" />
+<text x="417" y="391" font-family="Segoe UI" font-size="11" font-weight="500" fill="#052E23" text-anchor="middle">Agregar</text>
+</svg>

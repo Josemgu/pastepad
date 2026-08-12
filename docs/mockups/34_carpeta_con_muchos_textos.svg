@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 540" width="380" height="540" role="img" aria-label="Carpeta con muchos textos">
+<title>pastepad guardados, carpeta llena</title>
+<desc>La pestana Guardados con la carpeta Trabajo seleccionada y ocho textos guardados dentro, mostrando como se ve una carpeta que crecio con el uso diario.</desc>
+
+<rect x="0" y="0" width="380" height="540" rx="20" fill="#0B0B0D" stroke="#242429" stroke-width="1"/>
+<text x="16" y="26" font-family="Segoe UI" font-size="11" font-weight="400" fill="#6B6B75" text-anchor="start">Ctrl + Shift + V</text>
+<circle cx="300" cy="20" r="10" fill="#1B1B1F" />
+<text x="300" y="24" font-family="Segoe UI" font-size="9" font-weight="400" fill="#9C9CA6" text-anchor="middle">II</text>
+<circle cx="330" cy="20" r="10" fill="#1B1B1F" />
+<text x="330" y="24" font-family="Segoe UI" font-size="9" font-weight="400" fill="#9C9CA6" text-anchor="middle">@</text>
+<circle cx="360" cy="20" r="10" fill="#1B1B1F" />
+<text x="360" y="24" font-family="Segoe UI" font-size="9" font-weight="400" fill="#9C9CA6" text-anchor="middle">x</text>
+<rect x="16" y="38" width="348" height="42" rx="12" fill="#141417" />
+<text x="32" y="64" font-family="Segoe UI" font-size="13" font-weight="400" fill="#6B6B75" text-anchor="start">◎  Buscar en todo</text>
+<rect x="16" y="90" width="172" height="30" rx="15" fill="#1B1B1F" />
+<text x="102" y="109" font-family="Segoe UI" font-size="12" font-weight="400" fill="#9C9CA6" text-anchor="middle">Reciente</text>
+<rect x="192" y="90" width="172" height="30" rx="15" fill="#2DD4A7" />
+<text x="278" y="109" font-family="Segoe UI" font-size="12" font-weight="500" fill="#052E23" text-anchor="middle">Guardados</text>
+<rect x="16" y="128" width="348" height="34" rx="10" fill="#2DD4A7" />
+<text x="30" y="150" font-family="Segoe UI" font-size="12" font-weight="500" fill="#052E23" text-anchor="start">📁  Trabajo</text>
+<text x="352" y="150" font-family="Segoe UI" font-size="13" font-weight="400" fill="#052E23" text-anchor="middle">▾</text>
+<rect x="16" y="176" width="348" height="50" rx="14" fill="#1B1B1F" />
+<text x="22" y="196" font-family="Segoe UI" font-size="11.5" font-weight="400" fill="#F4F4F5" text-anchor="start">Plantilla de correo de seguimiento</text>
+<text x="22" y="213" font-family="Segoe UI" font-size="9.5" font-weight="400" fill="#6B6B75" text-anchor="start">Trabajo</text>
+<text x="350" y="205" font-family="Segoe UI" font-size="14" font-weight="400" fill="#6B6B75" text-anchor="middle">⋯</text>
+<rect x="16" y="232" width="348" height="50" rx="14" fill="#1B1B1F" />
+<text x="22" y="252" font-family="Segoe UI" font-size="11.5" font-weight="400" fill="#F4F4F5" text-anchor="start">Encabezado de reporte semanal</text>
+<text x="22" y="269" font-family="Segoe UI" font-size="9.5" font-weight="400" fill="#6B6B75" text-anchor="start">Trabajo</text>
+<text x="350" y="261" font-family="Segoe UI" font-size="14" font-weight="400" fill="#6B6B75" text-anchor="middle">⋯</text>
+<rect x="16" y="288" width="348" height="50" rx="14" fill="#1B1B1F" />
+<text x="22" y="308" font-family="Segoe UI" font-size="11.5" font-weight="400" fill="#F4F4F5" text-anchor="start">Firma de correo con cargo</text>
+<text x="22" y="325" font-family="Segoe UI" font-size="9.5" font-weight="400" fill="#6B6B75" text-anchor="start">Trabajo</text>
+<text x="350" y="317" font-family="Segoe UI" font-size="14" font-weight="400" fill="#6B6B75" text-anchor="middle">⋯</text>
+<rect x="16" y="344" width="348" height="50" rx="14" fill="#1B1B1F" />
+<text x="22" y="364" font-family="Segoe UI" font-size="11.5" font-weight="400" fill="#F4F4F5" text-anchor="start">Respuesta estandar - fuera de ofic</text>
+<text x="22" y="381" font-family="Segoe UI" font-size="9.5" font-weight="400" fill="#6B6B75" text-anchor="start">Trabajo</text>
+<text x="350" y="373" font-family="Segoe UI" font-size="14" font-weight="400" fill="#6B6B75" text-anchor="middle">⋯</text>
+<rect x="16" y="400" width="348" height="50" rx="14" fill="#1B1B1F" />
+<text x="22" y="420" font-family="Segoe UI" font-size="11.5" font-weight="400" fill="#F4F4F5" text-anchor="start">Plantilla de escalado a soporte</text>
+<text x="22" y="437" font-family="Segoe UI" font-size="9.5" font-weight="400" fill="#6B6B75" text-anchor="start">Trabajo</text>
+<text x="350" y="429" font-family="Segoe UI" font-size="14" font-weight="400" fill="#6B6B75" text-anchor="middle">⋯</text>
+<rect x="16" y="456" width="348" height="50" rx="14" fill="#1B1B1F" />
+<text x="22" y="476" font-family="Segoe UI" font-size="11.5" font-weight="400" fill="#F4F4F5" text-anchor="start">Enlace al panel de administracion</text>
+<text x="22" y="493" font-family="Segoe UI" font-size="9.5" font-weight="400" fill="#6B6B75" text-anchor="start">Trabajo</text>
+<text x="350" y="485" font-family="Segoe UI" font-size="14" font-weight="400" fill="#6B6B75" text-anchor="middle">⋯</text>
+<rect x="16" y="512" width="348" height="50" rx="14" fill="#1B1B1F" />
+<text x="22" y="532" font-family="Segoe UI" font-size="11.5" font-weight="400" fill="#F4F4F5" text-anchor="start">Recordatorio de reunion semanal</text>
+<text x="22" y="549" font-family="Segoe UI" font-size="9.5" font-weight="400" fill="#6B6B75" text-anchor="start">Trabajo</text>
+<text x="350" y="541" font-family="Segoe UI" font-size="14" font-weight="400" fill="#6B6B75" text-anchor="middle">⋯</text>
+<rect x="16" y="568" width="348" height="50" rx="14" fill="#1B1B1F" />
+<text x="22" y="588" font-family="Segoe UI" font-size="11.5" font-weight="400" fill="#F4F4F5" text-anchor="start">Cierre de ticket tipo</text>
+<text x="22" y="605" font-family="Segoe UI" font-size="9.5" font-weight="400" fill="#6B6B75" text-anchor="start">Trabajo</text>
+<text x="350" y="597" font-family="Segoe UI" font-size="14" font-weight="400" fill="#6B6B75" text-anchor="middle">⋯</text>
+<text x="16" y="524" font-family="Segoe UI" font-size="9.5" font-weight="400" fill="#6B6B75" text-anchor="start">8 textos en esta carpeta</text>
+</svg>

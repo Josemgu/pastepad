@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 220" width="460" height="220" role="img" aria-label="Flujo 2 de 5 - abrir el panel">
+<title>el usuario hace clic donde va a pegar y presiona el atajo</title>
+<desc>Un campo de texto vacio con el cursor parpadeando, y las teclas Ctrl+Shift+V resaltadas debajo.</desc>
+
+<rect x="0" y="0" width="460" height="220" rx="14" fill="#F2F2F0" />
+<text x="16" y="30" font-family="Segoe UI" font-size="13" font-weight="500" fill="#333" text-anchor="start">2. Clic en el campo donde vas a pegar</text>
+<rect x="16" y="44" width="428" height="40" rx="8" fill="#FFFFFF" stroke="#2DD4A7" stroke-width="1.5"/>
+<line x1="30" y1="54" x2="30" y2="74" stroke="#2DD4A7" stroke-width="1.5"/>
+<text x="16" y="116" font-family="Segoe UI" font-size="13" font-weight="500" fill="#333" text-anchor="start">3. Presiona el atajo</text>
+<rect x="16" y="130" width="42" height="30" rx="8" fill="#1B1B1F" />
+<text x="37" y="150" font-family="Segoe UI" font-size="10" font-weight="400" fill="#F4F4F5" text-anchor="middle">Ctrl</text>
+<text x="66" y="150" font-family="Segoe UI" font-size="12" font-weight="400" fill="#666" text-anchor="start">+</text>
+<rect x="78" y="130" width="46" height="30" rx="8" fill="#1B1B1F" />
+<text x="101" y="150" font-family="Segoe UI" font-size="10" font-weight="400" fill="#F4F4F5" text-anchor="middle">Shift</text>
+<text x="132" y="150" font-family="Segoe UI" font-size="12" font-weight="400" fill="#666" text-anchor="start">+</text>
+<rect x="144" y="130" width="30" height="30" rx="8" fill="#1B1B1F" />
+<text x="159" y="150" font-family="Segoe UI" font-size="10" font-weight="400" fill="#F4F4F5" text-anchor="middle">V</text>
+</svg>

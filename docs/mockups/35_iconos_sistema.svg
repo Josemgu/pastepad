@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 320" width="620" height="320" role="img" aria-label="Iconos del sistema, en detalle">
+<title>cada icono usado en pastepad, ampliado con su nombre</title>
+<desc>Rejilla de ocho iconos usados en la interfaz: fijar, quitar fijado, editar, borrar, enlace, carpeta, buscar y menu de tres puntos, cada uno con su nombre debajo.</desc>
+
+<rect width="620" height="320" fill="#0B0B0D" rx="16"/>
+<rect x="40" y="40" width="110" height="90" rx="16" fill="#1B1B1F" />
+<text x="95" y="92" font-family="Segoe UI" font-size="28" font-weight="400" fill="#2DD4A7" text-anchor="middle">⚑</text>
+<text x="95" y="118" font-family="Segoe UI" font-size="10" font-weight="400" fill="#6B6B75" text-anchor="middle">Fijar (pin)</text>
+<rect x="180" y="40" width="110" height="90" rx="16" fill="#1B1B1F" />
+<text x="235" y="92" font-family="Segoe UI" font-size="28" font-weight="400" fill="#F4F4F5" text-anchor="middle">⚑</text>
+<text x="235" y="118" font-family="Segoe UI" font-size="10" font-weight="400" fill="#6B6B75" text-anchor="middle">Quitar fijado</text>
+<rect x="320" y="40" width="110" height="90" rx="16" fill="#1B1B1F" />
+<text x="375" y="92" font-family="Segoe UI" font-size="28" font-weight="400" fill="#F4F4F5" text-anchor="middle">✎</text>
+<text x="375" y="118" font-family="Segoe UI" font-size="10" font-weight="400" fill="#6B6B75" text-anchor="middle">Editar</text>
+<rect x="460" y="40" width="110" height="90" rx="16" fill="#1B1B1F" />
+<text x="515" y="92" font-family="Segoe UI" font-size="28" font-weight="400" fill="#F4F4F5" text-anchor="middle">🗑</text>
+<text x="515" y="118" font-family="Segoe UI" font-size="10" font-weight="400" fill="#6B6B75" text-anchor="middle">Borrar</text>
+<rect x="40" y="180" width="110" height="90" rx="16" fill="#1B1B1F" />
+<text x="95" y="232" font-family="Segoe UI" font-size="28" font-weight="400" fill="#F4F4F5" text-anchor="middle">🔗</text>
+<text x="95" y="258" font-family="Segoe UI" font-size="10" font-weight="400" fill="#6B6B75" text-anchor="middle">Enlace</text>
+<rect x="180" y="180" width="110" height="90" rx="16" fill="#1B1B1F" />
+<text x="235" y="232" font-family="Segoe UI" font-size="28" font-weight="400" fill="#F4F4F5" text-anchor="middle">📁</text>
+<text x="235" y="258" font-family="Segoe UI" font-size="10" font-weight="400" fill="#6B6B75" text-anchor="middle">Carpeta</text>
+<rect x="320" y="180" width="110" height="90" rx="16" fill="#1B1B1F" />
+<text x="375" y="232" font-family="Segoe UI" font-size="28" font-weight="400" fill="#F4F4F5" text-anchor="middle">◎</text>
+<text x="375" y="258" font-family="Segoe UI" font-size="10" font-weight="400" fill="#6B6B75" text-anchor="middle">Buscar</text>
+<rect x="460" y="180" width="110" height="90" rx="16" fill="#1B1B1F" />
+<text x="515" y="232" font-family="Segoe UI" font-size="28" font-weight="400" fill="#F4F4F5" text-anchor="middle">⋯</text>
+<text x="515" y="258" font-family="Segoe UI" font-size="10" font-weight="400" fill="#6B6B75" text-anchor="middle">Menu (3 puntos)</text>
+</svg>

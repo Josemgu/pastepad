@@ -256,7 +256,7 @@ instalador/           instalar.bat, desinstalar.bat
 docs/
   ESPECIFICACION-UI.md    la interfaz al detalle
   FUNCIONES.md            cada función, tres líneas
-  maquetas/               las 20 maquetas SVG de referencia
+  mockups/               las 20 maquetas SVG de referencia
 ```
 
 Los cinco módulos marcados no importan ninguna librería gráfica. Por eso

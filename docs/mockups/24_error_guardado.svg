@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 220" width="380" height="220" role="img" aria-label="Error - fallo al guardar">
+<title>pastepad aviso de error de guardado</title>
+<desc>Aviso emergente en rojo indicando que no se pudo escribir el archivo, con boton para ver el registro de errores.</desc>
+
+<rect x="0" y="0" width="380" height="220" rx="20" fill="#141417" stroke="#EF4444" stroke-width="1.5"/>
+<circle cx="40" cy="42" r="15" fill="#3A1414" />
+<text x="40" y="48" font-family="Segoe UI" font-size="16" font-weight="700" fill="#EF4444" text-anchor="middle">!</text>
+<text x="66" y="38" font-family="Segoe UI" font-size="14" font-weight="500" fill="#F4F4F5" text-anchor="start">No se pudo guardar</text>
+<text x="24" y="80" font-family="Segoe UI" font-size="11" font-weight="400" fill="#9C9CA6" text-anchor="start">El archivo snippets.json no se pudo</text>
+<text x="24" y="96" font-family="Segoe UI" font-size="11" font-weight="400" fill="#9C9CA6" text-anchor="start">escribir. Puede que la carpeta este en</text>
+<text x="24" y="112" font-family="Segoe UI" font-size="11" font-weight="400" fill="#9C9CA6" text-anchor="start">solo lectura, o que otro programa lo</text>
+<text x="24" y="128" font-family="Segoe UI" font-size="11" font-weight="400" fill="#9C9CA6" text-anchor="start">tenga abierto ahora mismo.</text>
+<rect x="24" y="164" width="140" height="32" rx="10" fill="#1B1B1F" />
+<text x="94" y="185" font-family="Segoe UI" font-size="10.5" font-weight="400" fill="#F4F4F5" text-anchor="middle">Ver errores.log</text>
+<rect x="282" y="164" width="74" height="32" rx="10" fill="#2DD4A7" />
+<text x="319" y="185" font-family="Segoe UI" font-size="11" font-weight="500" fill="#052E23" text-anchor="middle">Cerrar</text>
+</svg>
