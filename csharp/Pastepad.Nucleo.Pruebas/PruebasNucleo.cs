@@ -577,6 +577,140 @@ public sealed class PruebaTituloGuardado : BaseConCarpetaTemporal
     }
 
     /// <summary>
+    /// El TextBox de WinUI separa las lineas con \r a secas. Partiendo
+    /// solo por \n, el titulo de un texto de tres lineas guardado desde
+    /// el dialogo salia "Primera linea Segunda linea Tercera linea":
+    /// las tres pegadas. Comprobado leyendo el snippets.json que escribio
+    /// el programa.
+    /// </summary>
+    [TestMethod]
+    public void test_el_titulo_con_saltos_de_windows_y_de_textbox()
+    {
+        Assert.AreEqual("Primera linea",
+            Modelo.PrimeraLinea("Primera linea\rSegunda linea\rTercera linea"));
+
+        Assert.AreEqual("Primera linea",
+            Modelo.PrimeraLinea("Primera linea\r\nSegunda linea"));
+
+        Assert.AreEqual("Primera linea",
+            Modelo.CrearSnippet("Primera linea\rSegunda linea", "Trabajo").Titulo);
+    }
+
+    /// <summary>
+    /// Y las lineas se cuentan igual vengan como vengan: el dialogo de
+    /// agregar una lista contaba "1 nota" con sesenta lineas pegadas.
+    /// </summary>
+    [TestMethod]
+    public void test_las_lineas_se_parten_venga_como_venga_el_salto()
+    {
+        Assert.HasCount(3, Modelo.LineasDe("una\rdos\rtres"));
+        Assert.HasCount(3, Modelo.LineasDe("una\r\ndos\r\ntres"));
+        Assert.HasCount(3, Modelo.LineasDe("una\ndos\ntres"));
+
+        // Las vacias son separacion, no contenido.
+        Assert.HasCount(2, Modelo.LineasDe("una\r\n\r\n  \r\ndos"));
+        Assert.IsEmpty(Modelo.LineasDe(""));
+    }
+
+    /// <summary>
+    /// Abrir un guardado en el editor y guardarlo **sin tocar nada**
+    /// tiene que dejarlo igual. Esta es la prueba del fallo que se colo
+    /// en la 4.0.1: una nota de cien lineas se quedaba en la primera —de
+    /// 7990 caracteres a 77— y el titulo propio se perdia. No se ve
+    /// mirando la pantalla, hay que mirar el archivo.
+    ///
+    /// Reproduce el viaje entero: leer del disco, sacar el texto como lo
+    /// saca el dialogo, rearmarlo como lo rearma al guardar, y volver a
+    /// leer.
+    /// </summary>
+    [TestMethod]
+    public void test_abrir_y_guardar_sin_cambios_no_toca_el_guardado()
+    {
+        string largo = string.Join(
+            "\r\n",
+            Enumerable.Range(1, 100).Select(n => $"Linea {n} de la nota larga"));
+
+        var a = new Almacen(Rutas);
+
+        a.AnadirSnippet(new Snippet
+        {
+            Titulo = "TITULO DISTINTO DEL TEXTO",
+            Categoria = "Trabajo",
+            Runs = [Modelo.CrearFragmento(largo)],
+        });
+
+        var antes = new Almacen(Rutas).Snippets.Single();
+
+        // Lo que el dialogo carga en la caja y devuelve al guardar.
+        string cargado = Modelo.TextoDe(antes.Runs);
+
+        Assert.AreEqual(largo.Length, cargado.Length,
+            "el editor no carga el texto entero");
+
+        var otro = new Almacen(Rutas);
+        var viejo = otro.Snippets.Single();
+
+        otro.ReemplazarSnippet(
+            viejo, Modelo.CrearSnippet(cargado, viejo.Categoria, viejo.Titulo));
+
+        var despues = new Almacen(Rutas).Snippets.Single();
+
+        Assert.AreEqual(largo, Modelo.TextoDe(despues.Runs),
+            "guardar sin cambios cambio el texto");
+
+        Assert.AreEqual("TITULO DISTINTO DEL TEXTO", despues.Titulo,
+            "guardar sin cambios se llevo el titulo por delante");
+    }
+
+    /// <summary>
+    /// Un marcador puede llevar nombre propio. Sin el, el titulo es la
+    /// direccion, y buscar por titulo en una lista de direcciones no
+    /// sirve de nada.
+    /// </summary>
+    [TestMethod]
+    public void test_el_marcador_puede_llevar_nombre_propio()
+    {
+        const string url = "https://ejemplo.com/muy/larga/y/fea?x=1";
+
+        var conNombre = Modelo.CrearSnippet(url, "Trabajo", "Panel de la SIE");
+        Assert.AreEqual("Panel de la SIE", conNombre.Titulo);
+        Assert.AreEqual(url, Modelo.TextoDe(conNombre.Runs));
+
+        // Sin nombre, o con uno en blanco, sigue valiendo la primera
+        // linea: no se puede quedar un guardado sin titulo.
+        Assert.AreEqual(url, Modelo.CrearSnippet(url, "Trabajo").Titulo);
+        Assert.AreEqual(url, Modelo.CrearSnippet(url, "Trabajo", "   ").Titulo);
+    }
+
+    /// <summary>
+    /// Y un texto de varias lineas no es un enlace aunque venga partido
+    /// con \r a secas, que es como lo devuelve el TextBox.
+    /// </summary>
+    [TestMethod]
+    public void test_un_texto_de_varias_lineas_no_es_enlace()
+    {
+        Assert.IsTrue(Modelo.EsEnlace("https://ejemplo.com"));
+        Assert.IsFalse(Modelo.EsEnlace("https://ejemplo.com\rsegunda linea"));
+        Assert.IsFalse(Modelo.EsEnlace("https://ejemplo.com\r\nsegunda linea"));
+    }
+
+    /// <summary>
+    /// Lo que se guarda lleva los saltos de Windows. Con \r a secas, un
+    /// texto de tres lineas pegado en el Bloc de notas salia en una.
+    /// </summary>
+    [TestMethod]
+    public void test_lo_guardado_lleva_los_saltos_de_windows()
+    {
+        var s = Modelo.CrearSnippet("una\rdos\r\ntres\ncuatro", "Trabajo");
+
+        Assert.AreEqual("una\r\ndos\r\ntres\r\ncuatro", Modelo.TextoDe(s.Runs));
+
+        // Y no los duplica al pasar dos veces.
+        Assert.AreEqual("una\r\ndos",
+            Modelo.NormalizarSaltos(Modelo.NormalizarSaltos("una\r\ndos")));
+    }
+
+    /// <summary>
     /// Y el resumen de pantalla sigue marcando el corte: quitarle los
     /// puntos suspensivos al guardado no puede quitarselos a la fila.
     /// </summary>

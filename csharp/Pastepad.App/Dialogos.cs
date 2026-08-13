@@ -55,8 +55,20 @@ public static class Dialogos
         caja.Resources["ContentDialogMinWidth"] = ancho;
         caja.Resources["ContentDialogMaxWidth"] = ancho;
 
+        // El alto tambien: la plantilla trae su propio tope y, con el
+        // panel estirado por encima de el, el dialogo se quedaba corto y
+        // recortaba por abajo. Mismo criterio que el ancho: manda la
+        // ventana, que es donde el dialogo vive.
+        caja.Resources["ContentDialogMaxHeight"] = Disponible(raiz);
+
         return caja;
     }
+
+    /// <summary>
+    /// El alto que un dialogo puede ocupar: el del panel menos el aire de
+    /// los bordes. Lo que no quepa aqui no se ve y no se alcanza.
+    /// </summary>
+    static double Disponible(XamlRoot raiz) => Math.Max(200, raiz.Size.Height - 16);
 
     static TextBlock Titulo(string texto) => new()
     {
@@ -87,6 +99,13 @@ public static class Dialogos
     /// Un campo de texto con el aspecto de la paleta. Alto explicito:
     /// el minimo que WinUI le pone a un TextBox de una linea es 32 y las
     /// maquetas piden 36 en el de carpeta y 32 en los de campos.
+    ///
+    /// **El texto se pone al final, y no dentro del inicializador.** Un
+    /// TextBox con AcceptsReturn en false se queda con la primera linea
+    /// de lo que se le asigne, y en el inicializador Text se asignaba
+    /// antes que AcceptsReturn: abrir un guardado de cien lineas en el
+    /// editor cargaba una. Medido: 7990 caracteres entraban como 77, y
+    /// pulsar Guardar escribia esos 77 encima de los 7990.
     /// </summary>
     static TextBox Campo(string valor = "", int lineas = 1, double alto = 36)
     {
@@ -94,7 +113,6 @@ public static class Dialogos
 
         var caja = new TextBox
         {
-            Text = valor,
             AcceptsReturn = !una,
             TextWrapping = una ? TextWrapping.NoWrap : TextWrapping.Wrap,
             FontSize = Estilo.TCuerpo,
@@ -111,7 +129,19 @@ public static class Dialogos
                 : VerticalAlignment.Top,
         };
 
-        if (!una) caja.MinHeight = alto;
+        if (!una)
+        {
+            caja.MinHeight = alto;
+
+            // La caja de varias lineas se desplaza por dentro. Sin esto
+            // crecia con el texto hasta salirse de la ventana: se veia
+            // el principio del texto y nada mas, y el resto no habia
+            // manera de alcanzarlo.
+            ScrollViewer.SetVerticalScrollBarVisibility(caja, ScrollBarVisibility.Auto);
+        }
+
+        // Ahora si: con AcceptsReturn ya puesto, el texto entra entero.
+        caja.Text = valor;
 
         return caja;
     }
@@ -148,6 +178,15 @@ public static class Dialogos
             default:
                 b.Background = Estilo.Pincel(Estilo.Actual.Tarjeta);
                 b.Foreground = Estilo.Pincel(Estilo.Actual.Texto);
+
+                // En las paletas claras la tarjeta y el fondo elevado del
+                // dialogo son el mismo blanco —"#FFFFFF" los dos en la
+                // paleta Clara—, asi que Cancelar se quedaba sin
+                // superficie y se leia como texto suelto al lado de un
+                // Guardar relleno. El borde es lo que ya usan las
+                // tarjetas de ajustes y las filas por este mismo motivo.
+                b.BorderBrush = Estilo.Pincel(Estilo.Actual.Borde);
+                b.BorderThickness = new Thickness(Estilo.EsClaro ? 1 : 0);
                 break;
         }
 
@@ -175,6 +214,57 @@ public static class Dialogos
         Spacing = 0,
         Padding = new Thickness(24, 24, 24, 24),
     };
+
+    /// <summary>
+    /// El cuerpo de los dialogos que llevan algo grande dentro —una caja
+    /// de texto, una lista de carpetas—. Va en rejilla y no apilado a
+    /// proposito.
+    ///
+    /// **Apilado, el pie se iba de la ventana.** La caja crecia con el
+    /// contenido y empujaba hacia abajo todo lo que venia detras: pegar
+    /// treinta lineas dejaba Cancelar y Agregar fuera de la pantalla, y
+    /// sin ningun sitio por donde desplazarse hasta ellos —estos
+    /// dialogos no llevaban ScrollViewer—. La unica salida era borrar
+    /// texto o pulsar Escape y perder lo pegado. Medido con 60 lineas:
+    /// la caja ocupaba 447 px de los 567 del panel y los dos botones no
+    /// llegaban a dibujarse.
+    ///
+    /// Aqui lo de arriba y lo de abajo ocupan lo suyo y el hueco que
+    /// sobra es del elemento del medio, que se desplaza por dentro. El
+    /// pie no se mueve nunca, tenga el texto una linea o cien.
+    /// </summary>
+    static Grid CuerpoConHueco(
+        double alto,
+        IReadOnlyList<UIElement> arriba,
+        FrameworkElement medio,
+        IReadOnlyList<UIElement> abajo)
+    {
+        var rejilla = new Grid
+        {
+            Padding = new Thickness(24, 24, 24, 24),
+            MaxHeight = alto,
+        };
+
+        void Poner(UIElement hijo, GridLength suyo)
+        {
+            rejilla.RowDefinitions.Add(new RowDefinition { Height = suyo });
+            Grid.SetRow((FrameworkElement)hijo, rejilla.RowDefinitions.Count - 1);
+            rejilla.Children.Add(hijo);
+        }
+
+        foreach (var hijo in arriba) Poner(hijo, GridLength.Auto);
+
+        // El minimo del elemento se respeta —una caja de una linea no
+        // sirve para pegar— pero la fila de estrella lo recorta cuando
+        // no cabe. Medido con el panel en su alto minimo, 340: la caja
+        // se queda en lo que sobra y el pie sigue dibujandose.
+        medio.VerticalAlignment = VerticalAlignment.Stretch;
+        Poner(medio, new GridLength(1, GridUnitType.Star));
+
+        foreach (var hijo in abajo) Poner(hijo, GridLength.Auto);
+
+        return rejilla;
+    }
 
     // ------------------------------------------------------ una linea
 
@@ -309,21 +399,53 @@ public static class Dialogos
         string texto = original is null ? "" : Modelo.TextoDe(original.Runs);
         var caja = Campo(texto, lineas: 10, alto: 220);
 
-        var cuerpo = Cuerpo();
-        cuerpo.Children.Add(Titulo(titulo));
-        cuerpo.Children.Add(fila);
-        cuerpo.Children.Add(caja);
-        cuerpo.Children.Add(new Border
+        // El nombre del marcador. Solo asoma cuando lo que hay escrito es
+        // un enlace: en un texto normal la primera linea ya hace de
+        // titulo y pedirlo aparte seria un campo mas que rellenar para
+        // guardar dos frases.
+        var nombre = Campo();
+        nombre.PlaceholderText = Textos.T("Cómo quieres llamarlo");
+
+        var bloqueNombre = new StackPanel
         {
-            Height = Estilo.E3,
-            Background = null,
-        });
-        cuerpo.Children.Add(Nota(Textos.T(
-            "Escribe [[algo]] y el programa te lo preguntará antes de pegar")));
+            Margin = new Thickness(0, 0, 0, Estilo.E3),
+            Visibility = Visibility.Collapsed,
+        };
+        bloqueNombre.Children.Add(Etiqueta(Textos.T("Nombre del marcador")));
+        bloqueNombre.Children.Add(nombre);
+
+        // Un titulo que es el propio enlace no es un titulo: lo puso el
+        // programa por no haber otro. Se ofrece en blanco para que el
+        // marcador que ya existe pueda estrenar nombre.
+        if (original is not null
+            && original.Titulo != Modelo.PrimeraLinea(texto))
+        {
+            nombre.Text = original.Titulo;
+        }
+
+        void MirarSiEsEnlace()
+        {
+            bloqueNombre.Visibility = Modelo.EsEnlace(caja.Text.Trim())
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+        }
+
+        MirarSiEsEnlace();
+        caja.TextChanged += (_, _) => MirarSiEsEnlace();
 
         var cancelar = Boton(Textos.T("Cancelar"), "normal");
         var guardar = Boton(Textos.T("Guardar"), "acento", 94);
-        cuerpo.Children.Add(Pie(cancelar, guardar));
+
+        var cuerpo = CuerpoConHueco(
+            Disponible(raiz),
+            [Titulo(titulo), fila, bloqueNombre],
+            caja,
+            [
+                new Border { Height = Estilo.E3, Background = null },
+                Nota(Textos.T(
+                    "Escribe [[algo]] y el programa te lo preguntará antes de pegar")),
+                Pie(cancelar, guardar),
+            ]);
 
         var dialogo = Caja(raiz, cuerpo);
 
@@ -336,12 +458,29 @@ public static class Dialogos
             string valor = caja.Text.Trim();
             if (valor.Length == 0) return;
 
-            // El titulo sale del texto y no se pide aparte: era un campo
-            // mas que rellenar para guardar dos frases. Lo arma el nucleo
-            // porque acaba en snippets.json.
+            // Lo arma el nucleo porque acaba en snippets.json. Del
+            // nombre solo se hace caso si hay enlace: si el usuario
+            // escribio uno y luego cambio el texto, el campo se escondio
+            // pero lo escrito sigue ahi.
+            string comoSeLlama =
+                bloqueNombre.Visibility == Visibility.Visible ? nombre.Text : "";
+
+            // Guardar sin haber tocado el texto no puede cambiar el
+            // titulo. Sin esto, abrir un guardado con nombre propio y
+            // pulsar Guardar se lo llevaba por delante y lo dejaba en la
+            // primera linea del texto.
+            if (comoSeLlama.Trim().Length == 0
+                && original is not null
+                && Modelo.NormalizarSaltos(valor)
+                   == Modelo.NormalizarSaltos(texto).Trim())
+            {
+                comoSeLlama = original.Titulo;
+            }
+
             salida = Modelo.CrearSnippet(
                 valor,
-                elegirCarpeta.SelectedItem as string ?? Config.CarpetaDef);
+                elegirCarpeta.SelectedItem as string ?? Config.CarpetaDef,
+                comoSeLlama);
 
             dialogo.Hide();
         };
@@ -453,12 +592,12 @@ public static class Dialogos
 
             var salida = new List<string>();
 
-            foreach (var linea in bruto.Split('\n'))
+            // Las lineas las parte el nucleo: lo que devuelve el TextBox
+            // viene separado por \r a secas y partirlo por \n dejaba las
+            // sesenta lineas convertidas en una sola nota.
+            foreach (var linea in Modelo.LineasDe(bruto))
             {
-                string l = linea.Trim();
-                if (l.Length == 0) continue;
-
-                if (limpiar.IsChecked == true) l = SinVineta(l);
+                string l = limpiar.IsChecked == true ? SinVineta(linea) : linea;
                 if (l.Length > 0) salida.Add(l);
             }
 
@@ -477,18 +616,21 @@ public static class Dialogos
         limpiar.Checked += (_, _) => Recontar();
         limpiar.Unchecked += (_, _) => Recontar();
 
-        var cuerpo = Cuerpo();
-        cuerpo.Children.Add(Titulo(Textos.T("Agregar a %s", carpeta)));
-        cuerpo.Children.Add(caja);
-        cuerpo.Children.Add(new Border { Height = Estilo.E3 });
-        cuerpo.Children.Add(porLinea);
-        cuerpo.Children.Add(juntas);
-        cuerpo.Children.Add(limpiar);
-        cuerpo.Children.Add(cuenta);
-
         var cancelar = Boton(Textos.T("Cancelar"), "normal");
         var agregar = Boton(Textos.T("Agregar"), "acento", 86);
-        cuerpo.Children.Add(Pie(cancelar, agregar));
+
+        var cuerpo = CuerpoConHueco(
+            Disponible(raiz),
+            [Titulo(Textos.T("Agregar a %s", carpeta))],
+            caja,
+            [
+                new Border { Height = Estilo.E3 },
+                porLinea,
+                juntas,
+                limpiar,
+                cuenta,
+                Pie(cancelar, agregar),
+            ]);
 
         var dialogo = Caja(raiz, cuerpo);
 
@@ -527,6 +669,279 @@ public static class Dialogos
         return linea;
     }
 
+    // ------------------------------------------------------- carpetas
+
+    /// <summary>
+    /// Lo que el usuario decidio sobre una carpeta: como se llama ahora
+    /// y si se va. Nombre es como se llamaba al abrir el dialogo, que es
+    /// por donde el almacen la encuentra.
+    /// </summary>
+    public sealed record CambioCarpeta(string Nombre, string Nuevo, bool Quitada);
+
+    /// <summary>Un boton de solo icono, para las acciones de una fila.</summary>
+    static Button IconoFila(string glifo, string rotulo, string color)
+    {
+        var b = new Button
+        {
+            Content = new TextBlock
+            {
+                Text = glifo,
+                FontFamily = new FontFamily("Segoe Fluent Icons"),
+                FontSize = 14,
+                Foreground = Estilo.Pincel(color),
+            },
+            Width = 32,
+            Height = 32,
+            MinWidth = 32,
+            MinHeight = 32,
+            Padding = new Thickness(0),
+            CornerRadius = new CornerRadius(Estilo.RControl),
+            Background = Estilo.Pincel(Estilo.Actual.Tarjeta),
+            BorderBrush = Estilo.Pincel(Estilo.Actual.Borde),
+            // Igual que el boton secundario: en claro la tarjeta es del
+            // mismo blanco que el dialogo y sin borde no se ve.
+            BorderThickness = new Thickness(Estilo.EsClaro ? 1 : 0),
+        };
+
+        ToolTipService.SetToolTip(b, rotulo);
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(b, rotulo);
+
+        return b;
+    }
+
+    /// <summary>
+    /// Editar las carpetas: renombrarlas y quitar las que sobran, todas
+    /// en la misma pantalla.
+    ///
+    /// Existe porque no habia forma de llegar a esto. Renombrar y
+    /// eliminar estaban en el desplegable de carpetas, pero solo de la
+    /// carpeta que estuviera puesta: con "Todas las carpetas" —que es lo
+    /// que hay al abrir— no salia ninguna de las dos, y desde que se
+    /// elige una hay que volver a abrir el desplegable para verlas. El
+    /// usuario lo conto como que las carpetas no tienen boton de editar.
+    ///
+    /// Nada se pierde hasta pulsar Guardar: quitar marca la fila y se
+    /// puede deshacer. Es lo que hacia la version anterior, y un clic de
+    /// mas no cuesta nada.
+    /// </summary>
+    public static async Task<List<CambioCarpeta>?> Carpetas(
+        XamlRoot raiz, IReadOnlyList<(string Nombre, int Cuantos)> carpetas)
+    {
+        var campos = new List<(string Nombre, TextBox Campo)>();
+        var quitadas = new HashSet<string>();
+
+        var lista = new StackPanel { Spacing = Estilo.E1 };
+
+        foreach (var (nombre, cuantos) in carpetas)
+        {
+            var campo = Campo(nombre, alto: 32);
+            campos.Add((nombre, campo));
+
+            var cuenta = new TextBlock
+            {
+                Text = Textos.T(cuantos == 1 ? "%d texto" : "%d textos", cuantos),
+                FontSize = Estilo.TMini,
+                Foreground = Estilo.Pincel(Estilo.Actual.Tenue),
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(Estilo.E2, 0, Estilo.E2, 0),
+            };
+
+            var quitar = IconoFila(
+                Estilo.Iconos.Papelera, Textos.T("Quitar"), Estilo.Rojo);
+
+            var fila = new Grid();
+            fila.ColumnDefinitions.Add(new ColumnDefinition
+            {
+                Width = new GridLength(1, GridUnitType.Star),
+            });
+            fila.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            fila.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            Grid.SetColumn(cuenta, 1);
+            Grid.SetColumn(quitar, 2);
+
+            fila.Children.Add(campo);
+            fila.Children.Add(cuenta);
+            fila.Children.Add(quitar);
+
+            string cual = nombre;
+
+            quitar.Click += (_, _) =>
+            {
+                bool fuera = !quitadas.Remove(cual);
+                if (fuera) quitadas.Add(cual);
+
+                campo.IsEnabled = !fuera;
+                fila.Opacity = fuera ? 0.45 : 1.0;
+
+                if (quitar.Content is TextBlock icono)
+                {
+                    icono.Text = fuera
+                        ? Estilo.Iconos.Deshacer
+                        : Estilo.Iconos.Papelera;
+
+                    icono.Foreground = Estilo.Pincel(
+                        fuera ? Estilo.Actual.Medio : Estilo.Rojo);
+                }
+
+                ToolTipService.SetToolTip(
+                    quitar, Textos.T(fuera ? "Recuperar" : "Quitar"));
+            };
+
+            lista.Children.Add(fila);
+        }
+
+        if (carpetas.Count == 0)
+            lista.Children.Add(Nota(Textos.T("Todavía no hay carpetas.")));
+
+        var cancelar = Boton(Textos.T("Cancelar"), "normal");
+        var guardar = Boton(Textos.T("Guardar"), "acento", 94);
+
+        // La lista va dentro del hueco que sobra: con veinte carpetas se
+        // desplaza por dentro y el pie sigue donde estaba. La barra, en
+        // Hidden como en el resto de los dialogos; medido, la rueda y el
+        // teclado siguen desplazando.
+        var rodillo = new ScrollViewer
+        {
+            Content = lista,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Hidden,
+        };
+
+        var cuerpo = CuerpoConHueco(
+            Disponible(raiz),
+            [Titulo(Textos.T("Carpetas"))],
+            rodillo,
+            [
+                new Border { Height = Estilo.E3 },
+                Nota(Textos.T("Al guardar se eliminan las carpetas quitadas "
+                            + "y los textos que tengan dentro.")),
+                Pie(cancelar, guardar),
+            ]);
+
+        var dialogo = Caja(raiz, cuerpo);
+
+        List<CambioCarpeta>? salida = null;
+
+        cancelar.Click += (_, _) => dialogo.Hide();
+
+        guardar.Click += (_, _) =>
+        {
+            var cambios = new List<CambioCarpeta>();
+
+            foreach (var (nombre, campo) in campos)
+            {
+                bool fuera = quitadas.Contains(nombre);
+                string nuevo = campo.Text.Trim();
+
+                // Un nombre en blanco no borra la carpeta: eso se pide
+                // con la papelera, que si avisa de lo que se lleva por
+                // delante.
+                if (nuevo.Length == 0) nuevo = nombre;
+
+                if (!fuera && nuevo == nombre) continue;
+
+                cambios.Add(new CambioCarpeta(nombre, nuevo, fuera));
+            }
+
+            salida = cambios;
+            dialogo.Hide();
+        };
+
+        await dialogo.ShowAsync();
+        return salida;
+    }
+
+    /// <summary>
+    /// Lo que hay dentro de una carpeta, para elegir que se toca.
+    /// Devuelve el texto elegido, o null si se cerro sin elegir.
+    ///
+    /// Es una lista y no un editor: el editor ya existe —el mismo
+    /// dialogo de Editar texto— y dos ContentDialog no pueden estar
+    /// abiertos a la vez, asi que este se cierra y abre aquel. El
+    /// usuario pidio llegar desde el menu de la carpeta a "actualizar
+    /// alguna informacion" de dentro, y hasta ahora habia que salir del
+    /// menu, filtrar por la carpeta y buscar la fila.
+    /// </summary>
+    public static async Task<Snippet?> Contenido(
+        XamlRoot raiz, string carpeta, IReadOnlyList<Snippet> textos)
+    {
+        var lista = new StackPanel { Spacing = Estilo.E1 };
+
+        Snippet? elegido = null;
+        ContentDialog? dialogo = null;
+
+        foreach (var texto in textos)
+        {
+            var nombre = new TextBlock
+            {
+                Text = Modelo.UnaLinea(texto.Titulo, 60),
+                FontSize = Estilo.TMenor,
+                Foreground = Estilo.Pincel(Estilo.Actual.Texto),
+                TextTrimming = TextTrimming.CharacterEllipsis,
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+
+            var editar = IconoFila(
+                Estilo.Iconos.Editar, Textos.T("Editar texto"),
+                Estilo.Actual.Medio);
+
+            var fila = new Grid
+            {
+                Background = Estilo.Pincel(Estilo.Actual.Tarjeta),
+                BorderBrush = Estilo.Pincel(Estilo.Actual.Borde),
+                BorderThickness = new Thickness(Estilo.EsClaro ? 1 : 0),
+                CornerRadius = new CornerRadius(Estilo.RControl),
+                Padding = new Thickness(Estilo.E3, 0, Estilo.E1, 0),
+                Height = 40,
+            };
+
+            fila.ColumnDefinitions.Add(new ColumnDefinition
+            {
+                Width = new GridLength(1, GridUnitType.Star),
+            });
+            fila.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            Grid.SetColumn(editar, 1);
+            fila.Children.Add(nombre);
+            fila.Children.Add(editar);
+
+            var cual = texto;
+
+            editar.Click += (_, _) =>
+            {
+                elegido = cual;
+                dialogo?.Hide();
+            };
+
+            lista.Children.Add(fila);
+        }
+
+        if (textos.Count == 0)
+            lista.Children.Add(Nota(Textos.T("La carpeta está vacía.")));
+
+        var cerrar = Boton(Textos.T("Cerrar"), "normal");
+
+        var pie = new Grid { Margin = new Thickness(0, Estilo.E4 + Estilo.E2, 0, 0) };
+        pie.Children.Add(cerrar);
+        cerrar.HorizontalAlignment = HorizontalAlignment.Right;
+
+        var cuerpo = CuerpoConHueco(
+            Disponible(raiz),
+            [Titulo(Textos.T("Contenido de %s", carpeta))],
+            new ScrollViewer
+            {
+                Content = lista,
+                VerticalScrollBarVisibility = ScrollBarVisibility.Hidden,
+            },
+            [pie]);
+
+        dialogo = Caja(raiz, cuerpo);
+
+        cerrar.Click += (_, _) => dialogo.Hide();
+
+        await dialogo.ShowAsync();
+        return elegido;
+    }
 
     // ----------------------------------------------------- apariencia
 

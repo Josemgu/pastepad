@@ -28,6 +28,47 @@ public static class Modelo
         string.Concat(fragmentos.Select(f => f.T));
 
     /// <summary>
+    /// Los dos caracteres con los que puede venir partido un texto.
+    ///
+    /// El TextBox de WinUI devuelve el salto de linea como \r a secas
+    /// —comprobado leyendo el snippets.json que escribio el programa—,
+    /// mientras que lo que llega del portapapeles trae \r\n. Partir solo
+    /// por \n dejaba las sesenta lineas pegadas en una.
+    /// </summary>
+    static readonly char[] Saltos = ['\r', '\n'];
+
+    /// <summary>
+    /// Las lineas con algo escrito, venga el texto partido como venga.
+    /// Las vacias se caen: son separacion, no contenido.
+    /// </summary>
+    public static List<string> LineasDe(string texto)
+    {
+        if (string.IsNullOrEmpty(texto)) return [];
+
+        var salida = new List<string>();
+
+        foreach (var linea in texto.Split(Saltos))
+        {
+            string limpio = linea.Trim();
+            if (limpio.Length > 0) salida.Add(limpio);
+        }
+
+        return salida;
+    }
+
+    /// <summary>
+    /// Deja todos los saltos en \r\n, que es como los espera Windows.
+    ///
+    /// Lo que sale del TextBox lleva \r a secas y asi se guardaba en
+    /// snippets.json; pegado en el Bloc de notas, un texto de tres
+    /// lineas salia en una sola.
+    /// </summary>
+    public static string NormalizarSaltos(string texto) =>
+        string.IsNullOrEmpty(texto)
+            ? texto
+            : texto.Replace("\r\n", "\n").Replace('\r', '\n').Replace("\n", "\r\n");
+
+    /// <summary>
     /// La primera linea con algo escrito, con los espacios de dentro
     /// normalizados. Ni corta ni añade: lo que devuelve esta contenido
     /// tal cual en el texto del usuario.
@@ -40,7 +81,7 @@ public static class Modelo
     {
         if (string.IsNullOrEmpty(texto)) return "";
 
-        foreach (var linea in texto.Split('\n'))
+        foreach (var linea in texto.Split(Saltos))
         {
             string limpio = string.Join(" ", linea.Split(
                 (char[]?)null, StringSplitOptions.RemoveEmptyEntries));
@@ -61,13 +102,30 @@ public static class Modelo
     /// se encontraba un texto que el usuario nunca escribio. Acortarlo
     /// para que quepa en la fila es cosa de la interfaz, que es la unica
     /// que sabe cuanto cabe.
+    ///
+    /// El texto se guarda con los saltos normalizados por el mismo
+    /// motivo: es el unico sitio por el que pasa lo que el usuario
+    /// escribio antes de llegar al archivo.
+    ///
+    /// <paramref name="titulo"/> es para los marcadores. En un texto la
+    /// primera linea sirve de titulo, pero en un enlace la primera linea
+    /// ES la direccion, y una lista de direcciones no se puede buscar
+    /// por nombre. Vacio o en blanco vuelve a la primera linea, que es
+    /// lo de siempre.
     /// </summary>
-    public static Snippet CrearSnippet(string texto, string categoria) => new()
+    public static Snippet CrearSnippet(
+        string texto, string categoria, string? titulo = null)
     {
-        Titulo = PrimeraLinea(texto),
-        Categoria = categoria,
-        Runs = [CrearFragmento(texto)],
-    };
+        string limpio = NormalizarSaltos(texto);
+        string nombre = (titulo ?? "").Trim();
+
+        return new Snippet
+        {
+            Titulo = nombre.Length > 0 ? nombre : PrimeraLinea(limpio),
+            Categoria = categoria,
+            Runs = [CrearFragmento(limpio)],
+        };
+    }
 
     /// <summary>
     /// Resumen de una linea, para ensenar. Corta antes de separar en
@@ -104,7 +162,10 @@ public static class Modelo
 
         string t = texto.Trim();
 
-        if (t.Contains(' ') || t.Contains('\n') || t.Length > 2000)
+        // Los dos saltos: lo que sale del TextBox viene partido con \r a
+        // secas, y un texto de varias lineas no es un enlace aunque la
+        // primera lo parezca.
+        if (t.Contains(' ') || t.IndexOfAny(Saltos) >= 0 || t.Length > 2000)
             return false;
 
         string bajo = t.ToLowerInvariant();

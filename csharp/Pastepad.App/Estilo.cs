@@ -399,5 +399,9 @@ public static class Estilo
         public const string Portapapeles = "\uE77F"; // Paste
         public const string Seleccionar = "\uE762";  // CheckList
         public const string Marca = "\uE73E";           // CheckMark
+        public const string Editar = "\uE70F";       // Edit
+        public const string Plantilla = "\uE943";    // Code
+        public const string Papelera = "\uE74D";     // Delete
+        public const string Deshacer = "\uE7A7";     // Undo
     }
 }

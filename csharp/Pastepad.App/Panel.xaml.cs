@@ -36,11 +36,13 @@ public sealed partial class Panel : Window
     readonly HashSet<Elemento> _marcados =
         new(ReferenceEqualityComparer.Instance);
 
-    readonly Dictionary<string, bool> _grupos = new()
-    {
-        ["marcadores"] = true,
-        ["notas"] = true,
-    };
+    /// <summary>
+    /// Que grupos de Guardados estan abiertos. Se siembra del almacen al
+    /// arrancar y se guarda al plegar: el usuario pidio verlos "en una
+    /// lista desplegable, no extendida", y una preferencia que se pierde
+    /// al cerrar el panel no es una preferencia.
+    /// </summary>
+    readonly Dictionary<string, bool> _grupos = [];
 
     readonly nint _hwnd;
     readonly OverlappedPresenter _presentador;
@@ -494,26 +496,56 @@ public sealed partial class Panel : Window
     }
 
     /// <summary>
-    /// Guardados en dos grupos plegables: marcadores y notas.
+    /// Guardados en tres grupos plegables: marcadores, plantillas y
+    /// notas.
     ///
-    /// Un marcador no es otro tipo de dato: es un guardado cuyo texto es
-    /// un enlace. Se separan porque no se usan igual — uno se abre en el
-    /// navegador y otro se pega — y mezclarlos obligaba a leer la lista
-    /// entera para encontrar cualquiera de los dos.
+    /// Ninguno es otro tipo de dato: son guardados que se distinguen por
+    /// lo que llevan dentro —un enlace, unos [[campos]], o ni una cosa
+    /// ni otra—. Se separan porque no se usan igual: uno se abre en el
+    /// navegador, otro pregunta antes de pegar y el tercero se pega tal
+    /// cual. La carpeta la elige el usuario; el grupo sale del texto y
+    /// no hay que mantenerlo.
+    ///
+    /// Un enlace con [[campos]] cuenta como marcador: lo que manda es
+    /// que ese clic abre el navegador.
     /// </summary>
     void Agrupar()
     {
         var marcadores = _filas.Where(f => f.EsEnlace).ToList();
-        var notas = _filas.Where(f => !f.EsEnlace).ToList();
+        var plantillas = _filas.Where(f => f.EsPlantilla).ToList();
+        var notas = _filas.Where(f => !f.EsEnlace && !f.EsPlantilla).ToList();
 
-        // Con un solo grupo la cabecera sobra: no hay nada que separar.
-        bool conCabecera = marcadores.Count > 0 && notas.Count > 0;
+        // Con un solo grupo la cabecera sobra: no hay nada que separar,
+        // y plegarlo dejaria la pestana en blanco.
+        int cuantos = (marcadores.Count > 0 ? 1 : 0)
+                    + (plantillas.Count > 0 ? 1 : 0)
+                    + (notas.Count > 0 ? 1 : 0);
+
+        bool conCabecera = cuantos > 1;
 
         Volcar("marcadores", Textos.T("Marcadores"), marcadores,
                Estilo.Iconos.Enlace, true, conCabecera);
 
+        Volcar("plantillas", Textos.T("Plantillas"), plantillas,
+               Estilo.Iconos.Plantilla, true, conCabecera);
+
         Volcar("notas", Textos.T("Notas"), notas,
                Estilo.Iconos.Nota, false, conCabecera);
+    }
+
+    /// <summary>
+    /// Si un grupo esta abierto. De fabrica cerrado: con las tres
+    /// cabeceras a la vista se ve de un vistazo que hay de cada cosa y
+    /// se abre lo que se busca, que es como lo pidio el usuario.
+    /// </summary>
+    bool GrupoAbierto(string clave)
+    {
+        if (_grupos.TryGetValue(clave, out bool abierto)) return abierto;
+
+        abierto = Almacen.Pref("grupo." + clave, false);
+        _grupos[clave] = abierto;
+
+        return abierto;
     }
 
     void Volcar(string clave, string etiqueta, List<Fila> grupo,
@@ -521,7 +553,7 @@ public sealed partial class Panel : Window
     {
         if (grupo.Count == 0) return;
 
-        bool abierto = _grupos.GetValueOrDefault(clave, true);
+        bool abierto = GrupoAbierto(clave);
 
         if (conCabecera)
         {
@@ -708,7 +740,25 @@ public sealed partial class Panel : Window
         nueva.Click += async (_, _) => await NuevaCarpeta();
         MenuCarpetas.Items.Add(nueva);
 
+        // Editar no depende de que haya una carpeta puesta: con "Todas
+        // las carpetas" —que es lo que hay al abrir— no salia ninguna
+        // forma de renombrar ni de borrar, y el usuario lo conto como
+        // que las carpetas no tienen boton de editar.
+        if (Almacen.Carpetas.Count > 0)
+        {
+            var editar = new MenuFlyoutItem { Text = Textos.T("Editar carpetas...") };
+            editar.Click += async (_, _) => await EditarCarpetas();
+            MenuCarpetas.Items.Add(editar);
+        }
+
         if (_carpeta is null) return;
+
+        var contenido = new MenuFlyoutItem
+        {
+            Text = Textos.T("Editar el contenido de %s...", _carpeta),
+        };
+        contenido.Click += async (_, _) => await EditarContenido();
+        MenuCarpetas.Items.Add(contenido);
 
         var renombrar = new MenuFlyoutItem { Text = Textos.T("Renombrar %s", _carpeta) };
         renombrar.Click += async (_, _) => await RenombrarCarpeta();
@@ -757,6 +807,32 @@ public sealed partial class Panel : Window
         mas.Click += async (_, _) => await NuevaCarpeta();
 
         ListaFichas.Children.Add(mas);
+
+        if (Almacen.Carpetas.Count == 0) return;
+
+        // El lapiz al lado del mas: en este modo el clic derecho de la
+        // ficha es lo unico que habia para renombrar, y un menu que solo
+        // aparece con el boton derecho no lo encuentra nadie.
+        var editar = new Button
+        {
+            Content = Estilo.Iconos.Editar,
+            FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Segoe Fluent Icons"),
+            FontSize = 14,
+            Height = Estilo.AltoPestana,
+            MinHeight = Estilo.AltoPestana,
+            MinWidth = 0,
+            Width = 34,
+            Padding = new Thickness(0),
+            CornerRadius = new CornerRadius(Estilo.RCapsula),
+            BorderThickness = new Thickness(0),
+            Background = Estilo.Pincel(Estilo.Actual.Tarjeta),
+            Foreground = Estilo.Pincel(Estilo.Actual.Medio),
+        };
+
+        Rotular(editar, Textos.T("Editar carpetas"));
+        editar.Click += async (_, _) => await EditarCarpetas();
+
+        ListaFichas.Children.Add(editar);
     }
 
     Button Ficha(string etiqueta, string? carpeta)
@@ -840,6 +916,65 @@ public sealed partial class Panel : Window
         _carpeta = nombre;
         _pestana = Guardados;
 
+        App.Actual.RefrescarLista();
+    }
+
+    /// <summary>
+    /// Renombrar y quitar carpetas, todas de una vez y sin depender de
+    /// cual este puesta.
+    /// </summary>
+    async Task EditarCarpetas()
+    {
+        var antes = Almacen.Carpetas
+            .Select(c => (c, Almacen.ContenidoDe(c).Count))
+            .ToList();
+
+        var cambios = await Dialogos.Carpetas(Marco.XamlRoot, antes);
+        if (cambios is null || cambios.Count == 0) return;
+
+        foreach (var cambio in cambios)
+        {
+            if (cambio.Quitada)
+            {
+                Almacen.BorrarCarpeta(cambio.Nombre);
+                if (_carpeta == cambio.Nombre) _carpeta = null;
+                continue;
+            }
+
+            if (!Almacen.RenombrarCarpeta(cambio.Nombre, cambio.Nuevo))
+            {
+                Avisar(Textos.T(
+                    "No se pudo renombrar: ya hay una carpeta %s.", cambio.Nuevo));
+                continue;
+            }
+
+            if (_carpeta == cambio.Nombre) _carpeta = cambio.Nuevo;
+        }
+
+        App.Actual.RefrescarLista();
+    }
+
+    /// <summary>
+    /// Lo de dentro de la carpeta puesta: se elige un texto y se abre en
+    /// el mismo editor de siempre. En dos pasos y no en uno porque dos
+    /// ContentDialog no pueden estar abiertos a la vez.
+    /// </summary>
+    async Task EditarContenido()
+    {
+        if (_carpeta is not { } carpeta) return;
+
+        var textos = Almacen.ContenidoDe(carpeta);
+
+        var elegido = await Dialogos.Contenido(Marco.XamlRoot, carpeta, textos);
+        if (elegido is null) return;
+
+        var nuevo = await Dialogos.Texto(
+            Marco.XamlRoot, Textos.T("Editar texto"), Almacen.Carpetas,
+            elegido.Categoria, elegido);
+
+        if (nuevo is null) return;
+
+        Almacen.ReemplazarSnippet(elegido, nuevo);
         App.Actual.RefrescarLista();
     }
 
@@ -1293,7 +1428,11 @@ public sealed partial class Panel : Window
             // plegaba ese. Medido: un clic en "Marcadores" cerraba los
             // dos grupos y uno en "Notas" no hacia nada.
             case Grupo grupo:
-                _grupos[grupo.Clave] = !_grupos.GetValueOrDefault(grupo.Clave, true);
+                bool abierto = !GrupoAbierto(grupo.Clave);
+
+                _grupos[grupo.Clave] = abierto;
+                Almacen.PonerPref("grupo." + grupo.Clave, abierto);
+
                 Refrescar();
                 break;
 

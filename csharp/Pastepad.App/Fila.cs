@@ -61,6 +61,14 @@ public sealed class Fila : ItemLista, INotifyPropertyChanged
     public string Texto { get; }
 
     public bool EsEnlace { get; }
+
+    /// <summary>
+    /// Lleva [[campos]] dentro, o sea que al usarla pregunta antes de
+    /// pegar. Se ve en la fila porque hasta ahora no habia forma de
+    /// saber cual iba a preguntar y cual no hasta pulsarla.
+    /// </summary>
+    public bool EsPlantilla { get; }
+
     public bool EsImagen { get; }
     public bool Fijada { get; }
 
@@ -92,6 +100,7 @@ public sealed class Fila : ItemLista, INotifyPropertyChanged
 
                 Texto = entrada.Texto ?? "";
                 EsEnlace = Modelo.EsEnlace(Texto);
+                EsPlantilla = !EsEnlace && Modelo.CamposDe(Texto).Count > 0;
                 Titulo = Modelo.UnaLinea(Texto, 80);
                 if (Titulo.Length == 0) Titulo = "—";
 
@@ -99,12 +108,13 @@ public sealed class Fila : ItemLista, INotifyPropertyChanged
                     ? Modelo.DominioDe(Texto)
                     : Textos.T("%d caracteres", Texto.Length);
 
-                Icono = EsEnlace ? Estilo.Iconos.Enlace : "";
+                Icono = IconoDe(EsEnlace, EsPlantilla);
                 break;
 
             case Snippet snippet:
                 Texto = Modelo.TextoDe(snippet.Runs);
                 EsEnlace = Modelo.EsEnlace(Texto);
+                EsPlantilla = !EsEnlace && Modelo.CamposDe(Texto).Count > 0;
 
                 // El titulo se guarda entero y se acorta aqui, igual que
                 // ya se hacia con el historial: el recorte es de pantalla
@@ -113,7 +123,7 @@ public sealed class Fila : ItemLista, INotifyPropertyChanged
                 if (Titulo.Length == 0) Titulo = "—";
 
                 Detalle = EsEnlace ? Modelo.DominioDe(Texto) : snippet.Categoria;
-                Icono = EsEnlace ? Estilo.Iconos.Enlace : "";
+                Icono = IconoDe(EsEnlace, EsPlantilla);
                 break;
 
             default:
@@ -124,6 +134,15 @@ public sealed class Fila : ItemLista, INotifyPropertyChanged
                 break;
         }
     }
+
+    /// <summary>
+    /// Un enlace y una plantilla llevan icono; el resto, ninguno. Una
+    /// fila con icono en todas seria una columna de ruido.
+    /// </summary>
+    static string IconoDe(bool enlace, bool plantilla) =>
+        enlace ? Estilo.Iconos.Enlace
+        : plantilla ? Estilo.Iconos.Plantilla
+        : "";
 
     // ------------------------------------------------------ el estado
 
@@ -198,7 +217,9 @@ public sealed class Fila : ItemLista, INotifyPropertyChanged
 
     public Brush ColorIcono => Activa
         ? Estilo.Pincel(Estilo.ColorAcento.Sobre)
-        : Estilo.Pincel(EsEnlace ? Estilo.ColorAcento.Color : Estilo.Actual.Tenue);
+        : Estilo.Pincel(EsEnlace || EsPlantilla
+            ? Estilo.ColorAcento.Color
+            : Estilo.Actual.Tenue);
 
     public Brush ColorCasilla => Activa
         ? Estilo.Pincel(Estilo.ColorAcento.Sobre)

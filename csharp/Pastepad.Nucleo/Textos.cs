@@ -254,6 +254,34 @@ public static class Textos
                 "Blush",
             ["Carpetas"] =
                 "Folders",
+            ["Plantillas"] =
+                "Templates",
+            ["Editar el contenido de %s..."] =
+                "Edit what is in %s...",
+            ["Contenido de %s"] =
+                "What is in %s",
+            ["La carpeta está vacía."] =
+                "The folder is empty.",
+            ["Nombre del marcador"] =
+                "Bookmark name",
+            ["Cómo quieres llamarlo"] =
+                "What to call it",
+            ["Editar carpetas..."] =
+                "Edit folders...",
+            ["Editar carpetas"] =
+                "Edit folders",
+            ["%d texto"] =
+                "%d text",
+            ["%d textos"] =
+                "%d texts",
+            ["Quitar"] =
+                "Remove",
+            ["Recuperar"] =
+                "Undo",
+            ["Todavía no hay carpetas."] =
+                "No folders yet.",
+            ["Al guardar se eliminan las carpetas quitadas y los textos que tengan dentro."] =
+                "Saving deletes the removed folders and the texts inside them.",
             ["Cómo se enseñan"] =
                 "How they show",
             ["Lista desplegable"] =
@@ -437,6 +465,34 @@ public static class Textos
                 "Rubor",
             ["Carpetas"] =
                 "Pastas",
+            ["Plantillas"] =
+                "Modelos",
+            ["Editar el contenido de %s..."] =
+                "Editar o conteúdo de %s...",
+            ["Contenido de %s"] =
+                "Conteúdo de %s",
+            ["La carpeta está vacía."] =
+                "A pasta está vazia.",
+            ["Nombre del marcador"] =
+                "Nome do marcador",
+            ["Cómo quieres llamarlo"] =
+                "Como queres chamá-lo",
+            ["Editar carpetas..."] =
+                "Editar pastas...",
+            ["Editar carpetas"] =
+                "Editar pastas",
+            ["%d texto"] =
+                "%d texto",
+            ["%d textos"] =
+                "%d textos",
+            ["Quitar"] =
+                "Remover",
+            ["Recuperar"] =
+                "Recuperar",
+            ["Todavía no hay carpetas."] =
+                "Ainda não há pastas.",
+            ["Al guardar se eliminan las carpetas quitadas y los textos que tengan dentro."] =
+                "Ao guardar, as pastas removidas e os textos que tiverem dentro são eliminados.",
             ["Cómo se enseñan"] =
                 "Como aparecem",
             ["Lista desplegable"] =
@@ -620,6 +676,34 @@ public static class Textos
                 "Rougeur",
             ["Carpetas"] =
                 "Dossiers",
+            ["Plantillas"] =
+                "Modèles",
+            ["Editar el contenido de %s..."] =
+                "Modifier le contenu de %s...",
+            ["Contenido de %s"] =
+                "Contenu de %s",
+            ["La carpeta está vacía."] =
+                "Le dossier est vide.",
+            ["Nombre del marcador"] =
+                "Nom du signet",
+            ["Cómo quieres llamarlo"] =
+                "Comment l'appeler",
+            ["Editar carpetas..."] =
+                "Modifier les dossiers...",
+            ["Editar carpetas"] =
+                "Modifier les dossiers",
+            ["%d texto"] =
+                "%d texte",
+            ["%d textos"] =
+                "%d textes",
+            ["Quitar"] =
+                "Retirer",
+            ["Recuperar"] =
+                "Rétablir",
+            ["Todavía no hay carpetas."] =
+                "Pas encore de dossiers.",
+            ["Al guardar se eliminan las carpetas quitadas y los textos que tengan dentro."] =
+                "En enregistrant, les dossiers retirés et les textes qu'ils contiennent sont supprimés.",
             ["Cómo se enseñan"] =
                 "Comment les afficher",
             ["Lista desplegable"] =

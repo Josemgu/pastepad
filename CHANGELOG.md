@@ -3,6 +3,49 @@
 All notable changes to this project are documented here.
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [4.0.1] - 2026-08-13
+
+The first day of real use turned up three faults, and measuring them
+turned up three more. Two of the six destroyed text without saying so.
+
+### Fixed
+- **Editing a saved multi-line text kept only the first line.** Opening
+  the editor and pressing Save — without touching anything — cut a
+  100-line note from 5290 characters to 77. The cause was the order of
+  two lines in an object initialiser: a WinUI `TextBox` with
+  `AcceptsReturn` still `false` truncates whatever is assigned to
+  `Text`, and `Text` came first. This is also the whole of the reported
+  "a long text isn't visible when you edit it".
+- **Saving recalculated the title from the first line**, so opening and
+  saving a bookmark wiped the name it had been given.
+- **Line breaks were read as `\n` when a `TextBox` returns `\r`.**
+  Pasting 60 lines and choosing "one note per line" produced a single
+  note holding all of them, and saved text reached other applications
+  as one line.
+- **Long text pushed the dialog buttons off screen** with no way to
+  scroll to them. The body is now a grid: the footer keeps its place
+  and the text box scrolls inside itself.
+- **Folders could not be edited.** The Python version had that dialog
+  and it was not ported. Rename and Delete were also unreachable while
+  "All folders" was selected, which is the default.
+- **A secondary button was white on white in the light theme**, since
+  `Elevado` and `Tarjeta` are both `#FFFFFF` there.
+
+### Added
+- Bookmarks can be given a name. The field appears only when what you
+  typed is a link, and left blank the URL is still used, so nothing
+  ends up untitled. Searching a bookmark by URL was the only option
+  before.
+- Saved items carry a `{}` marker when they hold `[[fields]]`.
+- Saved splits into Bookmarks, Templates and Notes by what the content
+  is rather than where it was filed. The groups start collapsed and
+  remember their state between sessions.
+- "Edit the contents of \<folder\>…" in the folder menu, listing its
+  texts with a pencil on each.
+
+### Changed
+- 45 tests to 51.
+
 ## [4.0.0] - 2026-08-13
 
 Rewritten in C# with WinUI 3. Same program, same data, same shortcut —
