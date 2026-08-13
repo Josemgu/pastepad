@@ -34,6 +34,27 @@ internal static class Arranque
         }
     }
 
+    /// <summary>
+    /// Lo que hay hoy en la clave, para poder decir que se cambio y de
+    /// que a que. Devuelve el valor tal cual esta guardado —con las
+    /// comillas incluidas—, no la ruta limpia: lo que interesa anotar es
+    /// exactamente lo que habia.
+    /// </summary>
+    public static string? ValorActual()
+    {
+        try
+        {
+            using var k = Registry.CurrentUser.OpenSubKey(Clave);
+            return k?.GetValue(Nombre) as string;
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException
+                                    or System.Security.SecurityException)
+        {
+            Registro.Fallo("leer el valor del autoarranque", e);
+            return null;
+        }
+    }
+
     public static void Poner(bool activar)
     {
         try

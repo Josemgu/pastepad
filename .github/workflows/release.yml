@@ -1,6 +1,6 @@
 name: Build and release
 
-# Compila el .exe en un runner limpio de GitHub y lo publica.
+# Compila el instalador en un runner limpio de GitHub y lo publica.
 # Ventaja sobre compilar en tu maquina: cualquiera puede ver el registro
 # de la compilacion y comprobar que el binario sale del codigo publicado.
 
@@ -15,20 +15,17 @@ permissions:
 jobs:
   build:
     runs-on: windows-latest
+
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-dotnet@v4
         with:
-          python-version: '3.12'
-
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-          pip install pyinstaller
+          dotnet-version: '10.0.x'
 
       # La version sale del tag, no escrita a mano en doce sitios: se
-      # publico una release con binarios viejos justamente por eso.
+      # publico una release con binarios viejos justamente por eso. El
+      # .csproj NO lleva <Version>, la pone aqui -p:Version=.
       - name: Averiguar la version
         id: v
         shell: pwsh
@@ -38,67 +35,89 @@ jobs:
           "version=$t" | Out-File -Append $env:GITHUB_OUTPUT
           Write-Host "version: $t"
 
-      - name: Run tests
-        run: python prueba.py
+      - name: Pruebas del nucleo
+        run: dotnet test csharp/Pastepad.Nucleo.Pruebas -c Release
 
-      # flet pack y no flet build: el segundo compila con el SDK de
-      # Flutter, mas de un giga de descarga en cada ejecucion del CI.
-      - name: Build
+      # publish y no build: build deja una carpeta que no arranca sola.
+      # x86 a proposito, y no es por maquinas viejas: en 32 bits el
+      # Windows App SDK no copia onnxruntime.dll (21 MB) ni DirectML.dll
+      # (18 MB), dos bibliotecas de IA que pastepad no usa para nada. Un
+      # ejecutable de 32 bits corre igual en x64 y en ARM64.
+      # dotnet publish no vacia la carpeta de destino: lo que quede de
+      # antes viaja dentro del instalador. En un runner limpio no puede
+      # pasar, pero en una maquina de desarrollo si — aqui se colo un
+      # errores.log de una prueba anterior.
+      - name: Vaciar la carpeta de publish
+        shell: pwsh
         run: |
-          flet pack main.py --onedir --name pastepad `
-            --icon docs/pastepad.ico `
-            --product-name pastepad `
-            --file-description "pastepad - gestor de portapapeles" `
-            --product-version ${{ steps.v.outputs.version }} `
-            --file-version ${{ steps.v.outputs.version }} `
-            --company-name "Jose Miguel Ortiz" `
-            --copyright "MIT License" `
-            --distpath instalador/dist -y
-
-      # Un solo archivo con todo dentro. Es la version que no se puede
-      # romper: separar el .exe de su carpeta _internal da el error de
-      # "no se encuentra python311.dll", y aqui no hay carpeta que
-      # separar.
-      - name: Build portable
-        run: |
-          flet pack main.py --name pastepad-portable `
-            --icon docs/pastepad.ico `
-            --product-name pastepad `
-            --file-description "pastepad - gestor de portapapeles" `
-            --product-version ${{ steps.v.outputs.version }} `
-            --file-version ${{ steps.v.outputs.version }} `
-            --company-name "Jose Miguel Ortiz" `
-            --copyright "MIT License" `
-            --distpath instalador/portable -y
-
-      # Se publica el zip entero y no el .exe suelto: en la version
-      # instalable el ejecutable necesita las dependencias que hay a su
-      # lado, y ademas asi el instalador viaja con el.
-      - name: Empaquetar y firmar los hashes
-        run: |
-          $exe = "instalador\dist\pastepad\pastepad.exe"
-          $port = "instalador\portable\pastepad-portable.exe"
-          if (-not (Test-Path $exe))  { throw "No se genero pastepad.exe" }
-          if (-not (Test-Path $port)) { throw "No se genero el portable" }
-          New-Item -ItemType Directory -Force dist | Out-Null
-          Compress-Archive -Force -DestinationPath dist\pastepad-${{ steps.v.outputs.version }}.zip `
-            -Path instalador\dist\pastepad, instalador\instalar.bat,
-                  instalador\desinstalar.bat, instalador\LEEME.txt
-          Copy-Item $port dist\pastepad-${{ steps.v.outputs.version }}-portable.exe -Force
-          $lineas = @()
-          foreach ($f in "pastepad-${{ steps.v.outputs.version }}.zip", "pastepad-${{ steps.v.outputs.version }}-portable.exe") {
-            $h = (Get-FileHash "dist\$f" -Algorithm SHA256).Hash
-            $lineas += "$h  $f"
-            Write-Host "$f  ->  $h"
+          if (Test-Path publicado-x86) {
+            Remove-Item publicado-x86 -Recurse -Force
           }
-          $lineas | Out-File -Encoding ascii dist\SHA256.txt
+
+      - name: Publicar x86
+        run: >
+          dotnet publish csharp/Pastepad.App
+          -c Release -p:Platform=x86 -r win-x86
+          -p:Version=${{ steps.v.outputs.version }}
+          -o publicado-x86
+
+      - name: Comprobar lo publicado
+        shell: pwsh
+        run: |
+          $exe = "publicado-x86\pastepad.exe"
+          if (-not (Test-Path $exe)) { throw "no se genero pastepad.exe" }
+
+          $n = (Get-ChildItem publicado-x86 -Recurse -File).Count
+          $mb = [math]::Round(((Get-ChildItem publicado-x86 -Recurse -File |
+                 Measure-Object Length -Sum).Sum / 1MB), 1)
+          $vi = (Get-Item $exe).VersionInfo
+          Write-Host "archivos: $n   tamano: $mb MB"
+          Write-Host "version : $($vi.ProductVersion)   empresa: $($vi.CompanyName)"
+
+          # Que la version del tag llegue de verdad al ejecutable: es el
+          # fallo que ya se colo una vez.
+          if ($vi.ProductVersion -ne "${{ steps.v.outputs.version }}") {
+            throw "el .exe dice '$($vi.ProductVersion)' y el tag es '${{ steps.v.outputs.version }}'"
+          }
+
+      # Inno Setup venia preinstalado en la imagen windows-2022, pero NO
+      # viene en windows-2025, que es la que responde hoy a
+      # windows-latest. Se instala en vez de fijar la imagen vieja,
+      # que ademas esta anunciada para retirada.
+      - name: Instalar Inno Setup
+        run: choco install innosetup --no-progress -y
+
+      - name: Construir el instalador
+        shell: pwsh
+        run: |
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { throw "no encuentro ISCC en $iscc" }
+
+          # Entrecomillado: la ruta del runner no lleva espacios hoy,
+          # pero la de una maquina cualquiera si.
+          & $iscc "/DVersion=${{ steps.v.outputs.version }}" `
+                  "/DPublish=$(Join-Path $PWD 'publicado-x86')" `
+                  "instalador\pastepad.iss"
+          if ($LASTEXITCODE -ne 0) { throw "ISCC fallo con $LASTEXITCODE" }
+
+      - name: Hashes
+        shell: pwsh
+        run: |
+          $f = "pastepad-${{ steps.v.outputs.version }}-instalador.exe"
+          if (-not (Test-Path "dist\$f")) { throw "no se genero $f" }
+
+          $mb = [math]::Round((Get-Item "dist\$f").Length / 1MB, 1)
+          Write-Host "instalador: $mb MB"
+
+          $h = (Get-FileHash "dist\$f" -Algorithm SHA256).Hash
+          "$h  $f" | Out-File -Encoding ascii dist\SHA256.txt
+          Write-Host "$f  ->  $h"
 
       - uses: actions/upload-artifact@v4
         with:
           name: pastepad
           path: |
-            dist/pastepad-${{ steps.v.outputs.version }}.zip
-            dist/pastepad-${{ steps.v.outputs.version }}-portable.exe
+            dist/pastepad-${{ steps.v.outputs.version }}-instalador.exe
             dist/SHA256.txt
 
       - name: Publish release
@@ -106,23 +125,26 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist/pastepad-${{ steps.v.outputs.version }}.zip
-            dist/pastepad-${{ steps.v.outputs.version }}-portable.exe
+            dist/pastepad-${{ steps.v.outputs.version }}-instalador.exe
             dist/SHA256.txt
           body: |
-            ## Dos formas de instalarlo
+            ## Instalacion
 
-            **`pastepad-${{ steps.v.outputs.version }}.zip`** — la recomendada.
-            Descomprimelo y ejecuta `instalar.bat`. No pide
-            administrador. Arranca con Windows y sale en el menu inicio.
+            **`pastepad-${{ steps.v.outputs.version }}-instalador.exe`**
 
-            **`pastepad-${{ steps.v.outputs.version }}-portable.exe`** — un solo archivo.
-            Lo ejecutas donde sea, sin instalar nada. Llevalo en un
-            pendrive. Pesa mas porque trae el interprete de Python
-            entero dentro, y por eso no se puede romper: no hay carpeta
-            que se pueda separar del ejecutable.
+            Ejecutalo y listo. **No pide administrador.** Se instala solo
+            para tu usuario, en `%LOCALAPPDATA%\Programs\pastepad`.
 
-            Ninguna de las dos necesita que tengas Python instalado.
+            Atajo para abrir el panel: **Ctrl + Shift + V**
+
+            ## Tus datos no se tocan al desinstalar
+
+            El programa se instala en una carpeta y tus datos viven en
+            otra, `%LOCALAPPDATA%\pastepad`. Desinstalar se lleva el
+            programa y **no puede tocar tu historial ni tus textos
+            guardados**, porque ya no estan en el mismo sitio.
+
+            Si quieres borrarlos tambien, borra esa carpeta a mano.
 
             ## Windows Defender
 
@@ -137,5 +159,5 @@ jobs:
             ## Verificar la descarga
 
             ```powershell
-            Get-FileHash pastepad-${{ steps.v.outputs.version }}.zip -Algorithm SHA256
+            Get-FileHash pastepad-${{ steps.v.outputs.version }}-instalador.exe -Algorithm SHA256
             ```

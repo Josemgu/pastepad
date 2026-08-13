@@ -104,7 +104,8 @@ internal static class Registro
         var yo = System.Security.Principal.WindowsIdentity.GetCurrent();
 
         var entorno =
-            $"=== arranque === pid {Environment.ProcessId}, "
+            $"=== arranque === pastepad {Nucleo.Config.Version}, "
+            + $"pid {Environment.ProcessId}, "
             + $"usuario {yo.Name}, "
             + $"elevado {new System.Security.Principal.WindowsPrincipal(yo)
                 .IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator)}, "

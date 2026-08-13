@@ -774,6 +774,70 @@ public sealed class PruebaTextos
 }
 
 [TestClass]
+public sealed class PruebaAutoarranque : BaseConCarpetaTemporal
+{
+    /// <summary>
+    /// Los tres casos de la preferencia. Se prueban aqui, sobre la
+    /// decision pura, y no sobre el registro de Windows: HKCU es global
+    /// y es del usuario, no de la prueba — una prueba que escriba ahi le
+    /// cambia el arranque de sesion a quien la ejecute.
+    /// </summary>
+    [TestMethod]
+    public void test_sin_preferencia_se_arranca_con_windows()
+    {
+        // Primer arranque: no hay config.json todavia.
+        var a = new Almacen(Rutas);
+
+        Assert.IsTrue(Autoarranque.Quiere(
+            a.Pref(Autoarranque.Clave, Autoarranque.PorDefecto)));
+    }
+
+    [TestMethod]
+    public void test_con_si_se_arranca_con_windows()
+    {
+        var a = new Almacen(Rutas);
+        a.PonerPref(Autoarranque.Clave, "si");
+
+        Assert.IsTrue(Autoarranque.Quiere(
+            new Almacen(Rutas).Pref(Autoarranque.Clave, Autoarranque.PorDefecto)));
+    }
+
+    [TestMethod]
+    public void test_con_no_no_se_arranca_con_windows()
+    {
+        var a = new Almacen(Rutas);
+        a.PonerPref(Autoarranque.Clave, "no");
+
+        Assert.IsFalse(Autoarranque.Quiere(
+            new Almacen(Rutas).Pref(Autoarranque.Clave, Autoarranque.PorDefecto)));
+    }
+
+    /// <summary>
+    /// Un config.json se edita a mano. "Si " con mayuscula o con un
+    /// espacio de sobra sigue siendo que si.
+    /// </summary>
+    [TestMethod]
+    public void test_el_si_se_lee_con_mano_ancha()
+    {
+        Assert.IsTrue(Autoarranque.Quiere("Si"));
+        Assert.IsTrue(Autoarranque.Quiere(" si "));
+        Assert.IsTrue(Autoarranque.Quiere("SI"));
+    }
+
+    /// <summary>
+    /// Y lo que no es un si, no lo es — el mismo criterio que la version
+    /// anterior, que comparaba con "si" tal cual.
+    /// </summary>
+    [TestMethod]
+    public void test_lo_que_no_es_si_no_arranca()
+    {
+        Assert.IsFalse(Autoarranque.Quiere("no"));
+        Assert.IsFalse(Autoarranque.Quiere(""));
+        Assert.IsFalse(Autoarranque.Quiere("cualquier cosa"));
+    }
+}
+
+[TestClass]
 public sealed class PruebaMedidasDelPanel
 {
     /// <summary>

@@ -6,6 +6,35 @@
     <RootNamespace>Pastepad.App</RootNamespace>
     <AssemblyName>pastepad</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
+
+    <!--
+      Lo que Windows ensena en Propiedades del archivo, y de donde sale
+      Config.Version. Sin esto CompanyName decia "pastepad" —el nombre
+      del ensamblado, porque nadie lo puso— y LegalCopyright estaba en
+      blanco.
+
+      Version NO se fija aqui a proposito: la pone el CI con
+      -p:Version=<tag>. Escrita en el archivo se queda vieja, y ya se
+      publico una release con binarios viejos por tenerla clavada en doce
+      sitios (error 4 de TRASPASO.md). En una compilacion de escritorio
+      sale 1.0.0, que es justo lo que debe verse fuera de una release.
+    -->
+    <Product>pastepad</Product>
+    <AssemblyTitle>pastepad</AssemblyTitle>
+    <Description>pastepad - gestor de portapapeles para Windows</Description>
+    <Company>Jose Miguel Ortiz</Company>
+    <Authors>Jose Miguel Ortiz</Authors>
+    <Copyright>Copyright (c) 2026 Jose Miguel Ortiz. Licencia MIT.</Copyright>
+
+    <!--
+      Sin el "+<sha>" que el SDK le anade a la version informativa. Lo
+      que se ensena en Propiedades y en Agregar o quitar programas es
+      "4.0.0" y no "4.0.0+4bbe758f...". El commit no se pierde: una
+      release sale siempre de un tag. Config.Version sigue partiendo por
+      "+" por si acaso, que no cuesta nada.
+    -->
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <Platforms>x86;x64;ARM64</Platforms>
     <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">win-$([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture.ToString().ToLowerInvariant())</RuntimeIdentifier>
     <PublishProfile Condition="Exists('Properties\PublishProfiles\win-$(Platform).pubxml')">win-$(Platform).pubxml</PublishProfile>
@@ -36,16 +65,24 @@
     <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
   </PropertyGroup>
 
+  <!--
+    CopyToPublishDirectory en todos: sin el, publish deja la carpeta
+    Assets vacia. AppIcon.ico hace falta de verdad —Bandeja lo carga del
+    disco con LoadImage, y sin el la bandeja cae al icono generico de
+    Windows—, y los demas se copian para que lo publicado y lo compilado
+    tengan el mismo contenido. Cuanto menos se parezcan, mas fallos que
+    solo salen en lo que se distribuye.
+  -->
   <ItemGroup>
-    <Content Include="Assets\SplashScreen.scale-200.png" />
-    <Content Include="Assets\LockScreenLogo.scale-200.png" />
-    <Content Include="Assets\Square150x150Logo.scale-200.png" />
-    <Content Include="Assets\Square44x44Logo.scale-200.png" />
-    <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
-    <Content Include="Assets\Square44x44Logo.targetsize-48_altform-lightunplated.png" />
-    <Content Include="Assets\StoreLogo.png" />
-    <Content Include="Assets\AppIcon.ico" />
-    <Content Include="Assets\Wide310x150Logo.scale-200.png" />
+    <Content Include="Assets\SplashScreen.scale-200.png" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Assets\LockScreenLogo.scale-200.png" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Assets\Square150x150Logo.scale-200.png" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Assets\Square44x44Logo.scale-200.png" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Assets\Square44x44Logo.targetsize-48_altform-lightunplated.png" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Assets\StoreLogo.png" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Assets\AppIcon.ico" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Assets\Wide310x150Logo.scale-200.png" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
@@ -86,6 +123,67 @@
   <PropertyGroup Condition="'$(DisableHasPackageAndPublishMenuAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
     <HasPackageAndPublishMenu>true</HasPackageAndPublishMenu>
   </PropertyGroup>
+
+  <!--
+    El XAML compilado (.xbf) en la carpeta de publish.
+
+    Sin esto, `dotnet publish` deja fuera App.xbf y Panel.xbf y el
+    programa publicado MUERE AL ARRANCAR con XamlParseException en el
+    constructor de Panel. La compilacion normal si funciona, asi que el
+    fallo solo se ve ejecutando lo que se va a distribuir — el error 5 de
+    TRASPASO.md, "probar el ejecutable, no solo el codigo fuente".
+
+    El motivo: la tarea CopyGeneratedXaml del Windows App SDK copia los
+    .xbf al directorio de salida y los apunta solo en @(FileWrites). Para
+    una aplicacion empaquetada los recoge despues el empaquetador de
+    MSIX; desempaquetada y publicada con dotnet publish no los recoge
+    nadie, porque publish arma su lista desde @(ResolvedFileToPublish).
+    Aqui se anaden a esa lista.
+  -->
+  <Target Name="PublicarXamlCompilado"
+          DependsOnTargets="ComputeProcessXamlFiles"
+          BeforeTargets="ComputeResolvedFilesToPublishList">
+
+    <ItemGroup>
+      <_XamlCompilado Include="@(ProcessedXamlFiles->'%(FullPath)')" />
+    </ItemGroup>
+
+    <!-- Igual que hace el propio SDK al empaquetar: conserva las
+         subcarpetas si algun dia una pagina XAML deja de estar en la
+         raiz del proyecto. -->
+    <AssignTargetPath Files="@(_XamlCompilado)" RootFolder="$(OutputPath)">
+      <Output TaskParameter="AssignedFiles" ItemName="_XamlCompiladoConDestino" />
+    </AssignTargetPath>
+
+    <ItemGroup>
+      <ResolvedFileToPublish Include="@(_XamlCompiladoConDestino)">
+        <RelativePath>%(TargetPath)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+
+      <!--
+        Y el indice de recursos de la aplicacion, que se queda fuera por
+        lo mismo. Es el que resuelve ms-appx:///Microsoft.UI.Xaml/Themes/
+        themeresources.xaml: sin el, con los .xbf ya en su sitio, el
+        arranque sigue muriendo — solo que un paso mas adelante.
+      -->
+      <ResolvedFileToPublish Include="$(OutputPath)$(TargetName).pri"
+                             Condition="Exists('$(OutputPath)$(TargetName).pri')">
+        <RelativePath>$(TargetName).pri</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+
+    <!--
+      Que no se pueda publicar en silencio sin el indice: el fallo que
+      provoca no se parece en nada a su causa.
+    -->
+    <Error Condition="!Exists('$(OutputPath)$(TargetName).pri')"
+           Text="No existe $(OutputPath)$(TargetName).pri. Sin el indice de recursos, lo publicado arranca y muere con XamlParseException." />
+
+    <Message Importance="high"
+             Text="Se publican: @(_XamlCompiladoConDestino->'%(TargetPath)'), $(TargetName).pri" />
+  </Target>
 
   <!-- Publish Properties -->
   <PropertyGroup>

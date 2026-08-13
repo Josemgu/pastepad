@@ -34,9 +34,20 @@ public static class Program
     /// </summary>
     static Exception? _rutaMala;
 
+    /// <summary>
+    /// El instante de la primera linea de <c>Main</c>. El requisito
+    /// numero dos del proyecto es que abrir el panel sea instantaneo, y
+    /// llevaba tres versiones sin un solo numero detras. Se asigna en una
+    /// sentencia y no en un inicializador de campo para que sea de
+    /// verdad la primera linea.
+    /// </summary>
+    internal static long Arranque { get; private set; }
+
     [STAThread]
     static void Main(string[] args)
     {
+        Arranque = System.Diagnostics.Stopwatch.GetTimestamp();
+
         // Lo primero de todo: el registro y la instancia unica dependen
         // de la carpeta de datos.
         LeerArgumentos(args);

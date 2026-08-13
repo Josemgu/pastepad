@@ -90,6 +90,8 @@ public partial class App : Application
 
         _bandeja = new Bandeja(_buzon.Handle, "pastepad");
 
+        AplicarAutoarranque();
+
         _ultimaSecuencia = Portapapeles.Secuencia();
 
         // El historial se vuelca cada pocos segundos en vez de en cada
@@ -101,6 +103,80 @@ public partial class App : Application
 
         if (_buzon.Problema is not null)
             _panel.Avisar(_buzon.Problema);
+
+        // Cuanto tarda en estar listo, desde la primera linea de Main.
+        // En caliente sale una cosa y en frio otra muy distinta: el
+        // arranque en frio de verdad son 476 archivos que nadie ha
+        // tocado todavia, y solo se mide reiniciando la maquina y
+        // leyendo esta linea.
+        Registro.Anotar(string.Format(
+            "listo en {0:F0} ms",
+            System.Diagnostics.Stopwatch
+                .GetElapsedTime(Program.Arranque).TotalMilliseconds));
+    }
+
+    /// <summary>
+    /// Arrancar con Windows, segun la preferencia del usuario. La decide
+    /// la aplicacion en cada arranque y nadie mas: el instalador ya no
+    /// escribe en HKCU\...\Run.
+    ///
+    /// Se reescribe siempre, exista ya o no. Esa es la forma de corregir
+    /// una ruta vieja, y con instalador de por medio pasa de verdad:
+    /// quien tuviera la version anterior en %LOCALAPPDATA%\pastepad y
+    /// ponga la nueva en \Programs\pastepad se queda con la entrada
+    /// apuntando a un ejecutable que ya no esta. La version anterior
+    /// tenia el mismo problema y se resolvia a mano — "si mueves la
+    /// carpeta, abrelo una vez desde el sitio nuevo".
+    /// </summary>
+    void AplicarAutoarranque()
+    {
+        string preferencia =
+            Almacen.Pref(Autoarranque.Clave, Autoarranque.PorDefecto)
+            ?? Autoarranque.PorDefecto;
+
+        // El valor que habia, para poder decir de que a que. Se lee y se
+        // vuelve a leer despues de escribir en vez de componer la ruta a
+        // mano: asi los dos lados se comparan en el mismo formato, con
+        // las comillas que Windows guarda.
+        string? antes = Arranque.ValorActual();
+
+        if (Autoarranque.Quiere(preferencia))
+        {
+            Arranque.Poner(true);
+
+            string ahora = Arranque.ValorActual()
+                           ?? Environment.ProcessPath
+                           ?? "(ruta desconocida)";
+
+            // Reescribir la entrada de otro programa no puede pasar sin
+            // dejar rastro: quien lo mire despues tiene derecho a saber
+            // que habia antes y cuando cambio.
+            Registro.Anotar(
+                antes is null
+                    ? $"arranque con Windows: registrado en {ahora}"
+                    : antes == ahora
+                        ? $"arranque con Windows: ya estaba puesto en {ahora}"
+                        : $"arranque con Windows: se ha reescrito de {antes} a {ahora}");
+
+            return;
+        }
+
+        if (antes is not null)
+        {
+            Arranque.Poner(false);
+
+            // Con el valor que tenia: si el usuario cambia de idea, ahi
+            // esta lo que habia que devolver.
+            Registro.Anotar(
+                $"arranque con Windows: quitado ({Autoarranque.Clave}"
+                + $"='{preferencia}'); apuntaba a {antes}");
+
+            return;
+        }
+
+        Registro.Anotar(
+            $"arranque con Windows: no se registra ({Autoarranque.Clave}"
+            + $"='{preferencia}')");
     }
 
     // ------------------------------------------------------- el atajo
@@ -112,8 +188,24 @@ public partial class App : Application
 
         if (_panel is null) return;
 
-        if (_panel.EstaVisible) _panel.Esconder();
-        else MostrarPanel();
+        if (_panel.EstaVisible)
+        {
+            _panel.Esconder();
+            return;
+        }
+
+        // El otro numero que faltaba. Se mide alrededor de Asomar, que es
+        // sincrono, asi que al volver el panel ya esta puesto y con el
+        // foco. La linea se escribe despues de medir: el coste de anotar
+        // no entra en la cifra.
+        long marca = System.Diagnostics.Stopwatch.GetTimestamp();
+
+        MostrarPanel();
+
+        Registro.Anotar(string.Format(
+            "panel en {0:F1} ms",
+            System.Diagnostics.Stopwatch
+                .GetElapsedTime(marca).TotalMilliseconds));
     }
 
     void MostrarPanel()

@@ -23,6 +23,10 @@ obj/
 *.user
 .vs/
 
+# La carpeta de publish: 475 archivos y casi 200 MB, se regenera con
+# dotnet publish -c Release -p:Platform=x86 -r win-x86
+publicado-x86/
+
 # El log de la prueba del atajo se escribe junto al ejecutable
 csharp/**/prueba-atajo.log
 
