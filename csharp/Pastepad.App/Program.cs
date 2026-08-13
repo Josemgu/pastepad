@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;
@@ -24,13 +26,26 @@ public static class Program
     /// </summary>
     internal static string? CarpetaDatos { get; private set; }
 
+    /// <summary>
+    /// Lo que fallo al resolver la ruta de <c>--datos</c>, si fallo. No
+    /// se anota en el momento: registrar antes de saber la carpeta de
+    /// datos clavaria el log en la de siempre, que es justo lo que
+    /// <c>--datos</c> quiere evitar.
+    /// </summary>
+    static Exception? _rutaMala;
+
     [STAThread]
     static void Main(string[] args)
     {
+        // Lo primero de todo: el registro y la instancia unica dependen
+        // de la carpeta de datos.
         LeerArgumentos(args);
 
         Registro.EngancharGlobales();
         Registro.AnotarArranque();
+
+        if (_rutaMala is not null)
+            Registro.Fallo("--datos: la ruta no se pudo resolver", _rutaMala);
 
         if (CarpetaDatos is not null)
             Registro.Anotar($"datos en carpeta alternativa: {CarpetaDatos}");
@@ -65,9 +80,33 @@ public static class Program
         {
             if (args[i].Equals("--datos", StringComparison.OrdinalIgnoreCase))
             {
-                CarpetaDatos = args[i + 1];
+                CarpetaDatos = Normalizar(args[i + 1]);
                 return;
             }
+        }
+    }
+
+    /// <summary>
+    /// A ruta absoluta y sin barra final. Dos lanzamientos que escriben
+    /// en la misma carpeta tienen que dar la misma clave de instancia, y
+    /// <c>datos</c>, <c>.\datos\</c> y <c>C:\...\datos</c> son la misma
+    /// carpeta escrita de tres maneras.
+    /// </summary>
+    static string Normalizar(string ruta)
+    {
+        try
+        {
+            return Path.TrimEndingDirectorySeparator(Path.GetFullPath(ruta));
+        }
+        catch (Exception e) when (e is ArgumentException
+                                    or NotSupportedException
+                                    or PathTooLongException)
+        {
+            _rutaMala = e;
+
+            // Se sigue con lo que vino: el almacen dira lo que pase al
+            // intentar escribir alli, y eso el usuario si lo ve.
+            return ruta;
         }
     }
 
@@ -78,7 +117,22 @@ public static class Program
     /// </summary>
     static string Clave() => CarpetaDatos is null
         ? CLAVE_INSTANCIA
-        : CLAVE_INSTANCIA + "-" + CarpetaDatos.GetHashCode().ToString("X");
+        : CLAVE_INSTANCIA + "-" + Resumen(CarpetaDatos);
+
+    /// <summary>
+    /// Resumen estable de la ruta: 16 hexadecimales de SHA-256 sobre
+    /// ella en minusculas, que en Windows es el mismo nombre.
+    ///
+    /// No es String.GetHashCode y no puede serlo: en .NET Core esta
+    /// aleatorizado por proceso, asi que cada lanzamiento producia una
+    /// clave distinta y con <c>--datos</c> la instancia unica no
+    /// funcionaba — dos procesos peleandose por el atajo global, que es
+    /// exactamente el fallo que hizo que el programa pareciera roto
+    /// durante dias. Aqui no se le pide nada criptografico, solo que sea
+    /// el mismo numero en todos los procesos y en todos los arranques.
+    /// </summary>
+    static string Resumen(string ruta) => Convert.ToHexString(
+        SHA256.HashData(Encoding.UTF8.GetBytes(ruta.ToLowerInvariant())))[..16];
 
     static bool SoyLaInstanciaBuena()
     {

@@ -51,12 +51,15 @@ public partial class App : Application
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
-        Almacen = new Almacen(Program.CarpetaDatos is { } carpeta
-            ? Rutas.EnCarpeta(carpeta)
-            : null);
-
-        Almacen.Incidencia += (donde, e) => Registro.Fallo(donde, e);
+        Almacen = new Almacen(
+            Program.CarpetaDatos is { } carpeta ? Rutas.EnCarpeta(carpeta) : null,
+            Registro.Fallo,
+            Registro.Anotar);
         Indice = new Indice(Almacen);
+
+        // Antes de crear el panel: sus textos se resuelven al construirlo.
+        Textos.Idioma = Almacen.Pref("idioma", Textos.IdiomaDef)
+                        ?? Textos.IdiomaDef;
 
         _panel = new Panel();
 
@@ -186,9 +189,86 @@ public partial class App : Application
                 : Portapapeles.Copiar(
                     [Modelo.CrearFragmento(entrada.Texto ?? "")], sinFormato: true);
 
+            await TrasCopiar(copiado);
+        }
+        catch (Exception e)
+        {
+            Registro.Fallo("Pegar", e);
+        }
+    }
+
+    /// <summary>
+    /// Pega un texto con formato: es lo que distingue un guardado de una
+    /// entrada del historial, que siempre va plana.
+    /// </summary>
+    internal async void PegarFragmentos(
+        IReadOnlyList<Fragmento> fragmentos, bool sinFormato)
+    {
+        try
+        {
+            await TrasCopiar(Portapapeles.Copiar(fragmentos, sinFormato));
+        }
+        catch (Exception e)
+        {
+            Registro.Fallo("PegarFragmentos", e);
+        }
+    }
+
+    /// <summary>
+    /// Devuelve el foco a donde estaba y pega alli. Es la parte
+    /// delicada del ciclo y por eso vive en un solo sitio: guardar el
+    /// hwnd anterior, engancharle el hilo y soltar Ctrl+V.
+    /// </summary>
+    async Task TrasCopiar(bool copiado)
+    {
+        if (!copiado)
+        {
+            _panel?.Avisar(Textos.T("No se pudo copiar al portapapeles."));
+            return;
+        }
+
+        _secuenciaPropia = Portapapeles.Secuencia();
+        _ultimaSecuencia = _secuenciaPropia;
+
+        _panel?.Esconder();
+
+        if (!Foco.Devolver(_ventanaPrevia))
+        {
+            // Queda copiado: el usuario puede pegar a mano. Es peor
+            // no decirselo que decirlo.
+            _panel?.Avisar(Textos.T("Copiado, pero no pude volver a la ventana "
+                                  + "anterior. Pega con Ctrl+V."));
+            return;
+        }
+
+        // Windows necesita un instante para asentar el primer plano
+        // antes de aceptar las teclas.
+        await Task.Delay(60);
+
+        Foco.PegarConTeclado();
+    }
+
+    /// <summary>Deja el contenido en el portapapeles sin pegarlo.</summary>
+    internal void CopiarSolo(Elemento elemento)
+    {
+        try
+        {
+            bool copiado = elemento switch
+            {
+                Entrada { EsImagen: true, Ruta: { } ruta } =>
+                    Portapapeles.CopiarImagen(ruta),
+
+                Entrada entrada => Portapapeles.Copiar(
+                    [Modelo.CrearFragmento(entrada.Texto ?? "")], sinFormato: true),
+
+                Snippet snippet => Portapapeles.Copiar(snippet.Runs),
+
+                _ => false,
+            };
+
             if (!copiado)
             {
-                _panel?.Avisar("No se pudo copiar al portapapeles.");
+                _panel?.Avisar(Textos.T("No se pudo copiar al portapapeles."));
                 return;
             }
 
@@ -196,27 +276,42 @@ public partial class App : Application
             _ultimaSecuencia = _secuenciaPropia;
 
             _panel?.Esconder();
-
-            if (!Foco.Devolver(_ventanaPrevia))
-            {
-                // Queda copiado: el usuario puede pegar a mano. Es peor
-                // no decirselo que decirlo.
-                _panel?.Avisar("Copiado, pero no pude volver a la ventana "
-                             + "anterior. Pega con Ctrl+V.");
-                return;
-            }
-
-            // Windows necesita un instante para asentar el primer plano
-            // antes de aceptar las teclas.
-            await Task.Delay(60);
-
-            Foco.PegarConTeclado();
         }
         catch (Exception e)
         {
-            Registro.Fallo("Pegar", e);
+            Registro.Fallo("CopiarSolo", e);
         }
     }
+
+    /// <summary>
+    /// Un enlace se abre, no se pega. Solo cuando el texto entero es la
+    /// direccion: un parrafo que la menciona de pasada no cuenta.
+    /// </summary>
+    internal void AbrirEnlace(string texto)
+    {
+        _panel?.Esconder();
+
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = Modelo.UrlDe(texto),
+                UseShellExecute = true,
+            });
+        }
+        catch (Exception e)
+        {
+            Registro.Fallo("AbrirEnlace", e);
+            _panel?.Avisar(Textos.T("No se pudo abrir el enlace."));
+        }
+    }
+
+    /// <summary>
+    /// Cambia el atajo global en caliente. False si Windows no lo da
+    /// —normalmente porque otro programa se lo quedo—, y entonces la
+    /// interfaz tiene que decirlo en vez de callarse.
+    /// </summary>
+    internal bool PonerAtajo(string atajo) => _buzon?.PonerAtajo(atajo) ?? false;
 
     // -------------------------------------------------------- el cierre
 

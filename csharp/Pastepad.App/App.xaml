@@ -8,9 +8,220 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
-                <!-- Other merged dictionaries here -->
             </ResourceDictionary.MergedDictionaries>
-            <!-- Other app resources here -->
+
+            <!--
+                Las tres paletas del sistema. Con {ThemeResource} en el
+                XAML, WinUI las reevalua cada vez que cambia el tema en
+                caliente; con {StaticResource} solo se leerian al cargar.
+                Fuente: learn.microsoft.com, "XAML theme resources".
+
+                Dentro de un ThemeDictionary los colores van con
+                {StaticResource}, salvo los SystemColor* de HighContrast,
+                que la misma guia marca como la excepcion.
+
+                Los valores de Light y Dark son los de la seccion 2 de
+                docs/ESPECIFICACION-UI.md. Estilo.Aplicar() los cambia en
+                el sitio cuando el usuario elige uno de los otros diez
+                fondos, que son nuestros y no del sistema.
+            -->
+            <ResourceDictionary.ThemeDictionaries>
+
+                <ResourceDictionary x:Key="Light">
+                    <Color x:Key="PpFondoColor">#F6F6F4</Color>
+                    <Color x:Key="PpElevadoColor">#FFFFFF</Color>
+                    <Color x:Key="PpTarjetaColor">#FFFFFF</Color>
+                    <Color x:Key="PpHoverColor">#EFEFEC</Color>
+                    <Color x:Key="PpBordeColor">#E6E6E2</Color>
+                    <Color x:Key="PpTextoColor">#141416</Color>
+                    <Color x:Key="PpMedioColor">#5C5C66</Color>
+                    <Color x:Key="PpTenueColor">#707079</Color>
+                    <Color x:Key="PpAcentoColor">#2DD4A7</Color>
+                    <Color x:Key="PpSobreColor">#052E23</Color>
+                    <Color x:Key="PpRojoColor">#EF4444</Color>
+                    <Color x:Key="PpAmbarColor">#F5A524</Color>
+                    <Color x:Key="PpPeligroColor">#DC2626</Color>
+                    <Color x:Key="PpBarraFocoColor">#FFFFFF</Color>
+
+                    <SolidColorBrush x:Key="PpFondo" Color="{StaticResource PpFondoColor}" />
+                    <SolidColorBrush x:Key="PpElevado" Color="{StaticResource PpElevadoColor}" />
+                    <SolidColorBrush x:Key="PpTarjeta" Color="{StaticResource PpTarjetaColor}" />
+                    <SolidColorBrush x:Key="PpHover" Color="{StaticResource PpHoverColor}" />
+                    <SolidColorBrush x:Key="PpBorde" Color="{StaticResource PpBordeColor}" />
+                    <SolidColorBrush x:Key="PpTexto" Color="{StaticResource PpTextoColor}" />
+                    <SolidColorBrush x:Key="PpMedio" Color="{StaticResource PpMedioColor}" />
+                    <SolidColorBrush x:Key="PpTenue" Color="{StaticResource PpTenueColor}" />
+                    <SolidColorBrush x:Key="PpAcento" Color="{StaticResource PpAcentoColor}" />
+                    <SolidColorBrush x:Key="PpSobre" Color="{StaticResource PpSobreColor}" />
+                    <SolidColorBrush x:Key="PpRojo" Color="{StaticResource PpRojoColor}" />
+                    <SolidColorBrush x:Key="PpAmbar" Color="{StaticResource PpAmbarColor}" />
+                    <SolidColorBrush x:Key="PpPeligro" Color="{StaticResource PpPeligroColor}" />
+                    <SolidColorBrush x:Key="PpBarraFoco" Color="{StaticResource PpBarraFocoColor}" />
+                </ResourceDictionary>
+
+                <ResourceDictionary x:Key="Dark">
+                    <Color x:Key="PpFondoColor">#0B0B0D</Color>
+                    <Color x:Key="PpElevadoColor">#141417</Color>
+                    <Color x:Key="PpTarjetaColor">#1B1B1F</Color>
+                    <Color x:Key="PpHoverColor">#26262B</Color>
+                    <Color x:Key="PpBordeColor">#242429</Color>
+                    <Color x:Key="PpTextoColor">#F4F4F5</Color>
+                    <Color x:Key="PpMedioColor">#9C9CA6</Color>
+                    <Color x:Key="PpTenueColor">#86868E</Color>
+                    <Color x:Key="PpAcentoColor">#2DD4A7</Color>
+                    <Color x:Key="PpSobreColor">#052E23</Color>
+                    <Color x:Key="PpRojoColor">#EF4444</Color>
+                    <Color x:Key="PpAmbarColor">#F5A524</Color>
+                    <Color x:Key="PpPeligroColor">#DC2626</Color>
+                    <Color x:Key="PpBarraFocoColor">#FFFFFF</Color>
+
+                    <SolidColorBrush x:Key="PpFondo" Color="{StaticResource PpFondoColor}" />
+                    <SolidColorBrush x:Key="PpElevado" Color="{StaticResource PpElevadoColor}" />
+                    <SolidColorBrush x:Key="PpTarjeta" Color="{StaticResource PpTarjetaColor}" />
+                    <SolidColorBrush x:Key="PpHover" Color="{StaticResource PpHoverColor}" />
+                    <SolidColorBrush x:Key="PpBorde" Color="{StaticResource PpBordeColor}" />
+                    <SolidColorBrush x:Key="PpTexto" Color="{StaticResource PpTextoColor}" />
+                    <SolidColorBrush x:Key="PpMedio" Color="{StaticResource PpMedioColor}" />
+                    <SolidColorBrush x:Key="PpTenue" Color="{StaticResource PpTenueColor}" />
+                    <SolidColorBrush x:Key="PpAcento" Color="{StaticResource PpAcentoColor}" />
+                    <SolidColorBrush x:Key="PpSobre" Color="{StaticResource PpSobreColor}" />
+                    <SolidColorBrush x:Key="PpRojo" Color="{StaticResource PpRojoColor}" />
+                    <SolidColorBrush x:Key="PpAmbar" Color="{StaticResource PpAmbarColor}" />
+                    <SolidColorBrush x:Key="PpPeligro" Color="{StaticResource PpPeligroColor}" />
+                    <SolidColorBrush x:Key="PpBarraFoco" Color="{StaticResource PpBarraFocoColor}" />
+                </ResourceDictionary>
+
+                <!--
+                    En alto contraste no se inventan colores: los elige el
+                    usuario en la configuracion de Windows y taparlos es
+                    justo lo que rompe la accesibilidad que activo.
+                    Aqui si va {ThemeResource}, que es la excepcion que
+                    marca la guia.
+                -->
+                <ResourceDictionary x:Key="HighContrast">
+                    <SolidColorBrush x:Key="PpFondo" Color="{ThemeResource SystemColorWindowColor}" />
+                    <SolidColorBrush x:Key="PpElevado" Color="{ThemeResource SystemColorWindowColor}" />
+                    <SolidColorBrush x:Key="PpTarjeta" Color="{ThemeResource SystemColorWindowColor}" />
+                    <SolidColorBrush x:Key="PpHover" Color="{ThemeResource SystemColorHighlightColor}" />
+                    <SolidColorBrush x:Key="PpBorde" Color="{ThemeResource SystemColorWindowTextColor}" />
+                    <SolidColorBrush x:Key="PpTexto" Color="{ThemeResource SystemColorWindowTextColor}" />
+                    <SolidColorBrush x:Key="PpMedio" Color="{ThemeResource SystemColorWindowTextColor}" />
+                    <SolidColorBrush x:Key="PpTenue" Color="{ThemeResource SystemColorGrayTextColor}" />
+                    <SolidColorBrush x:Key="PpAcento" Color="{ThemeResource SystemColorHighlightColor}" />
+                    <SolidColorBrush x:Key="PpSobre" Color="{ThemeResource SystemColorHighlightTextColor}" />
+                    <SolidColorBrush x:Key="PpRojo" Color="{ThemeResource SystemColorWindowTextColor}" />
+                    <SolidColorBrush x:Key="PpAmbar" Color="{ThemeResource SystemColorWindowTextColor}" />
+                    <SolidColorBrush x:Key="PpPeligro" Color="{ThemeResource SystemColorWindowTextColor}" />
+                    <SolidColorBrush x:Key="PpBarraFoco" Color="{ThemeResource SystemColorHighlightTextColor}" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+
+            <SolidColorBrush x:Key="PpNada" Color="Transparent" />
+
+            <!--
+                Segoe UI Variable Display en Windows 11; Segoe UI si no
+                esta. XAML cae al siguiente nombre de la lista solo.
+            -->
+            <x:String x:Key="PpFuente">Segoe UI Variable Display, Segoe UI</x:String>
+
+            <!--
+                Los tres circulos de la cabecera. Lado 20 porque las
+                maquetas los dibujan con radio 10; el minimo que WinUI
+                le pone a un Button es 32x32 y descolgaba la cabecera
+                entera, asi que van con alto y ancho explicitos.
+            -->
+            <Style x:Key="PpIconoCabecera" TargetType="Button">
+                <Setter Property="Width" Value="20" />
+                <Setter Property="Height" Value="20" />
+                <Setter Property="MinWidth" Value="20" />
+                <Setter Property="MinHeight" Value="20" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="CornerRadius" Value="10" />
+                <Setter Property="Background" Value="{ThemeResource PpTarjeta}" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Foreground" Value="{ThemeResource PpMedio}" />
+                <Setter Property="FontFamily" Value="Segoe Fluent Icons" />
+                <Setter Property="FontSize" Value="10" />
+                <Setter Property="HorizontalContentAlignment" Value="Center" />
+                <Setter Property="VerticalContentAlignment" Value="Center" />
+            </Style>
+
+            <!--  Los del pie: sin fondo, mas grandes, radio 10.  -->
+            <Style x:Key="PpIconoPie" TargetType="Button">
+                <Setter Property="Width" Value="30" />
+                <Setter Property="Height" Value="26" />
+                <Setter Property="MinWidth" Value="30" />
+                <Setter Property="MinHeight" Value="26" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="CornerRadius" Value="10" />
+                <Setter Property="Background" Value="{StaticResource PpNada}" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Foreground" Value="{ThemeResource PpMedio}" />
+                <Setter Property="FontFamily" Value="Segoe Fluent Icons" />
+                <Setter Property="FontSize" Value="15" />
+                <Setter Property="HorizontalContentAlignment" Value="Center" />
+                <Setter Property="VerticalContentAlignment" Value="Center" />
+            </Style>
+
+            <!--
+                Botones del pie. Alto 26 explicito: el minimo de WinUI es
+                32 y las maquetas piden 26.
+            -->
+            <Style x:Key="PpBoton" TargetType="Button">
+                <Setter Property="Height" Value="26" />
+                <Setter Property="MinHeight" Value="26" />
+                <Setter Property="MinWidth" Value="0" />
+                <Setter Property="Padding" Value="16,0" />
+                <Setter Property="CornerRadius" Value="10" />
+                <Setter Property="Background" Value="{ThemeResource PpTarjeta}" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Foreground" Value="{ThemeResource PpTexto}" />
+                <Setter Property="FontFamily" Value="{StaticResource PpFuente}" />
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="HorizontalContentAlignment" Value="Center" />
+                <Setter Property="VerticalContentAlignment" Value="Center" />
+            </Style>
+
+            <Style
+                x:Key="PpBotonAcento"
+                BasedOn="{StaticResource PpBoton}"
+                TargetType="Button">
+                <Setter Property="Background" Value="{ThemeResource PpAcento}" />
+                <Setter Property="Foreground" Value="{ThemeResource PpSobre}" />
+            </Style>
+
+            <!--  Pestanas y fichas de carpeta: capsula de 30 px.  -->
+            <Style x:Key="PpPestana" TargetType="Button">
+                <Setter Property="Height" Value="30" />
+                <Setter Property="MinHeight" Value="30" />
+                <Setter Property="MinWidth" Value="0" />
+                <Setter Property="Padding" Value="16,0" />
+                <Setter Property="CornerRadius" Value="15" />
+                <Setter Property="Background" Value="{ThemeResource PpTarjeta}" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Foreground" Value="{ThemeResource PpMedio}" />
+                <Setter Property="FontFamily" Value="{StaticResource PpFuente}" />
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="HorizontalContentAlignment" Value="Center" />
+                <Setter Property="VerticalContentAlignment" Value="Center" />
+            </Style>
+
+            <Style x:Key="PpTextoFila" TargetType="TextBlock">
+                <Setter Property="FontFamily" Value="{StaticResource PpFuente}" />
+                <Setter Property="FontSize" Value="13" />
+                <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                <Setter Property="TextWrapping" Value="NoWrap" />
+                <Setter Property="MaxLines" Value="1" />
+            </Style>
+
+            <Style x:Key="PpSubtituloFila" TargetType="TextBlock">
+                <Setter Property="FontFamily" Value="{StaticResource PpFuente}" />
+                <Setter Property="FontSize" Value="11" />
+                <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                <Setter Property="TextWrapping" Value="NoWrap" />
+                <Setter Property="MaxLines" Value="1" />
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
