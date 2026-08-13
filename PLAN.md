@@ -32,6 +32,35 @@ funcionaba; y al qa, que el apilado no ocurría y que el margen del
 diálogo era de 17 px. Comprobar la marca de tiempo del `.exe` antes de
 creerse una medida.
 
+### Abierto: el instalador silencioso no devuelve el control
+
+Encontrado el 13 ago 2026 actualizando de la 4.2.0 a la 4.3.0 en la
+máquina del usuario, con el instalador publicado.
+
+**La actualización salió perfecta.** Cerró limpio, volcó —una copia hecha
+300 ms antes y aún no escrita sobrevivió— y pastepad volvió solo seis
+segundos después:
+
+```
+13:37:44.457  nos cierran para actualizarnos; volcando
+13:37:44.459  buzon cerrado
+13:37:50.847  === arranque === pastepad 4.3.0
+```
+
+Lo raro es otra cosa: `Start-Process -Wait` sobre el instalador **no
+volvió nunca**, y se cortó a los 10 minutos. El trabajo estaba hecho a
+los 15 segundos.
+
+La sospecha, sin comprobar: `RmRestart` lanza pastepad y el proceso hereda
+los descriptores del instalador, así que quien espera al instalador acaba
+esperando a pastepad, que no se cierra nunca. Si es eso, **cualquier
+script de actualización silenciosa se queda colgado** — y la 4.2.0 se
+publicó precisamente para que actualizar sin vigilancia funcionara.
+
+No afecta a quien ejecuta el instalador a mano. Comprobarlo es mirar el
+proceso padre del pastepad reabierto, o lanzar el instalador
+redirigiendo la salida a un archivo y ver si vuelve.
+
 ### Lo que queda abierto al cerrar el paso 6
 
 - **El arranque en frío tras reiniciar sigue sin medirse.** Es el único
