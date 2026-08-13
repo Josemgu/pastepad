@@ -38,12 +38,9 @@ creerse una medida.
   número que le falta al requisito dos. Lo da la primera línea de
   `errores.log` el día que se reinicie el equipo: busca `listo en`.
   En caliente son 420–463 ms.
-- **`--datos` aísla los datos pero NO el autoarranque.** Lanzar una
-  compilación de desarrollo reescribe `HKCU\...\Run` apuntando a esa
-  carpeta, así que al reiniciar arrancaría el binario de pruebas en vez
-  del instalado. Le pasó al diseñador tomando las capturas, y lo
-  restauró. Hace falta una opción `--sin-autoarranque`, o que `--datos`
-  lo implique.
+- ~~**`--datos` aísla los datos pero NO el autoarranque.**~~ **Cerrado en
+  la 4.2.0.** Volvió a pasar dos veces durante el trabajo de esa versión,
+  así que `--datos` ya implica no tocar el registro y lo dice en el log.
 - **Sin firmar.** SmartScreen avisa. El certificado de SignPath está por
   solicitar, y exige verificación en dos pasos y aprobación manual de
   cada release. Hay que firmar **dos veces**: el `.exe` antes de
@@ -486,14 +483,32 @@ tiene que cerrar pastepad es pastepad, volcando primero.
   sobre el historial. Efecto secundario bueno: descargando con el
   navegador vuelve la marca de la web, así que SmartScreen sigue
   protegiendo mientras el binario no esté firmado.
-- **4.2.0** — el botón que descarga, comprueba el `digest` y lanza el
-  instalador. Antes hay que resolver si el Restart Manager alcanza a la
-  ventana oculta del panel, que **está sin verificar**.
+- **4.2.0 — hecho, y resultó ser otra cosa.** La pregunta era si el
+  Restart Manager alcanza a la ventana oculta. Medido con su propia API
+  contra pastepad corriendo: **no**, y por dos motivos a la vez.
 
-**Y un fallo que hay que arreglar antes del 4.2.0:** el `[Run]` del
-`.iss` lleva `skipifsilent`, así que una actualización silenciosa
-dejaría pastepad instalado y **cerrado, sin atajo**, hasta abrirlo a
-mano.
+  Una ventana solo-mensajes «cannot be enumerated», así que el buzón no
+  recibe `WM_QUERYENDSESSION` — no es un fallo, es la definición. Y
+  `bRestartable` era `False` porque nadie había llamado a
+  `RegisterApplicationRestart`, que es la condición que pone la propia
+  documentación de Inno para que `RestartApplications=yes` sirva de algo.
+
+  Lo peor no era ninguno de los dos: **el tipo que veía el Restart
+  Manager cambiaba según el panel estuviera abierto o escondido**
+  (`RmMainWindow` frente a `RmOtherWindow`). El mismo programa se
+  comportaba de dos maneras al actualizarse según dónde lo hubieras
+  dejado.
+
+  Arreglado con una ventana de nivel superior aparte que solo escucha
+  (`Sistema/Cierre.cs`), el registro para reinicio, y
+  `RestartApplications=yes`. El `skipifsilent` se queda como está: con el
+  reinicio funcionando ya sobra, y quitarlo abriría pastepad a quien
+  instale en silencio sin tenerlo abierto.
+
+- **El botón que descarga y lanza el instalador** sigue pendiente, y
+  ahora se apoya en algo verificado. Antes de escribirlo hay que decidir
+  si pastepad se lanza a sí mismo el instalador o si se limita a abrir la
+  release, que es lo que hace hoy.
 
 Con una preferencia para apagar el aviso, visible desde el primer día.
 

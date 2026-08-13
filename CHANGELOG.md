@@ -3,6 +3,38 @@
 All notable changes to this project are documented here.
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [4.2.0] - 2026-08-13
+
+**Updating pastepad no longer costs you the clipboard you just copied,
+and no longer leaves it closed.** Both of those were happening, and
+neither said anything.
+
+### Fixed
+- **pastepad did not come back after being updated.** Installing over a
+  running copy left it installed and shut down — no shortcut, no capture,
+  nothing on screen to say so. Windows will only reopen a program that
+  asked to be reopened, and pastepad never asked. Measured with the same
+  API the installer uses: `bRestartable` was `False`.
+- **Up to three seconds of copies were lost every time.** The history is
+  written every few seconds rather than on every copy, and the only thing
+  that forced it out was quitting from the tray. An installer closing
+  pastepad — or Windows shutting down — took whatever had not been
+  written yet. It now saves when Windows warns it, which it did not hear
+  before: the window that handles the shortcut is a message-only window,
+  and those cannot be enumerated, so the warning never reached it. A
+  second window, never drawn and never in Alt+Tab, listens for it.
+- What happened on an update depended on **whether the panel happened to
+  be open**. With it tucked in the tray Windows classified pastepad as a
+  program with no top-level window; with it open, as a normal one. Same
+  program, two behaviours, decided by where you left it.
+- **`--datos` rewrote the real autostart entry.** The option exists to
+  test without touching your installation, and it kept every test run's
+  data separate while pointing Windows' startup entry at a build that
+  would be gone the next day.
+
+### Changed
+- 74 tests to 78.
+
 ## [4.1.0] - 2026-08-13
 
 **This is the last version you have to install by hand.** From here on

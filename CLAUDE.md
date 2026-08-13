@@ -13,7 +13,7 @@ las pierde al reiniciar.
 
 ## Estado
 
-Versión 4.1.0, reescrita en C# con WinUI 3 sobre el Windows App SDK
+Versión 4.2.0, reescrita en C# con WinUI 3 sobre el Windows App SDK
 2.3.1 y .NET 10. Desempaquetada y self-contained.
 
 La versión anterior (3.x, Python con Flet) **ya no está en el repo**.
@@ -38,11 +38,13 @@ csharp/
     Busqueda.cs              ranking e indice con cache
     Textos.cs                4 idiomas
     Versiones.cs             comparar versiones y decidir si toca avisar
+    Argumentos.cs            la linea con la que Windows nos reabre
     Config.cs, Datos.cs, Autoarranque.cs, Rutas
-  Pastepad.Nucleo.Pruebas/   74 pruebas, sin abrir ventana
+  Pastepad.Nucleo.Pruebas/   78 pruebas, sin abrir ventana
   Pastepad.App/
     Sistema/                 todo lo que habla con Win32
       Buzon.cs               ventana solo-mensajes: atajo y portapapeles
+      Cierre.cs              oye que nos van a cerrar y vuelca antes
       Portapapeles.cs        lectura, escritura, formatos privados, RTF
       Foco.cs                devolver el foco y pegar
       Actualizacion.cs       consulta la API de GitHub. Solo consulta
@@ -79,7 +81,11 @@ conclusiones falsas —que `ResizeClient` funcionaba, y que un arreglo de
 disposición no se había aplicado—. Comprueba la marca de tiempo del
 `.exe` antes de creerte una medida.
 
-**Para ejecutar, siempre `--datos`:**
+**Para ejecutar, siempre `--datos`.** Desde la 4.2.0 esa opción tampoco
+toca la entrada de arranque del registro, que hasta entonces sí
+reescribía —dejando el autoarranque del usuario apuntando a una
+compilación de pruebas—. Aun así, si algo va raro, mira
+`HKCU\...\Run\pastepad`.
 
 ```powershell
 & ".\csharp\Pastepad.App\bin\x86\Debug\net10.0-windows10.0.26100.0\win-x86\pastepad.exe" --datos "C:\temp\prueba"
@@ -105,6 +111,21 @@ ventana de XAML. `Sistema/Buzon.cs`. Medido 100/100 en el sondeo y
 `ExecutionEngineException` abierto en el repositorio de WinUI, y atar el
 atajo a la ventana visible —que se esconde— es el acoplamiento que mató
 a la versión anterior.
+
+**La escucha del cierre es una ventana APARTE del buzon**, y de nivel
+superior. `Sistema/Cierre.cs`. Una ventana solo-mensajes «cannot be
+enumerated», y lo que no se enumera no recibe `WM_QUERYENDSESSION`: el
+buzón es sordo a eso por construcción. Medido con la propia API del
+Restart Manager sobre pastepad corriendo: `bRestartable=False`, y el tipo
+cambiaba entre `RmOtherWindow` y `RmMainWindow` **según el panel
+estuviera escondido o abierto**. Después del cambio: cierre limpio en
+157–201 ms, reapertura en 56–68 ms, y una copia hecha 400 ms antes
+sobrevive.
+
+**`RegisterApplicationRestart(null, ...)` no conserva los argumentos, los
+borra.** «If this parameter is NULL or an empty string, the previously
+registered command line is removed». Se comprobó: una instancia lanzada
+con `--datos` volvió sin él y abrió el almacén real.
 
 **El portapapeles va por Win32**, no por la clase `Clipboard` de WinRT.
 Su documentación dice que solo se accede con la aplicación enfocada, y

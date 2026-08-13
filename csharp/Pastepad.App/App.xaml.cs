@@ -17,6 +17,7 @@ public partial class App : Application
 
     Buzon? _buzon;
     Bandeja? _bandeja;
+    Cierre? _cierre;
     Panel? _panel;
     Timer? _volcado;
     Timer? _novedades;
@@ -103,6 +104,16 @@ public partial class App : Application
 
         _bandeja = new Bandeja(_buzon.Handle, "pastepad");
 
+        // La escucha del cierre va aparte del buzon porque el buzon no
+        // puede oirla: ver el comentario de Cierre.cs. Y el registro para
+        // que nos reabran va aqui, no antes, para que la linea del log
+        // salga despues de la del arranque.
+        _cierre = new Cierre();
+        _cierre.Volcar += () => Almacen.Volcar(forzar: true);
+        _cierre.Terminar += Cerrar;
+
+        Cierre.PedirQueNosReabran();
+
         AplicarAutoarranque();
 
         _ultimaSecuencia = Portapapeles.Secuencia();
@@ -151,6 +162,20 @@ public partial class App : Application
     /// </summary>
     void AplicarAutoarranque()
     {
+        // --datos existe para probar sin tocar lo del usuario, y hasta la
+        // 4.2.0 no lo cumplia: aislaba los datos pero reescribia igual la
+        // entrada del registro, dejando el autoarranque apuntando a una
+        // compilacion de pruebas que manana ya no esta. Paso dos veces en
+        // una misma sesion.
+        //
+        // El registro es de la instalacion de verdad. Una sesion con
+        // --datos no tiene nada que decir ahi.
+        if (Program.CarpetaDatos is not null)
+        {
+            Registro.Anotar("sesion con --datos: no se toca el autoarranque");
+            return;
+        }
+
         string preferencia =
             Almacen.Pref(Autoarranque.Clave, Autoarranque.PorDefecto)
             ?? Autoarranque.PorDefecto;
@@ -487,15 +512,25 @@ public partial class App : Application
 
     // -------------------------------------------------------- el cierre
 
+    bool _cerrando;
+
     void Cerrar()
     {
-        Registro.Anotar("cierre pedido desde la bandeja");
+        // Ya no lo pide solo la bandeja: tambien el Restart Manager, y
+        // ese puede mandar WM_ENDSESSION y despues WM_CLOSE. Entrar dos
+        // veces desecharia dos veces y volcaria sobre un almacen a medio
+        // soltar.
+        if (_cerrando) return;
+        _cerrando = true;
+
+        Registro.Anotar("cerrando");
 
         Almacen.Volcar(forzar: true);
 
         _volcado?.Dispose();
         _novedades?.Dispose();
         _bandeja?.Dispose();
+        _cierre?.Dispose();
         _buzon?.Dispose();
 
         Exit();

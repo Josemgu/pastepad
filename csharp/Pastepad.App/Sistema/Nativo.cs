@@ -28,6 +28,20 @@ internal static partial class Nativo
     public const uint WM_RBUTTONUP = 0x0205;
     public const uint WM_COMMAND = 0x0111;
 
+    // --- el aviso de que nos van a cerrar ---------------------------
+
+    public const uint WM_CLOSE = 0x0010;
+    public const uint WM_QUERYENDSESSION = 0x0011;
+    public const uint WM_ENDSESSION = 0x0016;
+
+    /// <summary>
+    /// Llega en el lParam de WM_QUERYENDSESSION cuando quien cierra no
+    /// es Windows apagandose, sino el Restart Manager haciendole sitio a
+    /// un instalador. Sirve para distinguir "me actualizan" de "se apaga
+    /// el equipo", que en el registro no es lo mismo.
+    /// </summary>
+    public const nint ENDSESSION_CLOSEAPP = 0x1;
+
     // --- modificadores del atajo ------------------------------------
 
     public const uint MOD_ALT = 0x0001;
@@ -53,6 +67,16 @@ internal static partial class Nativo
     // --- varios -----------------------------------------------------
 
     public const nint HWND_MESSAGE = -3;
+
+    /// <summary>
+    /// Ventana emergente sin marco. Sin WS_VISIBLE: nace oculta y nunca
+    /// se muestra.
+    /// </summary>
+    public const uint WS_POPUP = 0x80000000;
+
+    /// <summary>Fuera de Alt+Tab y de la barra de tareas.</summary>
+    public const uint WS_EX_TOOLWINDOW = 0x00000080;
+
     public const int SW_RESTORE = 9;
     public const uint GMEM_MOVEABLE = 0x0002;
     public const uint MONITOR_DEFAULTTONEAREST = 2;
@@ -166,6 +190,27 @@ internal static partial class Nativo
     [LibraryImport("kernel32.dll", StringMarshalling = StringMarshalling.Utf16,
         SetLastError = true)]
     public static partial nint GetModuleHandleW(string? nombre);
+
+    // --- que nos reabran despues de actualizarnos -------------------
+
+    /// <summary>
+    /// Le dice a Windows con que linea de comandos volver a abrirnos si
+    /// nos cierra. Sin esta llamada el Restart Manager NO reabre nada:
+    /// "Restart Manager can only restart applications that have been
+    /// registered for restart. This is the only way that the Restart
+    /// Manager can determine the command-line command to use".
+    ///
+    /// Devuelve un HRESULT, no un booleano.
+    /// </summary>
+    [LibraryImport("kernel32.dll", StringMarshalling = StringMarshalling.Utf16)]
+    public static partial int RegisterApplicationRestart(
+        string? lineaComandos, uint banderas);
+
+    /// <summary>No reabrirnos si lo que hubo fue un cierre inesperado.</summary>
+    public const uint RESTART_NO_CRASH = 1;
+
+    /// <summary>Ni si Windows nos da por colgados.</summary>
+    public const uint RESTART_NO_HANG = 2;
 
     // --- atajo global -----------------------------------------------
 

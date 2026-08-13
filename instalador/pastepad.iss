@@ -68,9 +68,21 @@ SolidCompression=yes
 WizardStyle=modern
 
 ; Cierra pastepad antes de sobrescribirlo. Sin esto, reinstalar encima
-; con el programa abierto falla por archivo bloqueado.
+; con el programa abierto falla por archivo bloqueado. Inno usa para eso
+; el Restart Manager de Windows.
 CloseApplications=yes
-RestartApplications=no
+
+; Y lo vuelve a abrir despues. Esto estuvo en "no" hasta la 4.1.0 porque
+; en "yes" no servia de nada: la condicion que pone la documentacion de
+; Inno es que "the application needs to be using the Windows
+; RegisterApplicationRestart API function", y pastepad no la llamaba.
+; Medido con la propia API del Restart Manager: bRestartable=False.
+;
+; Desde la 4.2.0 la llama —Sistema/Cierre.cs—, asi que actualizar encima
+; deja pastepad abierto y con su atajo puesto, en vez de instalado y
+; cerrado. Eso importa mas en la actualizacion silenciosa, que es la que
+; nadie esta mirando cuando ocurre.
+RestartApplications=yes
 
 [Languages]
 Name: "es"; MessagesFile: "compiler:Languages\Spanish.isl"

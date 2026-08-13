@@ -1141,6 +1141,55 @@ public sealed class PruebaEnlaces
 }
 
 /// <summary>
+/// La linea con la que Windows nos reabre despues de actualizarnos.
+/// Equivocarse aqui no rompe nada a la vista: pastepad vuelve a abrirse
+/// tan tranquilo sobre otra carpeta de datos.
+/// </summary>
+[TestClass]
+public sealed class PruebaArgumentos
+{
+    [TestMethod]
+    public void test_sin_argumentos_no_registra_linea()
+    {
+        // null y cadena vacia significan lo mismo para la API de
+        // Windows: borrar lo registrado. Devolver null lo deja claro.
+        Assert.IsNull(Argumentos.Componer([]));
+    }
+
+    [TestMethod]
+    public void test_argumento_simple_no_se_entrecomilla()
+    {
+        Assert.AreEqual("--datos C:\\temp\\prueba",
+            Argumentos.Componer(["--datos", "C:\\temp\\prueba"]));
+    }
+
+    /// <summary>
+    /// La que de verdad importa. La carpeta del proyecto es
+    /// "Mi pequeno Secreto\Pastepad", con dos espacios, y sin comillas
+    /// Windows la partiria en tres argumentos: pastepad volveria sin
+    /// carpeta valida y escribiria donde no toca.
+    ///
+    /// Todas las pruebas manuales se hicieron sobre la ruta corta de 8.3,
+    /// que no lleva espacios, asi que esta rama no se ejecuto ni una vez.
+    /// </summary>
+    [TestMethod]
+    public void test_ruta_con_espacios_va_entre_comillas()
+    {
+        Assert.AreEqual(
+            "--datos \"C:\\Users\\Jose Miguel Ortiz\\Mi pequeno Secreto\"",
+            Argumentos.Componer(
+                ["--datos", "C:\\Users\\Jose Miguel Ortiz\\Mi pequeno Secreto"]));
+    }
+
+    [TestMethod]
+    public void test_no_entrecomilla_dos_veces()
+    {
+        Assert.AreEqual("--datos \"C:\\con espacios\"",
+            Argumentos.Componer(["--datos", "\"C:\\con espacios\""]));
+    }
+}
+
+/// <summary>
 /// Fuera del paralelismo del resto: <see cref="Textos.Idioma"/> es
 /// estatico —lo pone la aplicacion una vez al arrancar— y dos pruebas
 /// cambiandolo a la vez se pisan. Costo dos fallos que no se repetian.
