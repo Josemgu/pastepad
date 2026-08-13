@@ -90,9 +90,11 @@ justamente por lo que viven en carpetas separadas. Y el arranque con
 Windows lo gobierna el propio programa, así que si reinstalas conserva
 lo que hubieras elegido.
 
-Los datos van a `%LOCALAPPDATA%` y no a *Archivos de programa* a
-propósito. Ahí Windows bloquea la escritura sin avisar, y pastepad
-arrancaría para luego no guardar nada.
+El programa se instala dentro de tu perfil y no en *Archivos de
+programa* para que ni instalar ni actualizar pidan permisos de
+administrador. Es una herramienta de un solo usuario y arranca con tu
+sesión; instalarla para toda la máquina solo significaría escribir la
+contraseña cada vez que haya versión nueva.
 
 ## El aviso de Windows
 

@@ -32,9 +32,9 @@ AppVersion={#Version}
 AppVerName=pastepad {#Version}
 VersionInfoVersion={#Version}
 AppPublisher=Jose Miguel Ortiz
-AppPublisherURL=https://github.com/josemiguelortiz/pastepad
-AppSupportURL=https://github.com/josemiguelortiz/pastepad/issues
-AppUpdatesURL=https://github.com/josemiguelortiz/pastepad/releases
+AppPublisherURL=https://github.com/Josemgu/pastepad
+AppSupportURL=https://github.com/Josemgu/pastepad/issues
+AppUpdatesURL=https://github.com/Josemgu/pastepad/releases
 
 ; Sin administrador. Con esto {autopf} resuelve a %LOCALAPPDATA%\Programs
 ; y no a Archivos de programa, que es donde Windows bloquea la escritura

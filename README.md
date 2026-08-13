@@ -87,9 +87,11 @@ removes the program and leaves the data where it is, which is why the
 two live in separate folders. Starting with Windows is a preference the
 program manages itself, so reinstalling keeps whatever you had chosen.
 
-Data goes to `%LOCALAPPDATA%` rather than *Program Files* on purpose.
-Windows blocks writes there without saying so, and pastepad would start
-and then quietly fail to save anything.
+The program installs under your profile rather than *Program Files* so
+that neither installing nor updating asks for elevation. It is a
+single-user tool and it starts with your session, so a machine-wide
+install would only mean a password prompt every time there is a new
+version.
 
 ## The Windows warning
 
