@@ -16,13 +16,41 @@ está marcado como tal y tiene un paso o un plan B que lo cubre.
 | 1 — atajo y portapapeles | Mecanismo probado. Falta el remojo largo. Ver `csharp/PruebaAtajo/RESULTADOS.md` |
 | 2 — lógica y 19 pruebas | **Hecho.** 22 en verde en `csharp/Pastepad.Nucleo.Pruebas` (las 19 de `prueba.py` más 3 que vigilan el formato del archivo) |
 | 3 — la cáscara | Montado y verificado por el qa: **el pegado pasa** (12/12), atajo 30/30 dos veces, instancia única, bandeja, bordes. Queda 1 fallo abierto (ver abajo) |
-| 4 — la interfaz | Sin empezar |
+| 4 — la interfaz | **Hecho.** El qa lo da por listo: 24 comprobaciones, 24 pasan. Dos vueltas del ciclo diseñador → programador → planificador → qa |
 | 5 — publicar y medir | Sin empezar |
 | 6 — retirar la versión en Python | Sin empezar. **No antes de cerrar el 4**: hoy es la fuente del diseño |
 
-Solución en `csharp/Pastepad.sln`. Las pruebas corren con
+Solución en `csharp/Pastepad.slnx`. Las pruebas corren con
 `dotnet test csharp/Pastepad.Nucleo.Pruebas`, sin ventana y sin el
-Windows App SDK.
+Windows App SDK. Son **40**.
+
+**Compila siempre por la solución**, no por el proyecto. Escriben en
+carpetas distintas —`bin\x86\Debug\...\win-x86\` la solución,
+`bin\Debug\...\win-x64\` el proyecto— y medir sobre el binario viejo ya
+dio dos conclusiones falsas: al programador, que `ResizeClient`
+funcionaba; y al qa, que el apilado no ocurría y que el margen del
+diálogo era de 17 px. Comprobar la marca de tiempo del `.exe` antes de
+creerse una medida.
+
+### Lo que queda abierto al cerrar el paso 4
+
+Nada de esto bloquea; queda escrito para que no se pierda.
+
+- **Las 18 bolitas de acento exponen su identificador crudo** como
+  nombre accesible: `menta_fria`, `ambar`, `durazno`. Iguales en los
+  cuatro idiomas. Con lector de pantalla en inglés se oye `menta_fria`.
+  Traducirlas son 18 claves nuevas.
+- **`Almacen.Problema` sigue solo en español.** Es la única cadena que
+  ve el usuario que no pasa por `T()`, y ahora ya se puede traducir.
+- **`Registro.RutaUsada` no la lee nadie.** O se usa en el aviso de
+  arranque degradado —que hoy dice qué falló pero no dónde está el
+  detalle— o se borra.
+- **`App.xaml` y `Estilo.cs` declaran los mismos colores dos veces.**
+  Hoy coinciden. Nada impide que dejen de hacerlo, y no habría error de
+  compilación que lo cazara.
+- **La causa del fallo de la carpeta sigue sin encontrarse.** El daño
+  está contenido y ahora deja rastro: `HResult` en el log, reintento
+  con espera, y la ruta real del almacén en la línea de arranque.
 
 ### Fallo abierto: la instancia que no ve su carpeta
 
@@ -319,6 +347,82 @@ navegar, se deja fuera. La versión sale del tag, no escrita a mano.
 **Cómo se sabe que quedó bien:** el `.exe` instalado —no el proyecto en
 depuración— pasa las pruebas del paso 1 y del paso 3 en una máquina
 limpia, movido de carpeta al menos una vez.
+
+### Cambios que pidió el usuario durante el paso 4
+
+No son desvíos del plan: son decisiones suyas, tomadas al ver la
+aplicación corriendo. Quedan aquí porque contradicen a
+`ESPECIFICACION-UI.md`, que se escribió antes.
+
+**1. El diseño se adapta a WinUI 3, no al revés.** Usar los materiales
+y el sistema de temas del framework y luego taparlos es pagar el coste
+sin cobrar el beneficio. Coincide con el motivo por el que
+`TRASPASO.md` eligió WinUI 3.
+
+**2. El tema sigue a Windows y cambia en vivo.** Con el panel abierto,
+si Windows pasa de oscuro a claro, el panel pasa con él. `"tema":
+"auto"` de `config.json` significa eso. Claro y oscuro explícitos se
+conservan como preferencia.
+
+**3. Fuera los tamaños fijos.** `mini`, `chico`, `mediano` y `grande`
+desaparecen de Apariencia: el panel es adaptable y todo su contenido se
+ajusta al redimensionar. Afecta a `Config.Tamanos` y a la sección
+«Tamaño» de la maqueta 08.
+
+**4. Falta el selector de idioma.** `pastepad/idiomas.py` tiene **4
+idiomas** —es, en, pt, fr— con 230 textos, y la maqueta 08 declara
+Color, Tamaño, Carpeta y Atajo, pero **ningún idioma**. Es un hueco de
+la especificación, no del código.
+
+**5. Apariencia hay que reorganizarla.** Tal cual está no queda como un
+programa terminado, y el objetivo es que esto salga a producción.
+
+**6. `tenue` sube hasta cumplir contraste AA.** Medido por el diseñador:
+hoy da entre 2.89:1 (`salvia`) y 3.38:1 (`lila`) sobre los 12 fondos,
+cuando WCAG AA pide 4.5:1 para texto normal. Es el color de los
+subtítulos de fila y de los estados vacíos, o sea texto que hay que
+poder leer.
+
+El usuario decidió el 12 ago 2026 subirlo **aceptando que cambia el
+aspecto de las doce paletas**. Legibilidad por delante del aspecto
+heredado de `estilo.py`.
+
+Se recalcula por paleta, no un valor único: cada fondo necesita el suyo
+para llegar a 4.5:1. Y se comprueba **calculando el contraste**, no
+mirándolo.
+
+**Y arrastró un ajuste que no estaba pedido: `medio` sube en seis
+paletas.** Al subir `tenue` hasta AA, en cuatro fondos claros quedaba
+pegado a `medio` —en `salvia`, 1.07:1 entre uno y otro— y el subtítulo
+dejaba de leerse como secundario. Como `tenue` ya no puede bajar sin
+romper AA, el escalón solo se recupera subiendo `medio`. Se fijó en
+1.30:1, el que ya tenían las paletas sanas.
+
+El diseñador lo marcó como fuera de lo autorizado y el usuario lo
+aprobó después, el 12 ago 2026: **se queda**. No se revierte sin una
+razón nueva.
+
+**7. El radio de esquina lo pone Windows, y es el máximo posible.** El
+usuario pidió más redondeo. No se puede: `DWM_WINDOW_CORNER_PREFERENCE`
+tiene cuatro valores —por defecto, no redondear, redondeado y
+redondeado pequeño— y **ninguno acepta un número de píxeles**. Ya se
+pide el grande, que mide 8 px a escala 100% y sube con el DPI.
+
+Para más habría que dibujar las esquinas nosotros con una ventana sin
+marco del sistema, y eso **reabre los dos defectos que ya se
+arreglaron**: vuelve la banda de la barra de título y vuelven las cuñas
+en las esquinas. Decidido el 12 ago 2026: **se deja como está.**
+
+Los 20 px que pedía la especificación quedan superados por lo que la
+plataforma permite. El panel ya no dibuja esquinas ni borde propios:
+los ponía encima de los del sistema y esa duplicación era la causa de
+las cuñas.
+
+**8. Queda sin decidir: la barra blanca de foco sobre el fondo `oro`**
+da 1.44:1, por debajo del 3:1 que pide WCAG 1.4.11 para elementos no
+textuales. Se mantiene blanca porque su trabajo es ser señal de forma,
+no de color, y la maqueta manda. Anotado con el número por si algún día
+se revisa.
 
 ### Paso 6 — Retirar la versión en Python
 
