@@ -44,7 +44,7 @@
 
 <g transform="translate(556,30)">
   <rect fill="#141417" width="272" height="200" rx="16"/>
-  <rect width="272" height="200" rx="16" fill="none" stroke="#242429" stroke-width="1" fill="none"/>
+  <rect width="272" height="200" rx="16" fill="none" stroke="#242429" stroke-width="1"/>
 
   <rect fill="#1B1B1F" x="14" y="16" width="244" height="28" rx="8"/>
   <circle cx="34" cy="30" r="5" fill="none" stroke="#6B6B75" stroke-width="1.5"/>
