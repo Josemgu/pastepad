@@ -136,6 +136,37 @@ salía `l + Shift + V` en vez de `Ctrl + Shift + V`.
   programa en `%LOCALAPPDATA%\Programs\pastepad`. Separados a propósito:
   así desinstalar no puede tocar el historial.
 
+## Probar con contenido largo. No es opcional
+
+La 4.0.0 salió con **seis fallos que 24 comprobaciones no vieron**,
+porque todas usaban textos de dos líneas. El usuario los encontró el
+primer día. Dos de los seis destruían texto en silencio.
+
+Cuando pruebes cualquier cosa que toque texto, hazlo con **treinta,
+sesenta y cien líneas**. Y comprueba el resultado **en
+`snippets.json`**, no en pantalla: los dos que destruían datos se veían
+bien mientras no abrieras el archivo.
+
+Tres trampas que ya costaron caras:
+
+- **Un `TextBox` de WinUI con `AcceptsReturn` en `false` se queda con la
+  primera línea** de lo que se le asigne. En un inicializador de objeto,
+  `Text` tiene que ir **después** de `AcceptsReturn`, o el texto se
+  trunca al entrar.
+- **`TextBox.Text` devuelve `\r` a secas**, no `\r\n` ni `\n`. Partir
+  por `\n` deja una sola línea con todo dentro.
+- Al comparar longitudes, la caja carga **tantos caracteres menos como
+  saltos de línea tenga** el archivo. Con 100 líneas, 5290 en disco son
+  5191 en la caja. Si la cuenta cuadra, no hay pérdida.
+
+### Y para automatizar la interfaz
+
+Los `MenuFlyoutItem` de esta aplicación **no responden a clic sintético**
+con `mouse_event`. Hay que usar `InvokePattern.Invoke()`. Para que el
+botón de tres puntos de una fila asome, además hay que seleccionar la
+fila por patrón. Eso dejó dos comprobaciones sin hacer en dos rondas
+distintas antes de descubrirse.
+
 ## Fallo abierto
 
 Una instancia arrancó sin poder leer ni escribir en su carpeta, con el
