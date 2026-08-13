@@ -13,10 +13,34 @@
   }
 </style>
 
+<defs>
+  <linearGradient id="menta" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#3BE0B4"/><stop offset="1" stop-color="#1FA680"/>
+  </linearGradient>
+  <linearGradient id="blanco" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#EDEDEA"/>
+  </linearGradient>
+  <linearGradient id="grisc" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#F5F5F3"/><stop offset="1" stop-color="#DADAD6"/>
+  </linearGradient>
+</defs>
+
 <rect class="bg" width="880" height="260" rx="20"/>
 
-<text class="t" x="60" y="96" font-size="48" font-weight="600">pastepad</text>
-<text class="dim" x="60" y="130" font-size="17">A clipboard manager for Windows</text>
+<!-- la marca, a escala 0.30 del logo de 256 -->
+<g transform="translate(52,46) scale(0.30)">
+  <rect x="52" y="122" width="152" height="60" rx="12"
+        fill="url(#grisc)" stroke="#C6C6C2" stroke-width="4" transform="rotate(-4 128 152)"/>
+  <rect x="52" y="96" width="152" height="60" rx="12"
+        fill="url(#blanco)" stroke="#D4D4D0" stroke-width="4.5" transform="rotate(2 128 126)"/>
+  <rect x="48" y="64" width="160" height="66" rx="13"
+        fill="url(#menta)" stroke="#0F3D30" stroke-width="5"/>
+  <rect x="68" y="82" width="90" height="9" rx="4.5" fill="#FFFFFF"/>
+  <rect x="68" y="100" width="60" height="7" rx="3.5" fill="#052E23" opacity="0.6"/>
+</g>
+
+<text class="t" x="132" y="96" font-size="48" font-weight="600">pastepad</text>
+<text class="dim" x="134" y="130" font-size="17">A clipboard manager for Windows</text>
 
 <g transform="translate(60,158)">
   <rect class="card" width="42" height="30" rx="8"/>
