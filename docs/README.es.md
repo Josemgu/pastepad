@@ -86,11 +86,19 @@ Para un correo:
 Hola [[nombre]], te escribo sobre [[tema]] del día [[fecha]].
 ```
 
-Un aviso sobre el asunto. En Gmail y en Outlook el asunto y el cuerpo
-son dos campos distintos, y pastepad pega en uno cada vez: aquel donde
-tenías el cursor. Así que guarda el asunto y el cuerpo como dos textos
-en la misma carpeta, y pega uno en el asunto y el otro en el cuerpo.
-pastepad no salta de un campo a otro por ti.
+**Correos: una carpeta de asuntos y otra de cuerpos**
+
+En Gmail y en Outlook el asunto y el cuerpo son dos campos distintos, y
+pastepad pega en uno cada vez: aquel donde tenías el cursor. En vez de
+pelearse con eso, dale una carpeta a cada uno:
+
+1. Crea una carpeta **Asuntos** y otra **Cuerpos**.
+2. Haz clic en el asunto, abre el panel y elige de **Asuntos**.
+3. Haz clic en el cuerpo, abre el panel otra vez y elige de **Cuerpos**.
+
+Dos pegados, y cada vez eliges el cuerpo que quieras en lugar de quedar
+atado a uno. Las carpetas salen como fichas arriba, así que cada lista
+está a un clic.
 
 ## Cómo se usa
 

@@ -86,12 +86,19 @@ For an email:
 Hi [[name]], following up on [[topic]] from [[date]].
 ```
 
-A note on subject lines. In Gmail and Outlook the subject and the body
-are two separate fields, and pastepad pastes into one field at a time —
-the one your cursor was in. So keep the subject and the body as two
-saved texts in the same folder: click the subject field and paste one,
-click the body and paste the other. pastepad will not jump between the
-fields for you.
+**Emails: one folder for subjects, one for bodies**
+
+In Gmail and Outlook the subject and the body are two separate fields,
+and pastepad pastes into one field at a time — the one your cursor was
+in. Rather than fight that, give each one its own folder:
+
+1. Make a folder called **Subjects** and another called **Bodies**.
+2. Click the subject field, open the panel, pick from **Subjects**.
+3. Click the body, open the panel again, pick from **Bodies**.
+
+Two pastes, and you choose the body you want each time instead of being
+tied to one. Folders show as chips along the top, so each list is one
+click away.
 
 ## Using it
 
