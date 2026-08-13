@@ -19,9 +19,9 @@ letters, hit <kbd>Enter</kbd>, and the text lands in the field you were
 working in.
 
 <div align="center">
-  <img src="docs/capturas/reciente.png" alt="Recent tab" width="270">
-  <img src="docs/capturas/guardados.png" alt="Saved tab" width="270">
-  <img src="docs/capturas/apariencia.png" alt="Appearance dialog" width="270">
+  <img src="docs/capturas/en-recent.png" alt="Recent tab" width="270">
+  <img src="docs/capturas/en-saved.png" alt="Saved tab" width="270">
+  <img src="docs/capturas/en-appearance.png" alt="Appearance dialog" width="270">
 </div>
 
 ## What it does
@@ -72,15 +72,24 @@ pastepad.exe /F`, or Exit from the tray icon.
 
 ## Installing
 
-> **Pending.** pastepad is being rewritten in C# with WinUI 3, and that
-> version has no installer yet. Instructions go here once there is
-> something to download.
+Download `pastepad-4.0.0-instalador.exe` from the
+[latest release](https://github.com/Josemgu/pastepad/releases/latest)
+and run it. It weighs 47.1 MB.
 
-The last published release is [v3.0.1](https://github.com/Josemgu/pastepad/releases/latest),
-built with Python and Flet. The rewrite exists because the global
-shortcut in that version stops responding after a few presses, and the
-cause turned out to be structural rather than a bug to patch. `PLAN.md`
-and `TRASPASO.md` have the reasoning.
+```
+program   %LOCALAPPDATA%\Programs\pastepad
+data      %LOCALAPPDATA%\pastepad
+uninstall Settings → Apps → Installed apps
+```
+
+No administrator prompt: it installs for your user only. Uninstalling
+removes the program and leaves the data where it is, which is why the
+two live in separate folders. Starting with Windows is a preference the
+program manages itself, so reinstalling keeps whatever you had chosen.
+
+Data goes to `%LOCALAPPDATA%` rather than *Program Files* on purpose.
+Windows blocks writes there without saying so, and pastepad would start
+and then quietly fail to save anything.
 
 ## The Windows warning
 
@@ -112,6 +121,20 @@ being true years ago.
 
 Every release ships a `SHA256.txt` so you can check the download matches
 what the build produced.
+
+## How it's built
+
+C# on .NET 10 with WinUI 3, no packaged identity. The clipboard, the
+global shortcut, the tray icon and the focus handoff are Win32 calls;
+the rest is XAML. The data layer has 45 tests that run without opening a
+window.
+
+Versions up to 3.0.1 were written in Python with Flet. That was
+abandoned because the global shortcut stopped responding after a few
+presses and the cause was structural: the shortcut and the window ended
+up on different threads. The old code lives on in the
+`ultima-version-python` tag. [PLAN.md](PLAN.md) and
+[TRASPASO.md](TRASPASO.md) record the reasoning and what was kept.
 
 ## Your data
 

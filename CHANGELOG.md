@@ -3,6 +3,61 @@
 All notable changes to this project are documented here.
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [4.0.0] - 2026-08-13
+
+Rewritten in C# with WinUI 3. Same program, same data, same shortcut —
+but the shortcut now answers every time, which is the reason the rewrite
+happened at all.
+
+### Changed
+- **The global shortcut sits on a message-only window** that lives as
+  long as the process, not as long as the panel. The Python version
+  registered a thread hotkey and pumped it from a worker; a message with
+  no window attached is never dispatched to a window procedure, so it
+  answered a few times and then stopped. Measured at 100 presses out of
+  100, and again at 30 out of 30 on the installed build.
+- **The clipboard reports by event** instead of being polled every 0.7
+  seconds. `WM_CLIPBOARDUPDATE` arrives more than once per copy, so a
+  sequence-number filter separates a real copy from a repeat.
+- **One process instead of two.** Working set went from 207 MB to
+  120 MB installed; the panel opens in 16–25 ms.
+- The theme follows Windows and switches while the panel is open. Mica
+  shows through unless one of the twelve backgrounds is picked.
+- Settings rows stack instead of splitting into two columns. Two columns
+  need a 380-pixel panel to be 455 wide, and the dropdown truncated from
+  the left without ellipsis — `Ctrl + Shift + V` read as
+  `l + Shift + V`, which looks like a different shortcut rather than a
+  cut one.
+- The program installs to `%LOCALAPPDATA%\Programs\pastepad` and keeps
+  its data in `%LOCALAPPDATA%\pastepad`. Uninstalling can no longer
+  touch the history, by construction rather than by asking first.
+
+### Added
+- An installer: one 47 MB `.exe`, no administrator prompt, an entry in
+  Add or remove programs, and its own uninstaller.
+- Language picker for the four translations that already existed but
+  had no way to be chosen.
+- Accessible names on the icon buttons and the eighteen accent swatches,
+  which had none.
+
+### Fixed
+- Accents and opening punctuation across all four languages. The Spanish
+  read `Como se enseñan` and `Si, borrar`; French had none at all.
+- Every accent colour now clears WCAG AA contrast, checked by
+  calculation. The subtitle colour failed on all twelve backgrounds.
+- Saved titles are stored whole. A one-line summary was being written to
+  `snippets.json` with its ellipsis inside the data.
+- A file that exists but cannot be read is marked and never overwritten.
+  `File.Exists` returns false when permission is denied, so an
+  unreadable history could pass for a first run and get replaced with an
+  empty one.
+
+### Removed
+- The Python implementation. It lives in the `ultima-version-python`
+  tag and in `v3.0.1`.
+- The window size presets. The panel resizes by dragging and remembers
+  where it was left.
+
 ## [2.0.0] - 2026-08-12
 
 ### Changed

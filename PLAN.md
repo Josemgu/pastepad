@@ -17,8 +17,8 @@ está marcado como tal y tiene un paso o un plan B que lo cubre.
 | 2 — lógica y 19 pruebas | **Hecho.** 22 en verde en `csharp/Pastepad.Nucleo.Pruebas` (las 19 de `prueba.py` más 3 que vigilan el formato del archivo) |
 | 3 — la cáscara | Montado y verificado por el qa: **el pegado pasa** (12/12), atajo 30/30 dos veces, instancia única, bandeja, bordes. Queda 1 fallo abierto (ver abajo) |
 | 4 — la interfaz | **Hecho.** El qa lo da por listo: 24 comprobaciones, 24 pasan. Dos vueltas del ciclo diseñador → programador → planificador → qa |
-| 5 — publicar y medir | Sin empezar |
-| 6 — retirar la versión en Python | Sin empezar. **No antes de cerrar el 4**: hoy es la fuente del diseño |
+| 5 — publicar y medir | **Hecho.** Instalador de 47,1 MB, verificado por el qa: 22 comprobaciones, 21 limpias |
+| 6 — retirar la versión en Python | **Hecho.** Vive en el tag `ultima-version-python` |
 
 Solución en `csharp/Pastepad.slnx`. Las pruebas corren con
 `dotnet test csharp/Pastepad.Nucleo.Pruebas`, sin ventana y sin el
@@ -32,7 +32,26 @@ funcionaba; y al qa, que el apilado no ocurría y que el margen del
 diálogo era de 17 px. Comprobar la marca de tiempo del `.exe` antes de
 creerse una medida.
 
-### Lo que queda abierto al cerrar el paso 4
+### Lo que queda abierto al cerrar el paso 6
+
+- **El arranque en frío tras reiniciar sigue sin medirse.** Es el único
+  número que le falta al requisito dos. Lo da la primera línea de
+  `errores.log` el día que se reinicie el equipo: busca `listo en`.
+  En caliente son 420–463 ms.
+- **`--datos` aísla los datos pero NO el autoarranque.** Lanzar una
+  compilación de desarrollo reescribe `HKCU\...\Run` apuntando a esa
+  carpeta, así que al reiniciar arrancaría el binario de pruebas en vez
+  del instalado. Le pasó al diseñador tomando las capturas, y lo
+  restauró. Hace falta una opción `--sin-autoarranque`, o que `--datos`
+  lo implique.
+- **Sin firmar.** SmartScreen avisa. El certificado de SignPath está por
+  solicitar, y exige verificación en dos pasos y aprobación manual de
+  cada release. Hay que firmar **dos veces**: el `.exe` antes de
+  construir el instalador y el instalador después.
+- **El changelog no tiene entradas de 3.0.0 ni 3.0.1**, aunque los tags
+  existen. Salta de la 2.0.0 a la 4.0.0.
+
+### Lo que quedó abierto al cerrar el paso 4
 
 Nada de esto bloquea; queda escrito para que no se pierda.
 

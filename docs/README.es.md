@@ -19,9 +19,9 @@ dos letras, pulsa <kbd>Enter</kbd> y el texto cae en el campo donde
 tenías el cursor.
 
 <div align="center">
-  <img src="capturas/reciente.png" alt="Pestaña Reciente" width="270">
-  <img src="capturas/guardados.png" alt="Pestaña Guardados" width="270">
-  <img src="capturas/apariencia.png" alt="Diálogo de apariencia" width="270">
+  <img src="capturas/es-reciente.png" alt="Pestaña Reciente" width="270">
+  <img src="capturas/es-guardados.png" alt="Pestaña Guardados" width="270">
+  <img src="capturas/es-apariencia.png" alt="Diálogo de apariencia" width="270">
 </div>
 
 ## Qué hace
@@ -74,16 +74,25 @@ pastepad.exe /F`, o Salir desde el icono de la bandeja.
 
 ## Instalación
 
-> **Pendiente.** pastepad se está reescribiendo en C# con WinUI 3, y esa
-> versión todavía no tiene instalador. Las instrucciones van aquí cuando
-> haya algo que descargar.
+Descarga `pastepad-4.0.0-instalador.exe` de la
+[última versión](https://github.com/Josemgu/pastepad/releases/latest) y
+ejecútalo. Ocupa 47,1 MB.
 
-La última versión publicada es la
-[v3.0.1](https://github.com/Josemgu/pastepad/releases/latest), hecha con
-Python y Flet. La reescritura existe porque en esa versión el atajo
-global deja de responder a las pocas pulsaciones, y la causa resultó ser
-de fondo y no un fallo que se arregle con un parche. El razonamiento
-está en [PLAN.md](../PLAN.md) y [TRASPASO.md](../TRASPASO.md).
+```
+programa      %LOCALAPPDATA%\Programs\pastepad
+datos         %LOCALAPPDATA%\pastepad
+desinstalar   Configuración → Aplicaciones → Aplicaciones instaladas
+```
+
+No pide permiso de administrador: se instala solo para tu usuario. Al
+desinstalar se va el programa y tus datos se quedan donde están, que es
+justamente por lo que viven en carpetas separadas. Y el arranque con
+Windows lo gobierna el propio programa, así que si reinstalas conserva
+lo que hubieras elegido.
+
+Los datos van a `%LOCALAPPDATA%` y no a *Archivos de programa* a
+propósito. Ahí Windows bloquea la escritura sin avisar, y pastepad
+arrancaría para luego no guardar nada.
 
 ## El aviso de Windows
 
@@ -116,6 +125,20 @@ años.
 
 Cada versión publica un `SHA256.txt` para poder comprobar que lo
 descargado es exactamente lo que salió de la compilación.
+
+## Cómo está hecho
+
+C# sobre .NET 10 con WinUI 3, sin identidad de paquete. El portapapeles,
+el atajo global, el icono de la bandeja y la devolución del foco son
+llamadas a Win32; lo demás es XAML. La capa de datos tiene 45 pruebas
+que corren sin abrir ninguna ventana.
+
+Hasta la 3.0.1 el programa estaba escrito en Python con Flet. Se
+abandonó porque el atajo global dejaba de responder a las pocas
+pulsaciones y la causa era de fondo: el atajo y la ventana acababan en
+hilos distintos. Aquel código sigue vivo en el tag
+`ultima-version-python`. En [PLAN.md](../PLAN.md) y
+[TRASPASO.md](../TRASPASO.md) está el razonamiento y lo que se conservó.
 
 ## Tus datos
 

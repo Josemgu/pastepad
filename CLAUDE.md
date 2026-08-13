@@ -11,170 +11,156 @@ estaba el cursor con un atajo global.
 Reemplaza al historial de Windows (Win+V), que solo guarda 25 entradas y
 las pierde al reiniciar.
 
-## Estado actual
+## Estado
 
-Versión 3.0.0, migrada de tkinter a Flet. La estructura y las pruebas
-están verificadas; **la interfaz sigue sin probarse en una máquina real**.
+Versión 4.0.0, reescrita en C# con WinUI 3 sobre el Windows App SDK
+2.3.1 y .NET 10. Desempaquetada y self-contained.
 
-Hasta la revisión de agosto de 2026, los ocho módulos v3 estaban sueltos
-en la raíz mientras `pastepad/` conservaba los cuatro módulos tkinter de
-la v2. `python main.py` moría en el import, y `prueba.py` daba 19 en
-verde porque probaba el paquete viejo. Ya está corregido: el paquete
-resuelve a 3.0.0 y las pruebas corren contra el código real.
+La versión anterior (3.x, Python con Flet) **ya no está en el repo**.
+Vive en el tag `ultima-version-python` y en `v3.0.1`. Si necesitas ver
+cómo hacía algo:
 
-### Problema abierto
+```
+git show ultima-version-python:pastepad/busqueda.py
+```
 
-El atajo global abre el panel **solo la primera vez** y después deja de
-responder. Ya se intentó:
-
-- Sacar el trabajo del callback de `keyboard` a una cola (`_pulsado`
-  solo hace `put_nowait` y sale)
-- Mandar el Ctrl+V del pegado con `keybd_event` de la API de Windows en
-  vez de con `keyboard.send`, para no ocupar la librería que escucha
-- Soltar Shift y Alt antes del pegado, por si el atajo los deja pulsados
-
-**Lo que se descartó en la revisión de agosto de 2026:**
-
-- *El hilo de `_atender_cola` muere.* No puede: es un `while True` con un
-  `except Exception` que lo envuelve todo. Ninguna excepción normal lo
-  saca del bucle.
-- *Los permisos de administrador.* UIPI produce un fallo correlacionado
-  con qué ventana tiene el foco, no un fallo permanente tras la primera
-  pulsación. El síntoma no cuadra.
-
-**La causa probable, y lo que se hizo al respecto:** `self.visible` es una
-bandera en sombra, y `alternar()` decide solo sobre ella. Si queda pegada
-en `True` con la ventana cerrada, cada pulsación llama a `ocultar()` y el
-panel no vuelve a salir. Se asignaba **antes** de `refrescar()` y de los
-dos `update()`, que son las tres cosas que pueden lanzar. Ahora se asigna
-en la última línea de `mostrar()`, así un fallo la deja en `False` y la
-siguiente pulsación reintenta.
-
-Eso corta la corrupción de estado, pero **no arregla la excepción de
-fondo si la hay**. Para verla:
-
-1. `errores.log` ya recoge los fallos de los hilos. Antes no: `sys.excepthook`
-   solo cubre el hilo principal, y `page.run_thread` entrega el trabajo a
-   un `ThreadPoolExecutor` que atrapa la excepción en su `Future` — no la
-   ve ni `sys.excepthook` ni `threading.excepthook`. Por eso `_vigilar` y
-   `_atender_cola` capturan y llaman a `registro.fallo()` a mano.
-2. `cfg.TRAZA_ATAJO` (hoy en `True`) anota en cada pulsación el valor de
-   `self.visible` junto al de `page.window.visible`. Si divergen, la
-   bandera se desincronizó. **Ponlo en `False` cuando el fallo esté
-   cerrado.**
-
-Hipótesis que sigue viva si el log no aclara nada: `keyboard` y el bucle
-de eventos de Flutter en conflicto. La alternativa sería `RegisterHotKey`
-de la API de Windows, más estable para atajos globales, pero exige
-atender la cola de mensajes del sistema.
-
-**Ejecuta `python main.py`, pulsa el atajo tres o cuatro veces y lee
-`errores.log`.**
+Por qué se reescribió, qué se conservó y qué se aprendió por el camino:
+`TRASPASO.md`. Cómo se hizo, paso a paso y con las fuentes:
+`PLAN.md`. Los dos siguen vigentes.
 
 ## Estructura
 
 ```
-main.py               arranque — llama a ft.run()
-pastepad/
-  config.py           colores, medidas, rutas, atajos    [sin tkinter/flet]
-  registro.py         errores.log — el único que escribe [sin tkinter/flet]
-  modelo.py           los datos y sus reglas             [sin tkinter/flet]
-  busqueda.py         ranking con caché de normalización [sin tkinter/flet]
-  windows.py          portapapeles, foco, ventana, arranque
-  estilo.py           colores vivos y piezas reutilizables
-  filas.py            las tarjetas de la lista
-  ventanas.py         los diálogos
-  app.py              coordina todo lo anterior
-prueba.py             19 pruebas — corren sin abrir ventana
-docs/FUNCIONES.md     las 133 funciones, tres líneas cada una
+csharp/
+  Pastepad.Nucleo/           net10.0 puro, sin Windows App SDK
+    Modelo.cs                reglas de los datos
+    Almacen.cs               lo unico que toca el disco
+    Busqueda.cs              ranking e indice con cache
+    Textos.cs                4 idiomas, 89 claves
+    Config.cs, Datos.cs, Autoarranque.cs, Rutas
+  Pastepad.Nucleo.Pruebas/   45 pruebas, sin abrir ventana
+  Pastepad.App/
+    Sistema/                 todo lo que habla con Win32
+      Buzon.cs               ventana solo-mensajes: atajo y portapapeles
+      Portapapeles.cs        lectura, escritura, formatos privados, RTF
+      Foco.cs                devolver el foco y pegar
+      Bandeja.cs, Pantalla.cs, Arranque.cs, Nativo.cs
+    Panel.xaml(.cs)          el panel
+    Dialogos.cs, Estilo.cs, Fila.cs
+    Program.cs               Main propio: instancia unica
+  PruebaAtajo/               el sondeo del paso 1. No se publica
+instalador/pastepad.iss      Inno Setup, el unico archivo
+docs/                        35 maquetas, especificacion, logos
 ```
 
-Los tres módulos marcados no importan ninguna librería gráfica. Eso es a
-propósito: permitió migrar de tkinter a Flet reutilizando 906 de 2.171
-líneas, y es lo que hace que las pruebas corran sin ventana.
-
-**No metas imports de Flet en `modelo.py`, `busqueda.py` ni `config.py`.**
+`Pastepad.Nucleo` no importa nada gráfico **a propósito**. Es lo que
+permite que 45 pruebas corran sin abrir ventana y sin el Windows App
+SDK. No metas WinUI ahí dentro.
 
 ## Cómo trabajar aquí
 
 ```powershell
-pip install -r requirements.txt
-python prueba.py      # 19 pruebas, deben pasar todas
-python main.py        # abre el programa
+dotnet build csharp/Pastepad.slnx
+dotnet test csharp/Pastepad.Nucleo.Pruebas
 ```
 
-Después de cualquier cambio en el modelo o la búsqueda, corre las
-pruebas. Si tocas la interfaz, hay que probar a mano.
+**Compila siempre por la solución, no por el proyecto.** Escriben en
+carpetas distintas: la solución en `bin/x86/...`, el proyecto en
+`bin/...` para x64. Medir sobre el binario viejo ya dio dos
+conclusiones falsas —que `ResizeClient` funcionaba, y que un arreglo de
+disposición no se había aplicado—. Comprueba la marca de tiempo del
+`.exe` antes de creerte una medida.
 
-## Decisiones tomadas y por qué
+**Para ejecutar, siempre `--datos`:**
 
-Estas ya se discutieron. Si vas a revertir alguna, ten un motivo.
+```powershell
+& ".\csharp\Pastepad.App\bin\x86\Debug\net10.0-windows10.0.26100.0\win-x86\pastepad.exe" --datos "C:\temp\prueba"
+```
 
-**Flet en vez de tkinter.** Tkinter dibuja con el motor viejo de Windows
-y el resultado se ve duro: sin sombras, sin suavizado decente, sin
-animaciones. Flet usa Flutter y rasteriza por GPU. El coste es que el
-ejecutable pesa unos 80-150 MB en vez de 30.
+Sin esa opción usa `%LOCALAPPDATA%\pastepad`, que es **el historial real
+del usuario**. Una sesión de pruebas ya se llevó por delante entradas
+suyas.
 
-**El callback del atajo no hace trabajo.** La librería `keyboard`
-escucha desde su propio hilo y ese hilo se bloquea mientras el callback
-tarda. Todo el trabajo va a una cola.
+Para publicar:
 
-**El pegado devuelve el foco primero.** Al abrirse el panel, el campo
-donde estaba el cursor pierde el foco, y un Ctrl+V a secas se va al
-vacío. Se guarda el handle de la ventana activa en el instante del
-atajo, y antes de pegar se le devuelve el foco con `AttachThreadInput`,
-que es el truco que Windows exige para que `SetForegroundWindow`
-funcione desde otro proceso.
+```powershell
+dotnet publish csharp/Pastepad.App -c Release -p:Platform=x86 -r win-x86
+```
 
-**Se respetan los formatos privados del portapapeles.** Windows define
-cuatro formatos con los que un programa marca contenido como "no
-guardar": los usan KeePass, Bitwarden, el Administrador de credenciales
-y el modo incógnito de Chrome. Si alguno está presente, ni se abre el
-portapapeles. Ver `windows.contenido_privado()`.
+## Decisiones medidas. No las revientes sin medir tú
 
-**El portapapeles solo se lee cuando cambia.** Windows tiene un contador
-(`GetClipboardSequenceNumber`) que sube con cada copia; leerlo cuesta una
-llamada, abrir el portapapeles cuesta muchísimo más. Sin esto, con un
-texto grande copiado, se leían 200 KB cuatro mil veces por hora.
+Estas no son opiniones: se comprobaron ejecutando, y hay número.
 
-**El índice de búsqueda cachea el texto normalizado.** Normalizar 80
-textos largos cuesta unos 25 ms; sin caché eso pasaba cada vez que el
-usuario copiaba algo.
+**El atajo va sobre una ventana solo-mensajes**, no subclasando la
+ventana de XAML. `Sistema/Buzon.cs`. Medido 100/100 en el sondeo y
+30/30 dos veces por QA sobre el ejecutable. El subclase arrastra un
+`ExecutionEngineException` abierto en el repositorio de WinUI, y atar el
+atajo a la ventana visible —que se esconde— es el acoplamiento que mató
+a la versión anterior.
 
-**Guardar es atómico.** Se escribe en un `.tmp` y se mueve con
-`os.replace`. Antes, un cierre a mitad de escritura dejaba el JSON
-cortado y se perdía todo.
+**El portapapeles va por Win32**, no por la clase `Clipboard` de WinRT.
+Su documentación dice que solo se accede con la aplicación enfocada, y
+un gestor de portapapeles vive en segundo plano por definición.
 
-**Un enlace se abre, no se pega.** Si la entrada es solo una dirección
-web, el clic abre el navegador. Un párrafo que menciona una URL de pasada
-no cuenta — ver `modelo.es_enlace()`, hay pruebas de eso.
+**El filtro de secuencia del portapapeles no es redundante.**
+`WM_CLIPBOARDUPDATE` llega **más de una vez por copia** —PowerShell
+dispara tres—. Sin `GetClipboardSequenceNumber` cada copia entra tres
+veces en el historial.
 
-**No hay arrastre libre de bordes en la versión tkinter.** Se intentó
-cinco veces y siempre dejaba franjas del dibujo anterior: CustomTkinter
-no repinta bien bajo redimensionado continuo. En Flet esto ya no aplica.
+**Instancia única con `AppInstance.FindOrRegisterForKey`**, no con un
+mutex. Y la clave se resume con SHA-256, no con `GetHashCode`, que en
+.NET Core está aleatorizado por proceso.
+
+**`MarcoVentana.cs` se queda.** `AppWindow.ResizeClient` dice en su
+documentación que calcula el área no cliente por ti; medido, da 31 px
+de más y el panel crece en cada apertura.
+
+**Los ajustes de los diálogos van siempre apilados.** El reparto en dos
+columnas no cabe hasta un panel de ~455 px, y el de fábrica son 380. El
+desplegable no pone puntos suspensivos: recorta por la izquierda, y
+salía `l + Shift + V` en vez de `Ctrl + Shift + V`.
 
 ## Cosas que romperás si no tienes cuidado
 
-- Los datos del usuario viven junto al ejecutable: `snippets.json`,
-  `historial.json`, `config.json`, `imagenes/`. Están en `.gitignore`.
-  **Nunca los subas ni los borres al hacer pruebas.**
-- El programa se registra solo en el arranque de Windows, usando la ruta
-  desde donde se lanzó. Si mueves la carpeta, hay que abrirlo una vez
-  desde el sitio nuevo. Para limpiar:
-  `reg delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Run" /v GestorSnippets /f`
-- Si el proyecto vive dentro de OneDrive, la sincronización puede
-  bloquear los JSON a mitad de escritura. Mejor moverlo fuera.
+- **`dotnet publish` no copia el XAML compilado ni el `.pri` ni los
+  Assets.** Hay un `Target` en el `.csproj` que los añade, y un
+  `<Error>` que rompe la compilación si falta el `.pri`. Sin eso, lo
+  publicado **muere al arrancar** con `XamlParseException` — y el build
+  funciona igual, así que solo se ve ejecutando lo que se distribuye.
+- **`dotnet publish` tampoco vacía la carpeta de destino.** Lo que
+  quede ahí viaja dentro del instalador. Ya se coló un `errores.log`.
+- **`File.Exists` devuelve `false` si no hay permiso de lectura**, sin
+  lanzar. Por eso `Almacen.Leer` abre el archivo en vez de preguntar: un
+  archivo ilegible que pase por «no existe» acaba sobrescrito.
+- **Los datos del usuario viven en `%LOCALAPPDATA%\pastepad`** y el
+  programa en `%LOCALAPPDATA%\Programs\pastepad`. Separados a propósito:
+  así desinstalar no puede tocar el historial.
+
+## Fallo abierto
+
+Una instancia arrancó sin poder leer ni escribir en su carpeta, con el
+atajo funcionando perfectamente, y al cerrarse guardó un historial vacío
+encima del real. **No se ha reproducido.** El daño está contenido —un
+archivo ilegible queda marcado y no se sobrescribe, con cuatro pruebas
+que lo fijan— y ahora deja rastro: `HResult` en el log, reintento con
+espera, y la ruta real del almacén en la línea de arranque.
+
+Detalle en `PLAN.md`.
 
 ## Estilo del código
 
-- Comentarios y nombres en español, sin tildes en el código
-- Los comentarios explican **por qué**, no qué hace la línea
-- Docstrings en las funciones que no son obvias
-- Líneas de 79 caracteres
-- **Ningún `except` mudo.** Un `except Exception: pass` en un hilo es
-  invisible sin consola, y fue la razón de que el fallo del atajo pasara
-  tres intentos sin diagnóstico. Si hay que tragarse un error, se anota
-  con `registro.fallo("de donde")`.
+- Comentarios y nombres en español, sin tildes **en el código**. Esto
+  es para identificadores y comentarios, **no para el texto que ve el
+  usuario**: ahí van las tildes y los signos de apertura. Se publicó una
+  versión con «Como» por «Cómo» y «Si, borrar» por «Sí, borrar» por
+  confundir las dos cosas.
+- Los comentarios explican **por qué**, no qué hace la línea.
+- Nada de código muerto ni de opciones «por si acaso».
+- La prueba se escribe junto con lo que implementa, no después.
+- **Ningún `catch` mudo.** Todo lo que se captura se registra con dónde
+  y por qué. Y compila sin avisos: tres `CS8601` que parecían
+  cosméticos eran las cuatro tablas de traducción en `null`, o sea la
+  aplicación reventando al elegir cualquier idioma.
 
 ## Historial
 
@@ -183,3 +169,4 @@ no repinta bien bajo redimensionado continuo. En Flet esto ya no aplica.
 - 1.x — un solo archivo, tkinter
 - 2.0 — reescrito en módulos, con pruebas
 - 3.0 — interfaz migrada a Flet
+- 4.0 — reescrito en C# con WinUI 3, por el atajo global

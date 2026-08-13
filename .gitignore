@@ -3,19 +3,7 @@ snippets.json
 historial.json
 config.json
 imagenes/
-errores.log
-
-# Salidas de PyInstaller
-build/
-dist/
-*.spec
-
-# Python
-__pycache__/
-*.pyc
-*.pyo
-.venv/
-venv/
+errores.log*
 
 # C# / .NET — salidas de compilacion, se regeneran con dotnet build
 bin/
@@ -23,21 +11,28 @@ obj/
 *.user
 .vs/
 
-# La carpeta de publish: 475 archivos y casi 200 MB, se regenera con
-# dotnet publish -c Release -p:Platform=x86 -r win-x86
+# La carpeta de publish: 487 archivos y 200 MB, se regenera con
+# dotnet publish csharp/Pastepad.App -c Release -p:Platform=x86 -r win-x86
 publicado-x86/
 
-# El log de la prueba del atajo se escribe junto al ejecutable
+# El instalador que produce Inno Setup: 47 MB, se regenera con
+# ISCC /DVersion=<version> instalador\pastepad.iss
+dist/
+
+# El log del sondeo del atajo, que se escribe junto a su ejecutable
 csharp/**/prueba-atajo.log
 
 # Windows
 Thumbs.db
 desktop.ini
 
-# Salida de la compilacion: 98 MB, se regenera con flet pack
-instalador/dist/
-instalador/*.spec
+# Lo que dejo la version en Python. Las carpetas pueden seguir en disco
+# aunque el codigo ya no este en el repo; vive en el tag
+# ultima-version-python.
+__pycache__/
+.venv/
+venv/
 build/
-errores.log*
-*.spec
+instalador/dist/
 instalador/portable/
+*.spec
