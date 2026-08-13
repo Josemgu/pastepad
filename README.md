@@ -37,8 +37,7 @@ working in.
 ## What it does
 
 Everything you copy shows up under Recent, text and screenshots alike.
-Pin what you use often and it stays on top, out of reach of the trim
-that clears the rest.
+Pin what you use often and it stays on top.
 
 Saved texts live in folders you name. Write `[[anything]]` in one and
 pastepad asks for it before pasting:
@@ -47,22 +46,16 @@ pastepad asks for it before pasting:
 Hi [[name]], following up on [[topic]] from [[date]].
 ```
 
-Links get their own treatment. If what you copied is a web address and
-nothing else, the row shows a link icon and the domain instead of a
-character count, and clicking opens the browser rather than pasting.
-Under Saved they sit in a separate collapsible group, because opening a
-bookmark and pasting a note are two different gestures and mixing them
-means reading the whole list to find either.
+Copy a web address on its own and pastepad treats it as a link: the row
+shows the domain, and clicking opens the browser instead of pasting.
+Bookmarks sit in their own group under Saved.
 
-Search runs across both tabs at once. Words can come in any order,
-accents are ignored, and a match in the title outranks one buried in the
-body.
+Search covers both tabs. Words can come in any order and accents are
+ignored.
 
-Some things never get recorded. Windows defines four
-[clipboard formats](https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats)
-an application uses to say "don't store this", and KeePass, Bitwarden,
-Windows Credential Manager and Chrome's incognito windows all set them.
-pastepad honours all four and drops that content.
+Password managers mark their content as private, and pastepad never
+records it. KeePass, Bitwarden, Windows Credential Manager and Chrome's
+incognito windows all do this.
 
 ## Using it
 
@@ -75,16 +68,16 @@ pastepad honours all four and drops that content.
 | <kbd>Esc</kbd> | Close |
 
 Click into the field you want to fill before opening the panel. pastepad
-records which window had focus and hands it back before pasting.
+remembers which window had focus and gives it back before pasting.
 
-The X only hides the panel. Closing it for good is `taskkill /IM
-pastepad.exe /F`, or Exit from the tray icon.
+The X only hides the panel. To close it for good, use Exit from the tray
+icon.
 
 ## Installing
 
-Download `pastepad-4.0.0-instalador.exe` from the
+Download the installer from the
 [latest release](https://github.com/Josemgu/pastepad/releases/latest)
-and run it. It weighs 47.1 MB.
+and run it. It weighs 47 MB.
 
 ```
 program   %LOCALAPPDATA%\Programs\pastepad
@@ -92,61 +85,37 @@ data      %LOCALAPPDATA%\pastepad
 uninstall Settings → Apps → Installed apps
 ```
 
-No administrator prompt: it installs for your user only. Uninstalling
-removes the program and leaves the data where it is, which is why the
-two live in separate folders. Starting with Windows is a preference the
-program manages itself, so reinstalling keeps whatever you had chosen.
+It installs for your user only, so there is no administrator prompt —
+not when installing and not when updating. Uninstalling removes the
+program and leaves your data alone, which is why the two are in separate
+folders.
 
-The program installs under your profile rather than *Program Files* so
-that neither installing nor updating asks for elevation. It is a
-single-user tool and it starts with your session, so a machine-wide
-install would only mean a password prompt every time there is a new
-version.
+pastepad tells you when a new version is out and updates without losing
+what you just copied.
 
 ## The Windows warning
 
 The first run shows *"Windows protected your PC"*. Choose **More info**,
 then **Run anyway**.
 
-An MIT licence and published source do not prevent this. SmartScreen
-reads neither. It looks at whether the binary carries a signature and at
-how many people have downloaded it without incident, and a new unsigned
-executable has neither.
+SmartScreen does not read the licence or the source. It looks for a
+signature and for download history, and a new unsigned program has
+neither. A free certificate from [SignPath](https://signpath.org/) is
+being requested, which is what makes the warning go away for good.
 
-A free certificate from [SignPath](https://signpath.org/) is being
-requested for the project, which is what makes the warning go away for
-good. Reputation then carries across releases instead of resetting with
-each one. Until that lands, these are the options:
-
-| Option | Effect | Cost |
-|---|---|---|
-| Accept the warning | One click, once | 0 |
-| Check the published SHA256 | Verifiable download, warning stays | 0 |
-| Free certificate for open source ([SignPath](https://signpath.org/), [OSSign](https://ossign.org/)) | Real signature, reputation accumulates | 0 |
-| [Azure Trusted Signing](https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/code-signing-options) | Same, run by Microsoft | ~$10/month |
-| Microsoft Store | Removes the warning entirely | Developer account |
-
-Self-signing does not help: Windows won't trust a certificate that
-doesn't come from a recognised authority. Extended validation
-certificates no longer grant instant reputation either — that stopped
-being true years ago.
-
-Every release ships a `SHA256.txt` so you can check the download matches
-what the build produced.
+Every release ships a `SHA256.txt` so you can check your download
+matches the build.
 
 ## How it's built
 
-C# on .NET 10 with WinUI 3, no packaged identity. The clipboard, the
-global shortcut, the tray icon and the focus handoff are Win32 calls;
-the rest is XAML. The data layer has 45 tests that run without opening a
-window.
+C# on .NET 10 with WinUI 3. The clipboard, the global shortcut, the tray
+icon and the focus handoff are Win32 calls; the rest is XAML. The data
+layer has 78 tests that run without opening a window.
 
 Versions up to 3.0.1 were written in Python with Flet. That was
-abandoned because the global shortcut stopped responding after a few
-presses and the cause was structural: the shortcut and the window ended
-up on different threads. The old code lives on in the
-`ultima-version-python` tag. [PLAN.md](PLAN.md) and
-[TRASPASO.md](TRASPASO.md) record the reasoning and what was kept.
+abandoned because the global shortcut stopped answering after a few
+presses. The old code lives in the `ultima-version-python` tag, and
+[PLAN.md](PLAN.md) and [TRASPASO.md](TRASPASO.md) record the reasoning.
 
 ## Your data
 
@@ -159,45 +128,37 @@ config.json       language, theme, colour, shortcut, size
 imagenes\         copied screenshots
 ```
 
-The history is stored unencrypted. Password-manager content is dropped
-automatically, but anything else sensitive you copy does get written
-down. The broom in the footer empties the history and the pause button
-stops capture. See [SECURITY.md](SECURITY.md).
+The history is not encrypted. Password-manager content is dropped on its
+own, but anything else you copy does get written down. The broom in the
+footer empties the history and the pause button stops capture. See
+[SECURITY.md](SECURITY.md).
 
-Keeping the folder inside OneDrive is a bad idea. Sync can lock the JSON
-files mid-write.
+Do not keep the folder inside OneDrive. Sync can lock the files while
+pastepad is writing them.
 
 ## Making it yours
 
-Four languages: English, Español, Português, Français. Pick one under
-Appearance, and it persists between sessions.
+Four languages: English, Español, Português, Français.
 
-Twelve backgrounds and eighteen accent colours. "Follow Windows" tracks
-the system theme and switches live when you change it. Every accent
-clears WCAG AA contrast against the text drawn on it, checked by
-calculation rather than by eye.
+Twelve backgrounds and eighteen accent colours. "Follow Windows" changes
+the theme live when the system does. Every accent was checked for
+contrast against the text drawn on it.
 
-The panel resizes by dragging its edges, between 300×340 and 720×1100,
-and remembers where you left it.
+The panel resizes by dragging its edges and remembers where you left it.
 
 ## Design
 
-The interface was drawn before it was built. There are 35 SVG mockups in
-[docs/mockups](docs/mockups), and
-[ESPECIFICACION-UI.md](docs/ESPECIFICACION-UI.md) has the palette, the
-measurements and the behaviour behind them, with the exact values.
-
-Two caveats live in that document: mockups 20 and 33 were never checked
-against the running program, and 26 and 27 draw Windows' own SmartScreen
-dialogs rather than anything pastepad controls.
+The interface was drawn before it was built: 35 SVG mockups in
+[docs/mockups](docs/mockups), with the palette, measurements and
+behaviour in [ESPECIFICACION-UI.md](docs/ESPECIFICACION-UI.md).
 
 ## Why another one
 
 [Ditto](https://github.com/sabrogden/Ditto) and
 [CopyQ](https://github.com/hluk/CopyQ) are good programs with years of
 work behind them. This one exists because my daily work needed two
-things neither does without setting them up: fill-in templates for notes
-I retype constantly, and rich-text paste that survives into Outlook.
+things neither does out of the box: fill-in templates for notes I retype
+constantly, and rich-text paste that survives into Outlook.
 
 ---
 
