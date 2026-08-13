@@ -36,12 +36,9 @@ tenías el cursor.
 Todo lo que copias aparece en Reciente, lo mismo un texto que una
 captura. Lo que uses a menudo lo puedes fijar y se queda arriba.
 
-Los textos guardados van en carpetas que nombras tú. Si escribes
-`[[algo]]` dentro de uno, el programa te lo pregunta antes de pegar:
-
-```
-Hola [[nombre]], te escribo sobre [[tema]] del día [[fecha]].
-```
+Los textos guardados van en carpetas que nombras tú, y uno que lleve
+`[[campos]]` dentro se convierte en plantilla: pastepad te los pregunta
+antes de pegar.
 
 Si lo que copias es una dirección web y nada más, pastepad la trata como
 enlace: la fila enseña el dominio, y al hacer clic se abre el navegador
@@ -54,6 +51,46 @@ orden y las tildes dan igual.
 Los gestores de contraseñas marcan su contenido como privado, y pastepad
 no lo guarda nunca. Lo hacen KeePass, Bitwarden, el Administrador de
 credenciales y las ventanas de incógnito de Chrome.
+
+## Plantillas
+
+Lo que envuelvas en `[[dobles corchetes]]` se convierte en un hueco que
+rellenas al pegar. La fila lleva la marca `{}` para saber de un vistazo
+cuál va a preguntar, y las plantillas van en su propio grupo dentro de
+Guardados.
+
+**Cómo se crea**
+
+1. Abre el panel, ve a **Guardados** y pulsa **Nuevo**.
+2. Escribe el texto y pon `[[corchetes]]` alrededor de lo que cambia
+   cada vez.
+3. Elige carpeta en **Guardar en** y pulsa **Agregar**.
+
+**Cómo se usa**
+
+Haz clic en el campo que quieres rellenar, abre el panel y pulsa la
+plantilla. Sale **Completar antes de pegar**, con una casilla por hueco.
+Los rellenas y pulsas **Pegar**.
+
+Para datos que reescribes a todas horas:
+
+```
+Nombre: [[nombre]]
+Apellido: [[apellido]]
+Fecha de nacimiento: [[fecha de nacimiento]]
+```
+
+Para un correo:
+
+```
+Hola [[nombre]], te escribo sobre [[tema]] del día [[fecha]].
+```
+
+Un aviso sobre el asunto. En Gmail y en Outlook el asunto y el cuerpo
+son dos campos distintos, y pastepad pega en uno cada vez: aquel donde
+tenías el cursor. Así que guarda el asunto y el cuerpo como dos textos
+en la misma carpeta, y pega uno en el asunto y el otro en el cuerpo.
+pastepad no salta de un campo a otro por ti.
 
 ## Cómo se usa
 

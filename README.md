@@ -39,12 +39,8 @@ working in.
 Everything you copy shows up under Recent, text and screenshots alike.
 Pin what you use often and it stays on top.
 
-Saved texts live in folders you name. Write `[[anything]]` in one and
-pastepad asks for it before pasting:
-
-```
-Hi [[name]], following up on [[topic]] from [[date]].
-```
+Saved texts live in folders you name, and one with `[[fields]]` in it
+becomes a template — pastepad asks for them before pasting.
 
 Copy a web address on its own and pastepad treats it as a link: the row
 shows the domain, and clicking opens the browser instead of pasting.
@@ -56,6 +52,46 @@ ignored.
 Password managers mark their content as private, and pastepad never
 records it. KeePass, Bitwarden, Windows Credential Manager and Chrome's
 incognito windows all do this.
+
+## Templates
+
+Anything you wrap in `[[double brackets]]` becomes a blank to fill in.
+The row is marked `{}` so you can tell at a glance which ones will ask,
+and templates sit in their own group under Saved.
+
+**Making one**
+
+1. Open the panel, go to **Saved**, press **New**.
+2. Write the text, and put `[[brackets]]` around whatever changes each
+   time.
+3. Choose a folder under **Save into** and press **Add**.
+
+**Using it**
+
+Click into the field you want to fill, open the panel, and click the
+template. **Fill in before pasting** appears with one box per blank.
+Fill them and press **Paste**.
+
+For details you retype constantly:
+
+```
+Name: [[name]]
+Surname: [[surname]]
+Date of birth: [[date of birth]]
+```
+
+For an email:
+
+```
+Hi [[name]], following up on [[topic]] from [[date]].
+```
+
+A note on subject lines. In Gmail and Outlook the subject and the body
+are two separate fields, and pastepad pastes into one field at a time —
+the one your cursor was in. So keep the subject and the body as two
+saved texts in the same folder: click the subject field and paste one,
+click the body and paste the other. pastepad will not jump between the
+fields for you.
 
 ## Using it
 
