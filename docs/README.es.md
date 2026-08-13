@@ -1,12 +1,19 @@
 <div align="center">
 
-<img src="logo.svg" alt="" width="120">
+<img src="banner.es.svg" alt="pastepad — un gestor de portapapeles para Windows" width="880">
 
-# pastepad
+<hr>
 
-Un gestor de portapapeles para Windows.
+[![versión](https://img.shields.io/github/v/release/Josemgu/pastepad?style=flat-square&label=versi%C3%B3n&color=2DD4A7&labelColor=1B1B1F)](https://github.com/Josemgu/pastepad/releases/latest)
+[![compilación](https://img.shields.io/github/actions/workflow/status/Josemgu/pastepad/release.yml?style=flat-square&label=compilaci%C3%B3n&labelColor=1B1B1F)](https://github.com/Josemgu/pastepad/actions/workflows/release.yml)
+![windows](https://img.shields.io/badge/windows-10%20%7C%2011-0078D4?style=flat-square&labelColor=1B1B1F)
+[![licencia](https://img.shields.io/github/license/Josemgu/pastepad?style=flat-square&label=licencia&color=6B6B75&labelColor=1B1B1F)](../LICENSE)
 
-[English](../README.md) · [Español](README.es.md) · [MIT](../LICENSE)
+[English](../README.md) · [Español](README.es.md)
+
+**Un gestor de portapapeles para Windows.**
+
+[![Descargar para Windows](https://img.shields.io/badge/Descargar%20para%20Windows-2DD4A7?style=for-the-badge&logo=windows&logoColor=052E23&labelColor=2DD4A7)](https://github.com/Josemgu/pastepad/releases/latest)
 
 </div>
 

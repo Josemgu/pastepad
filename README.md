@@ -1,12 +1,19 @@
 <div align="center">
 
-<img src="docs/logo.svg" alt="" width="120">
+<img src="docs/banner.svg" alt="pastepad — a clipboard manager for Windows" width="880">
 
-# pastepad
+<hr>
 
-A clipboard manager for Windows.
+[![version](https://img.shields.io/github/v/release/Josemgu/pastepad?style=flat-square&label=version&color=2DD4A7&labelColor=1B1B1F)](https://github.com/Josemgu/pastepad/releases/latest)
+[![build](https://img.shields.io/github/actions/workflow/status/Josemgu/pastepad/release.yml?style=flat-square&label=build&labelColor=1B1B1F)](https://github.com/Josemgu/pastepad/actions/workflows/release.yml)
+![windows](https://img.shields.io/badge/windows-10%20%7C%2011-0078D4?style=flat-square&labelColor=1B1B1F)
+[![licence](https://img.shields.io/github/license/Josemgu/pastepad?style=flat-square&label=licence&color=6B6B75&labelColor=1B1B1F)](LICENSE)
 
-[English](README.md) · [Español](docs/README.es.md) · [MIT](LICENSE)
+[English](README.md) · [Español](docs/README.es.md)
+
+**A clipboard manager for Windows.**
+
+[![Download for Windows](https://img.shields.io/badge/Download%20for%20Windows-2DD4A7?style=for-the-badge&logo=windows&logoColor=052E23&labelColor=2DD4A7)](https://github.com/Josemgu/pastepad/releases/latest)
 
 </div>
 

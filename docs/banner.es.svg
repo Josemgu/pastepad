@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 260" width="880" height="260" role="img" aria-label="pastepad, a clipboard manager for Windows">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 260" width="880" height="260" role="img" aria-label="pastepad, un gestor de portapapeles para Windows">
 <title>pastepad</title>
-<desc>Logo and tagline next to a preview of the panel: search box, Recent and Saved tabs, and a list of clipboard entries with a pinned link.</desc>
+<desc>Logotipo y lema junto a una vista previa del panel: caja de busqueda, pestanas Reciente y Guardados, y una lista de entradas del portapapeles con un enlace fijado.</desc>
 <style>
   .bg{fill:#0B0B0D}.card{fill:#1B1B1F}.elev{fill:#141417}
   .t{fill:#F4F4F5}.dim{fill:#9C9CA6}.tenue{fill:#6B6B75}.on{fill:#052E23}
@@ -40,7 +40,7 @@
 </g>
 
 <text class="t" x="132" y="96" font-size="48" font-weight="600">pastepad</text>
-<text class="dim" x="134" y="130" font-size="17">A clipboard manager for Windows</text>
+<text class="dim" x="134" y="130" font-size="17">Un gestor de portapapeles para Windows</text>
 
 <g transform="translate(60,158)">
   <rect class="card" width="42" height="30" rx="8"/>
@@ -51,7 +51,7 @@
   <text class="dim" x="122" y="20" font-size="14">+</text>
   <rect class="card" x="136" width="30" height="30" rx="8"/>
   <text class="t" x="151" y="20" font-size="13" text-anchor="middle">V</text>
-  <text class="dim" x="182" y="20" font-size="14">anywhere</text>
+  <text class="dim" x="182" y="20" font-size="14">donde estés</text>
 </g>
 
 <g transform="translate(556,30)">
@@ -61,20 +61,20 @@
   <rect class="card" x="14" y="16" width="244" height="28" rx="8"/>
   <circle cx="34" cy="30" r="5" fill="none" stroke="#6B6B75" stroke-width="1.5"/>
   <line x1="38" y1="34" x2="42" y2="38" stroke="#6B6B75" stroke-width="1.5" stroke-linecap="round"/>
-  <text class="dim" x="52" y="34" font-size="11">Search everything</text>
+  <text class="dim" x="52" y="34" font-size="11">Buscar en todo</text>
 
   <rect class="ac" x="14" y="52" width="118" height="22" rx="11"/>
-  <text class="on" x="73" y="67" font-size="10" text-anchor="middle">Recent</text>
+  <text class="on" x="73" y="67" font-size="10" text-anchor="middle">Reciente</text>
   <rect class="card" x="140" y="52" width="118" height="22" rx="11"/>
-  <text class="dim" x="199" y="67" font-size="10" text-anchor="middle">Saved</text>
+  <text class="dim" x="199" y="67" font-size="10" text-anchor="middle">Guardados</text>
 
   <rect class="ac" x="14" y="84" width="244" height="34" rx="8"/>
   <text class="on" x="42" y="99" font-size="10">🔗 https://docs.python.org</text>
   <text class="on" x="28" y="112" font-size="9" opacity=".72">docs.python.org</text>
 
   <rect class="card" x="14" y="124" width="244" height="34" rx="8"/>
-  <text class="t" x="28" y="139" font-size="10">Hi [[name]], about [[topic]]...</text>
-  <text class="dim" x="28" y="151" font-size="9">Templates</text>
+  <text class="t" x="28" y="139" font-size="10">Hola [[nombre]], sobre [[tema]]...</text>
+  <text class="dim" x="28" y="151" font-size="9">Plantillas</text>
 
   <rect class="card" x="14" y="164" width="244" height="20" rx="8"/>
   <text class="dim" x="28" y="178" font-size="9">git commit -m "fix: typo"</text>
