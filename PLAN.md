@@ -443,6 +443,60 @@ textuales. Se mantiene blanca porque su trabajo es ser señal de forma,
 no de color, y la maqueta manda. Anotado con el número por si algún día
 se revisa.
 
+### Después de publicar: que la actualización llegue
+
+Decidido el 13 ago 2026, con el plan del planificador delante.
+
+**El requisito**, con las palabras del usuario: «es importante que
+cualquier persona que tenga mi programa también se le actualice». Hoy
+quien instaló la 4.0.0 se queda ahí para siempre — y arrastra dos
+fallos que destruían texto en silencio.
+
+**Se descarta Velopack**, aunque sea la herramienta hecha para esto, por
+tres motivos medidos:
+
+1. Instala en `%LOCALAPPDATA%\{nombre}`, que con nuestro nombre **es la
+   carpeta de datos**. Pondría su actualizador junto a `historial.json`.
+2. `Arranque.cs` escribiría la ruta del ejecutable interno y no la del
+   lanzador que Velopack usa para sobrevivir a las actualizaciones, y su
+   documentación **no cubre el arranque con Windows**. El modo de fallo
+   sería «el atajo no arranca», que es el requisito número uno.
+3. Las 4.0.x ya están instaladas con Inno: migrar dejaría **dos
+   instalaciones**, y la que pierda el atajo queda como ventana muda.
+
+**Se elige lo aburrido**: aviso dentro del panel usando la API de
+GitHub. Nada de canal nuevo, nada de modelo de instalación nuevo. El
+instalador que hay ya reemplaza sin duplicar, admite modo silencioso y
+no toca los datos.
+
+Dato comprobado en vivo: la API devuelve el **`digest`** del asset en la
+misma respuesta que la URL de descarga. Mejor ancla que el `SHA256.txt`,
+que es un archivo suelto dentro de la propia release.
+
+**Avisa, no actualiza solo.** Decisión del usuario: «que pregunte a las
+personas». Y hay un motivo técnico que la respalda: el volcado del
+historial es diferido y **solo se fuerza al salir desde la bandeja**, así
+que un cierre impuesto puede perder hasta 3 segundos de copias. Quien
+tiene que cerrar pastepad es pastepad, volcando primero.
+
+**Partido en dos, a petición del usuario:**
+
+- **4.1.0** — comprobar, avisar en el panel, y el botón **abre la página
+  de la release en el navegador**. Una sola pieza nueva, cero riesgo
+  sobre el historial. Efecto secundario bueno: descargando con el
+  navegador vuelve la marca de la web, así que SmartScreen sigue
+  protegiendo mientras el binario no esté firmado.
+- **4.2.0** — el botón que descarga, comprueba el `digest` y lanza el
+  instalador. Antes hay que resolver si el Restart Manager alcanza a la
+  ventana oculta del panel, que **está sin verificar**.
+
+**Y un fallo que hay que arreglar antes del 4.2.0:** el `[Run]` del
+`.iss` lleva `skipifsilent`, así que una actualización silenciosa
+dejaría pastepad instalado y **cerrado, sin atajo**, hasta abrirlo a
+mano.
+
+Con una preferencia para apagar el aviso, visible desde el primer día.
+
 ### Paso 6 — Retirar la versión en Python
 
 **No antes de tiempo.** Mientras la interfaz se esté migrando, esos

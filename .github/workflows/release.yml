@@ -100,6 +100,29 @@ jobs:
                   "instalador\pastepad.iss"
           if ($LASTEXITCODE -ne 0) { throw "ISCC fallo con $LASTEXITCODE" }
 
+      # El nombre del asset es un contrato, no una casualidad: es el
+      # patron que el aviso de version nueva espera encontrar en la
+      # release. Si alguien lo cambia —en el .iss o aqui— el aviso no
+      # falla a gritos, deja de avisar y nadie se entera. Que reviente
+      # la publicacion es infinitamente mejor.
+      - name: Comprobar el nombre del asset
+        shell: pwsh
+        run: |
+          $esperado = "pastepad-${{ steps.v.outputs.version }}-instalador.exe"
+          $hay = @(Get-ChildItem dist -Filter *.exe | Select-Object -ExpandProperty Name)
+
+          Write-Host "esperado: $esperado"
+          Write-Host "hay     : $($hay -join ', ')"
+
+          if ($hay -notcontains $esperado) {
+            throw "el instalador no se llama '$esperado'. El aviso de version " +
+                  "nueva busca ese nombre; con otro, deja de avisar en silencio."
+          }
+
+          if ($hay.Count -ne 1) {
+            throw "hay $($hay.Count) ejecutables en dist; tiene que haber uno"
+          }
+
       - name: Hashes
         shell: pwsh
         run: |
@@ -128,6 +151,20 @@ jobs:
             dist/pastepad-${{ steps.v.outputs.version }}-instalador.exe
             dist/SHA256.txt
           body: |
+            ## Si ya tienes pastepad
+
+            **Esta es la ultima version que hay que instalar a mano.** A
+            partir de aqui, pastepad mira una vez al dia si hay algo
+            nuevo y te lo dice dentro del panel. Se puede apagar en
+            Apariencia.
+
+            **Si vienes de la 4.0.0, actualiza.** Esa version tenia seis
+            fallos, y **dos de ellos destruian texto en silencio**: se
+            veia bien en pantalla y lo que quedaba guardado estaba mal.
+
+            Instalar encima reemplaza lo que haya. Tu historial y tus
+            textos guardados no se tocan: viven en otra carpeta.
+
             ## Instalacion
 
             **`pastepad-${{ steps.v.outputs.version }}-instalador.exe`**

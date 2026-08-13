@@ -52,6 +52,13 @@ public sealed partial class Panel : Window
     /// <summary>null es "todas las carpetas".</summary>
     string? _carpeta;
 
+    /// <summary>
+    /// El menu del clic derecho sobre el desplegable de carpetas. Es otro
+    /// objeto que el del clic izquierdo porque un MenuFlyout no puede
+    /// estar colgado de dos propiedades a la vez.
+    /// </summary>
+    MenuFlyout? _menuDerecho;
+
     bool _marcando;
     bool _compacta;
 
@@ -190,6 +197,10 @@ public sealed partial class Panel : Window
         // Las filas leen la paleta al construir sus pinceles, asi que
         // hay que decirles que vuelvan a mirarla.
         foreach (var f in _filas) f.Refrescar();
+
+        // La banda de la novedad tambien va en acento: si no se repinta,
+        // se queda con el color de antes al cambiarlo en Apariencia.
+        PintarNovedad();
     }
 
     /// <summary>
@@ -362,6 +373,10 @@ public sealed partial class Panel : Window
         Buscador.Text = "";
         Refrescar();
 
+        // Despues de Refrescar, que no la toca: la novedad sobrevive a
+        // que se cierre el panel y se vuelve a poner hasta que se mire.
+        PintarNovedad();
+
         AppWindow.Show();
         EstaVisible = true;
 
@@ -383,7 +398,9 @@ public sealed partial class Panel : Window
 
         EstaVisible = false;
         AppWindow.Hide();
+
         Aviso.Visibility = Visibility.Collapsed;
+        AvisoAccion.Visibility = Visibility.Collapsed;
 
         // El modo seleccion no sobrevive al cierre: volver y encontrarse
         // las casillas puestas de la vez anterior desconcierta.
@@ -409,6 +426,9 @@ public sealed partial class Panel : Window
             : (Config.AnchoDef, Config.AltoDef);
     }
 
+    /// <summary>Donde lleva el boton del aviso, si lo lleva.</summary>
+    string? _avisoEnlace;
+
     /// <summary>
     /// Un problema que el usuario tiene que ver. Nada de fallos mudos:
     /// si el atajo no se pudo registrar, se dice cual es y por que.
@@ -417,9 +437,64 @@ public sealed partial class Panel : Window
     {
         DispatcherQueue.TryEnqueue(() =>
         {
+            _avisoEnlace = null;
+
             Aviso.Text = texto;
+            Aviso.Foreground = Estilo.Pincel(Estilo.Rojo);
             Aviso.Visibility = Visibility.Visible;
+
+            AvisoAccion.Visibility = Visibility.Collapsed;
         });
+    }
+
+    /// <summary>
+    /// La version nueva pendiente de que el usuario la vea, si la hay.
+    ///
+    /// Se guarda y se vuelve a pintar en cada apertura en vez de
+    /// enseñarse una vez y ya: la comprobacion cae cuando cae —puede ser
+    /// con el panel cerrado— y esconder el panel limpia la banda. Sin
+    /// esto, el aviso se lo puede quedar nadie.
+    /// </summary>
+    (string Version, string Pagina)? _novedad;
+
+    /// <summary>
+    /// Hay una version nueva. En acento y no en rojo: no es un fallo, es
+    /// una noticia. Y con un boton que abre la pagina de la release — no
+    /// descarga nada, eso es de la version siguiente.
+    /// </summary>
+    public void AvisarNovedad(string version, string pagina)
+    {
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            _novedad = (version, pagina);
+            PintarNovedad();
+        });
+    }
+
+    void PintarNovedad()
+    {
+        if (_novedad is not { } novedad) return;
+
+        _avisoEnlace = novedad.Pagina;
+
+        Aviso.Text = Textos.T("Hay una versión nueva: %s", novedad.Version);
+        Aviso.Foreground = Estilo.Pincel(Estilo.ColorAcento.Color);
+        Aviso.Visibility = Visibility.Visible;
+
+        AvisoAccion.Content = Textos.T("Ver la novedad");
+        AvisoAccion.Visibility = Visibility.Visible;
+    }
+
+    void AvisoAccion_Click(object remitente, RoutedEventArgs args)
+    {
+        if (_avisoEnlace is not { Length: > 0 } pagina) return;
+
+        // Ya la ha visto y ha ido a por ella: no se le vuelve a poner
+        // delante en cada apertura.
+        _novedad = null;
+
+        // AbrirEnlace ya esconde el panel antes de lanzar el navegador.
+        App.Actual.AbrirEnlace(pagina);
     }
 
     // ---------------------------------------------------------- lista
@@ -706,19 +781,29 @@ public sealed partial class Panel : Window
             ? Estilo.Iconos.Carpeta
             : Estilo.Iconos.CarpetaAbierta;
 
-        ConstruirMenuCarpetas();
+        LlenarMenuCarpetas(MenuCarpetas);
+
+        // El mismo menu con el boton derecho. El usuario lo busca ahi
+        // —"deberia ser con clic derecho sobre la carpeta"— y hasta ahora
+        // el desplegable solo respondia al izquierdo. Va en un MenuFlyout
+        // aparte a proposito: un mismo flyout no puede estar colgado de
+        // Flyout y de ContextFlyout a la vez.
+        _menuDerecho ??= new MenuFlyout { Placement = FlyoutPlacementMode.Bottom };
+
+        LlenarMenuCarpetas(_menuDerecho);
+        BotonCarpeta.ContextFlyout = _menuDerecho;
     }
 
-    void ConstruirMenuCarpetas()
+    void LlenarMenuCarpetas(MenuFlyout menu)
     {
-        MenuCarpetas.Items.Clear();
+        menu.Items.Clear();
 
         var todas = new MenuFlyoutItem { Text = Textos.T("Todas las carpetas") };
         todas.Click += (_, _) => ElegirCarpeta(null);
-        MenuCarpetas.Items.Add(todas);
+        menu.Items.Add(todas);
 
         if (Almacen.Carpetas.Count > 0)
-            MenuCarpetas.Items.Add(new MenuFlyoutSeparator());
+            menu.Items.Add(new MenuFlyoutSeparator());
 
         foreach (var nombre in Almacen.Carpetas)
         {
@@ -731,14 +816,14 @@ public sealed partial class Panel : Window
             string cual = nombre;
             item.Click += (_, _) => ElegirCarpeta(cual);
 
-            MenuCarpetas.Items.Add(item);
+            menu.Items.Add(item);
         }
 
-        MenuCarpetas.Items.Add(new MenuFlyoutSeparator());
+        menu.Items.Add(new MenuFlyoutSeparator());
 
         var nueva = new MenuFlyoutItem { Text = Textos.T("Nueva carpeta...") };
         nueva.Click += async (_, _) => await NuevaCarpeta();
-        MenuCarpetas.Items.Add(nueva);
+        menu.Items.Add(nueva);
 
         // Editar no depende de que haya una carpeta puesta: con "Todas
         // las carpetas" —que es lo que hay al abrir— no salia ninguna
@@ -748,29 +833,50 @@ public sealed partial class Panel : Window
         {
             var editar = new MenuFlyoutItem { Text = Textos.T("Editar carpetas...") };
             editar.Click += async (_, _) => await EditarCarpetas();
-            MenuCarpetas.Items.Add(editar);
+            menu.Items.Add(editar);
         }
 
-        if (_carpeta is null) return;
+        if (_carpeta is { } puesta) AccionesDeCarpeta(menu, puesta);
+    }
 
+    /// <summary>
+    /// Las tres cosas que se hacen sobre una carpeta concreta. Las mismas
+    /// en el desplegable y en el clic derecho de la ficha: dos menus con
+    /// contenidos distintos para lo mismo era la razon de que "editar el
+    /// contenido" no se encontrara en el modo de fichas.
+    /// </summary>
+    void AccionesDeCarpeta(MenuFlyout menu, string carpeta)
+    {
         var contenido = new MenuFlyoutItem
         {
-            Text = Textos.T("Editar el contenido de %s...", _carpeta),
+            Text = Textos.T("Editar el contenido de %s...", carpeta),
         };
-        contenido.Click += async (_, _) => await EditarContenido();
-        MenuCarpetas.Items.Add(contenido);
+        contenido.Click += async (_, _) =>
+        {
+            ElegirCarpeta(carpeta);
+            await EditarContenido(carpeta);
+        };
+        menu.Items.Add(contenido);
 
-        var renombrar = new MenuFlyoutItem { Text = Textos.T("Renombrar %s", _carpeta) };
-        renombrar.Click += async (_, _) => await RenombrarCarpeta();
-        MenuCarpetas.Items.Add(renombrar);
+        var renombrar = new MenuFlyoutItem { Text = Textos.T("Renombrar %s", carpeta) };
+        renombrar.Click += async (_, _) =>
+        {
+            ElegirCarpeta(carpeta);
+            await RenombrarCarpeta();
+        };
+        menu.Items.Add(renombrar);
 
         var borrar = new MenuFlyoutItem
         {
-            Text = Textos.T("Eliminar %s y su contenido", _carpeta),
+            Text = Textos.T("Eliminar %s y su contenido", carpeta),
             Foreground = Estilo.Pincel(Estilo.Rojo),
         };
-        borrar.Click += async (_, _) => await BorrarCarpeta();
-        MenuCarpetas.Items.Add(borrar);
+        borrar.Click += async (_, _) =>
+        {
+            ElegirCarpeta(carpeta);
+            await BorrarCarpeta();
+        };
+        menu.Items.Add(borrar);
     }
 
     /// <summary>
@@ -861,33 +967,13 @@ public sealed partial class Panel : Window
 
         ficha.Click += (_, _) => ElegirCarpeta(carpeta);
 
-        // Renombrar y borrar viven en el clic derecho de la ficha: en
-        // este modo no hay desplegable donde ponerlos.
+        // Editar el contenido, renombrar y borrar viven en el clic
+        // derecho de la ficha: en este modo no hay desplegable donde
+        // ponerlos, y es donde el usuario los busca.
         if (carpeta is not null)
         {
             var menu = new MenuFlyout();
-
-            var renombrar = new MenuFlyoutItem { Text = Textos.T("Renombrar %s", carpeta) };
-            renombrar.Click += async (_, _) =>
-            {
-                ElegirCarpeta(carpeta);
-                await RenombrarCarpeta();
-            };
-
-            var borrar = new MenuFlyoutItem
-            {
-                Text = Textos.T("Eliminar %s y su contenido", carpeta),
-                Foreground = Estilo.Pincel(Estilo.Rojo),
-            };
-            borrar.Click += async (_, _) =>
-            {
-                ElegirCarpeta(carpeta);
-                await BorrarCarpeta();
-            };
-
-            menu.Items.Add(renombrar);
-            menu.Items.Add(borrar);
-
+            AccionesDeCarpeta(menu, carpeta);
             ficha.ContextFlyout = menu;
         }
 
@@ -955,26 +1041,36 @@ public sealed partial class Panel : Window
     }
 
     /// <summary>
-    /// Lo de dentro de la carpeta puesta: se elige un texto y se abre en
-    /// el mismo editor de siempre. En dos pasos y no en uno porque dos
-    /// ContentDialog no pueden estar abiertos a la vez.
+    /// La carpeta entera en una caja, una nota por linea.
+    ///
+    /// Lo que sobrevive lo decide el nucleo: las lineas que no cambiaron
+    /// reutilizan su misma nota, con su nombre de marcador y su formato.
+    /// Aqui solo se escribe el resultado, y de una sola vez.
     /// </summary>
-    async Task EditarContenido()
+    async Task EditarContenido(string carpeta)
     {
-        if (_carpeta is not { } carpeta) return;
+        var antes = Modelo.PartirCarpeta(Almacen.ContenidoDe(carpeta));
 
-        var textos = Almacen.ContenidoDe(carpeta);
+        string? texto = await Dialogos.EditarCarpeta(Marco.XamlRoot, carpeta, antes);
+        if (texto is null) return;
 
-        var elegido = await Dialogos.Contenido(Marco.XamlRoot, carpeta, textos);
-        if (elegido is null) return;
+        var fusion = Modelo.FusionarCarpeta(antes, texto, carpeta);
 
-        var nuevo = await Dialogos.Texto(
-            Marco.XamlRoot, Textos.T("Editar texto"), Almacen.Carpetas,
-            elegido.Categoria, elegido);
+        // Guardar sin haber cambiado nada no escribe. Sin esto, abrir el
+        // editor y pulsar Guardar reordenaba snippets.json —las notas de
+        // varias lineas se van al final— sin que el usuario tocara nada.
+        var ahora = Almacen.ContenidoDe(carpeta);
 
-        if (nuevo is null) return;
+        bool igual = fusion.Resultado.Count == ahora.Count
+            && !fusion.Resultado.Where((s, i) => !ReferenceEquals(s, ahora[i])).Any();
 
-        Almacen.ReemplazarSnippet(elegido, nuevo);
+        if (igual) return;
+
+        Almacen.ReemplazarContenido(carpeta, fusion.Resultado);
+
+        _pestana = Guardados;
+        _carpeta = carpeta;
+
         App.Actual.RefrescarLista();
     }
 
@@ -1525,7 +1621,8 @@ public sealed partial class Panel : Window
             Almacen.Pref("tema", Estilo.TemaDef) ?? Estilo.TemaDef,
             Almacen.Pref("atajo", Config.AtajoDef) ?? Config.AtajoDef,
             ModoCarpetas,
-            Almacen.Pref("idioma", Textos.IdiomaDef) ?? Textos.IdiomaDef);
+            Almacen.Pref("idioma", Textos.IdiomaDef) ?? Textos.IdiomaDef,
+            Almacen.Pref(Versiones.ClaveAvisar, Versiones.AvisarDef));
 
         var elegido = await Dialogos.Apariencia(Marco.XamlRoot, antes);
         if (elegido is null) return;
@@ -1534,6 +1631,7 @@ public sealed partial class Panel : Window
         Almacen.PonerPref("tema", elegido.Tema);
         Almacen.PonerPref("carpetas", elegido.Carpetas);
         Almacen.PonerPref("idioma", elegido.Idioma);
+        Almacen.PonerPref(Versiones.ClaveAvisar, elegido.AvisarNovedades);
 
         Textos.Idioma = elegido.Idioma;
 

@@ -528,16 +528,33 @@
                 </StackPanel>
             </Grid>
 
-            <!--  ============================================== aviso  -->
-            <TextBlock
-                x:Name="Aviso"
-                Grid.Row="5"
-                FontFamily="{StaticResource PpFuente}"
-                FontSize="11"
-                Foreground="{ThemeResource PpRojo}"
-                Margin="16,0,16,8"
-                TextWrapping="Wrap"
-                Visibility="Collapsed" />
+            <!--
+                ============================================== aviso
+
+                Una banda dentro del panel y no un dialogo: lo que se
+                avisa aqui no merece interrumpir. Sirve para los fallos
+                —en rojo— y para la version nueva —en acento y con un
+                boton al lado—, que es el mismo sitio porque es el mismo
+                gesto: enterarse sin que te paren.
+            -->
+            <StackPanel Grid.Row="5" Margin="16,0,16,8">
+                <TextBlock
+                    x:Name="Aviso"
+                    FontFamily="{StaticResource PpFuente}"
+                    FontSize="11"
+                    Foreground="{ThemeResource PpRojo}"
+                    TextWrapping="Wrap"
+                    Visibility="Collapsed" />
+                <HyperlinkButton
+                    x:Name="AvisoAccion"
+                    Click="AvisoAccion_Click"
+                    FontFamily="{StaticResource PpFuente}"
+                    FontSize="11"
+                    Margin="0,2,0,0"
+                    MinHeight="0"
+                    Padding="0"
+                    Visibility="Collapsed" />
+            </StackPanel>
 
             <!--  ================================================= pie  -->
             <StackPanel Grid.Row="6">

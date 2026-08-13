@@ -13,7 +13,7 @@ las pierde al reiniciar.
 
 ## Estado
 
-Versión 4.0.0, reescrita en C# con WinUI 3 sobre el Windows App SDK
+Versión 4.1.0, reescrita en C# con WinUI 3 sobre el Windows App SDK
 2.3.1 y .NET 10. Desempaquetada y self-contained.
 
 La versión anterior (3.x, Python con Flet) **ya no está en el repo**.
@@ -36,16 +36,19 @@ csharp/
     Modelo.cs                reglas de los datos
     Almacen.cs               lo unico que toca el disco
     Busqueda.cs              ranking e indice con cache
-    Textos.cs                4 idiomas, 89 claves
+    Textos.cs                4 idiomas
+    Versiones.cs             comparar versiones y decidir si toca avisar
     Config.cs, Datos.cs, Autoarranque.cs, Rutas
-  Pastepad.Nucleo.Pruebas/   45 pruebas, sin abrir ventana
+  Pastepad.Nucleo.Pruebas/   74 pruebas, sin abrir ventana
   Pastepad.App/
     Sistema/                 todo lo que habla con Win32
       Buzon.cs               ventana solo-mensajes: atajo y portapapeles
       Portapapeles.cs        lectura, escritura, formatos privados, RTF
       Foco.cs                devolver el foco y pegar
+      Actualizacion.cs       consulta la API de GitHub. Solo consulta
       Bandeja.cs, Pantalla.cs, Arranque.cs, Nativo.cs
     Panel.xaml(.cs)          el panel
+    Formato.cs               la barra de formato sobre RichEditBox
     Dialogos.cs, Estilo.cs, Fila.cs
     Program.cs               Main propio: instancia unica
   PruebaAtajo/               el sondeo del paso 1. No se publica
@@ -54,8 +57,13 @@ docs/                        35 maquetas, especificacion, logos
 ```
 
 `Pastepad.Nucleo` no importa nada gráfico **a propósito**. Es lo que
-permite que 45 pruebas corran sin abrir ventana y sin el Windows App
+permite que 74 pruebas corran sin abrir ventana y sin el Windows App
 SDK. No metas WinUI ahí dentro.
+
+Ese reparto es también por qué `Versiones.cs` está en el núcleo y
+`Actualizacion.cs` en la aplicación: la decisión —comparar versiones,
+saber cuándo toca mirar y cuándo avisar— es lo que se puede romper en
+silencio, así que vive donde se puede probar. La consulta de red no.
 
 ## Cómo trabajar aquí
 

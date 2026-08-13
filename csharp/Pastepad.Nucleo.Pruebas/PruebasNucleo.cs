@@ -199,6 +199,71 @@ public sealed class PruebaPlantillas
         Assert.AreEqual("Hola Ana", Modelo.TextoDe(r));
     }
 
+    /// <summary>
+    /// Con barra de formato, un guardado tiene varios fragmentos y el
+    /// corte cae donde el usuario puso la negrita. Un [[campo]] partido
+    /// en tres no lo veia el reemplazo de antes y se pegaba con los
+    /// corchetes dentro.
+    /// </summary>
+    [TestMethod]
+    public void test_rellenar_un_campo_partido_entre_fragmentos()
+    {
+        var f = new[]
+        {
+            Modelo.CrearFragmento("Hola [["),
+            Modelo.CrearFragmento("nombre", negrita: 1),
+            Modelo.CrearFragmento("]], que tal"),
+        };
+
+        var r = Modelo.Rellenar(f, new Dictionary<string, string> { ["nombre"] = "Ana" });
+
+        Assert.AreEqual("Hola Ana, que tal", Modelo.TextoDe(r));
+        Assert.DoesNotContain("[[", Modelo.TextoDe(r));
+    }
+
+    /// <summary>
+    /// Y el resto del formato no se mueve: lo que estaba en negrita sigue
+    /// en negrita despues de rellenar.
+    /// </summary>
+    [TestMethod]
+    public void test_rellenar_conserva_el_formato_de_alrededor()
+    {
+        var f = new[]
+        {
+            Modelo.CrearFragmento("Estimado "),
+            Modelo.CrearFragmento("[[cliente]]", negrita: 1, color: "#C00000"),
+            Modelo.CrearFragmento(": adjunto el informe de [[mes]]."),
+        };
+
+        var r = Modelo.Rellenar(f, new Dictionary<string, string>
+        {
+            ["cliente"] = "Ana Perez",
+            ["mes"] = "julio",
+        });
+
+        Assert.AreEqual(
+            "Estimado Ana Perez: adjunto el informe de julio.", Modelo.TextoDe(r));
+
+        var enNegrita = r.Single(x => x.B == 1);
+        Assert.AreEqual("Ana Perez", enNegrita.T);
+        Assert.AreEqual("#C00000", enNegrita.C);
+    }
+
+    /// <summary>
+    /// Rellenar no puede multiplicar los fragmentos: sin unir los trozos
+    /// seguidos con el mismo formato, cada pegado dejaba uno por pieza.
+    /// </summary>
+    [TestMethod]
+    public void test_rellenar_no_multiplica_los_fragmentos()
+    {
+        var f = new[] { Modelo.CrearFragmento("a [[x]] b [[x]] c") };
+
+        var r = Modelo.Rellenar(f, new Dictionary<string, string> { ["x"] = "1" });
+
+        Assert.AreEqual("a 1 b 1 c", Modelo.TextoDe(r));
+        Assert.HasCount(1, r);
+    }
+
     [TestMethod]
     public void test_una_linea_corta_bien()
     {
@@ -721,6 +786,315 @@ public sealed class PruebaTituloGuardado : BaseConCarpetaTemporal
     }
 }
 
+/// <summary>
+/// El editor de la carpeta entera: una caja con una nota por linea.
+///
+/// Lo que se juega aqui es lo mismo de siempre —que guardar no destruya
+/// lo que el usuario no pidio destruir—, y con el volumen que el usuario
+/// dio de ejemplo: 3000 notas de las que se borran cien.
+/// </summary>
+[TestClass]
+public sealed class PruebaEditarCarpeta : BaseConCarpetaTemporal
+{
+    static Snippet Nota(
+        string texto, string? titulo = null, string carpeta = "Trabajo") =>
+        Modelo.CrearSnippet(texto, carpeta, titulo);
+
+    [TestMethod]
+    public void test_las_lineas_intactas_conservan_su_misma_nota()
+    {
+        var uno = Nota("https://ejemplo.com/x", "Panel de la SIE");
+        var dos = Nota("segunda");
+
+        // Una con formato puesto a mano, que es lo que se perderia si la
+        // fusion rehiciera las notas en vez de reutilizarlas.
+        var tres = new Snippet
+        {
+            Titulo = "tercera",
+            Categoria = "Trabajo",
+            Runs = [Modelo.CrearFragmento("tercera", "Arial", 20, negrita: 1)],
+        };
+
+        var antes = Modelo.PartirCarpeta([uno, dos, tres]);
+
+        var f = Modelo.FusionarCarpeta(
+            antes, "https://ejemplo.com/x\rsegunda\rtercera", "Trabajo");
+
+        Assert.AreEqual(3, f.Conservadas);
+        Assert.AreEqual(0, f.Nuevas);
+        Assert.IsEmpty(f.Quitadas);
+
+        // La misma nota, no una copia igual.
+        Assert.AreSame(uno, f.Resultado[0]);
+        Assert.AreSame(tres, f.Resultado[2]);
+
+        Assert.AreEqual("Panel de la SIE", f.Resultado[0].Titulo,
+            "el nombre propio del marcador se rehizo");
+
+        Assert.AreEqual("Arial", f.Resultado[2].Runs[0].F);
+        Assert.AreEqual(20, f.Resultado[2].Runs[0].S);
+        Assert.AreEqual(1, f.Resultado[2].Runs[0].B);
+    }
+
+    /// <summary>
+    /// El ejemplo del usuario, con su volumen: 3000 notas linea por
+    /// linea y quiere quitar cien. Las 2900 que quedan no se tocan.
+    /// </summary>
+    [TestMethod]
+    public void test_quitar_cien_de_tres_mil_no_toca_las_otras()
+    {
+        var carpeta = Enumerable.Range(1, 3000)
+            .Select(n => Nota($"nota numero {n}"))
+            .ToList();
+
+        var antes = Modelo.PartirCarpeta(carpeta);
+
+        string editado = string.Join("\r",
+            Enumerable.Range(101, 2900).Select(n => $"nota numero {n}"));
+
+        var f = Modelo.FusionarCarpeta(antes, editado, "Trabajo");
+
+        Assert.HasCount(2900, f.Resultado);
+        Assert.HasCount(100, f.Quitadas);
+        Assert.AreEqual(2900, f.Conservadas);
+        Assert.AreEqual(0, f.Nuevas, "se rehizo alguna nota que no cambio");
+
+        Assert.AreSame(carpeta[100], f.Resultado[0]);
+        Assert.AreSame(carpeta[2999], f.Resultado[2899]);
+
+        // Y las que se van son las cien primeras, no otras cien.
+        CollectionAssert.AreEqual(
+            carpeta.Take(100).ToList(), f.Quitadas);
+    }
+
+    /// <summary>
+    /// El viaje entero por el disco, que es donde se vieron los dos
+    /// fallos que destruian texto en silencio: se guarda, se relee, y se
+    /// cuenta lo que hay en snippets.json.
+    /// </summary>
+    [TestMethod]
+    public void test_guardar_la_carpeta_editada_sobrevive_al_disco()
+    {
+        var a = new Almacen(Rutas);
+
+        foreach (var n in Enumerable.Range(1, 3000))
+            a.Snippets.Add(Nota($"nota numero {n}"));
+
+        a.CrearCarpeta("Trabajo");
+        a.AnadirSnippet(Nota("de otra carpeta", carpeta: "Otra"));
+
+        var otro = new Almacen(Rutas);
+        var antes = Modelo.PartirCarpeta(otro.ContenidoDe("Trabajo"));
+
+        Assert.HasCount(3000, antes.DeUnaLinea);
+
+        string editado = string.Join("\r",
+            Enumerable.Range(101, 2900).Select(n => $"nota numero {n}"));
+
+        var f = Modelo.FusionarCarpeta(antes, editado, "Trabajo");
+        otro.ReemplazarContenido("Trabajo", f.Resultado);
+
+        var leido = new Almacen(Rutas);
+
+        Assert.HasCount(2900, leido.ContenidoDe("Trabajo"));
+        Assert.HasCount(1, leido.ContenidoDe("Otra"),
+            "editar una carpeta se llevo por delante otra");
+
+        Assert.AreEqual("nota numero 101",
+            Modelo.TextoDe(leido.ContenidoDe("Trabajo")[0].Runs));
+
+        Assert.AreEqual("nota numero 3000",
+            Modelo.TextoDe(leido.ContenidoDe("Trabajo")[2899].Runs));
+    }
+
+    /// <summary>
+    /// Una nota de varias lineas no cabe en "una nota por linea": ni se
+    /// ensena partida ni se pierde al guardar.
+    /// </summary>
+    [TestMethod]
+    public void test_una_nota_de_varias_lineas_se_queda_como_estaba()
+    {
+        var larga = Nota(string.Join("\r\n",
+            Enumerable.Range(1, 60).Select(n => $"linea {n}")));
+
+        var antes = Modelo.PartirCarpeta([Nota("corta"), larga]);
+
+        Assert.HasCount(1, antes.DeUnaLinea);
+        Assert.HasCount(1, antes.DeVariasLineas);
+        Assert.AreEqual("corta", antes.Texto,
+            "la nota larga se colo en la caja partida en 60 lineas");
+
+        // El usuario borra "corta" y guarda con la caja vacia.
+        var f = Modelo.FusionarCarpeta(antes, "", "Trabajo");
+
+        Assert.HasCount(1, f.Quitadas);
+        Assert.HasCount(1, f.Resultado);
+        Assert.AreSame(larga, f.Resultado[0]);
+
+        Assert.HasCount(60, Modelo.LineasDe(Modelo.TextoDe(f.Resultado[0].Runs)),
+            "la nota de 60 lineas salio partida o recortada");
+    }
+
+    /// <summary>
+    /// Dos notas con el mismo texto son dos notas. Emparejadas de una en
+    /// una, dejar una sola linea repetida borra una y conserva la otra.
+    /// </summary>
+    [TestMethod]
+    public void test_dos_notas_iguales_se_emparejan_una_a_una()
+    {
+        var uno = Nota("repetida");
+        var dos = Nota("repetida");
+
+        var antes = Modelo.PartirCarpeta([uno, dos]);
+
+        var dosVeces = Modelo.FusionarCarpeta(antes, "repetida\rrepetida", "Trabajo");
+        Assert.AreEqual(2, dosVeces.Conservadas);
+        Assert.IsEmpty(dosVeces.Quitadas);
+
+        var unaVez = Modelo.FusionarCarpeta(antes, "repetida", "Trabajo");
+        Assert.HasCount(1, unaVez.Resultado);
+        Assert.HasCount(1, unaVez.Quitadas);
+        Assert.AreSame(uno, unaVez.Resultado[0]);
+    }
+
+    /// <summary>
+    /// Y lo que si cambio se guarda como nota nueva, con su titulo
+    /// puesto por la primera linea, como cualquier otro guardado.
+    /// </summary>
+    [TestMethod]
+    public void test_una_linea_cambiada_es_una_nota_nueva()
+    {
+        var antes = Modelo.PartirCarpeta([Nota("como estaba")]);
+
+        var f = Modelo.FusionarCarpeta(antes, "como quedo", "Trabajo");
+
+        Assert.AreEqual(0, f.Conservadas);
+        Assert.AreEqual(1, f.Nuevas);
+        Assert.HasCount(1, f.Quitadas);
+
+        Assert.AreEqual("como quedo", f.Resultado[0].Titulo);
+        Assert.AreEqual("Trabajo", f.Resultado[0].Categoria);
+    }
+
+    /// <summary>
+    /// Reemplazar el contenido no puede mandar la carpeta al final del
+    /// archivo: la pestana se ordena por como estan en snippets.json.
+    /// </summary>
+    [TestMethod]
+    public void test_la_carpeta_editada_no_se_va_al_final()
+    {
+        var a = new Almacen(Rutas);
+
+        a.AnadirSnippet(Nota("primera de trabajo"));
+        a.AnadirSnippet(Nota("de otra", carpeta: "Otra"));
+
+        a.ReemplazarContenido("Trabajo", [Nota("sigue siendo la primera")]);
+
+        Assert.AreEqual("Trabajo", new Almacen(Rutas).Snippets[0].Categoria);
+    }
+}
+
+/// <summary>
+/// La barra de formato. Lo que se guarda tiene que seguir siendo texto
+/// plano correcto y seguir teniendo sus [[campos]].
+/// </summary>
+[TestClass]
+public sealed class PruebaFormato
+{
+    [TestMethod]
+    public void test_el_texto_plano_no_depende_del_formato()
+    {
+        var runs = new[]
+        {
+            Modelo.CrearFragmento("Estimado ", "Calibri", 11),
+            Modelo.CrearFragmento("Ana", "Arial", 14, negrita: 1, color: "#C00000"),
+            Modelo.CrearFragmento(":\r\nadjunto lo pedido.", "Calibri", 11),
+        };
+
+        var s = Modelo.CrearSnippet(runs, "Correo");
+
+        Assert.AreEqual("Estimado Ana:\r\nadjunto lo pedido.",
+            Modelo.TextoDe(s.Runs));
+
+        // El titulo sale del texto entero, no del primer fragmento.
+        Assert.AreEqual("Estimado Ana:", s.Titulo);
+
+        // Y los campos se siguen viendo aunque esten repartidos.
+        CollectionAssert.AreEqual(
+            new[] { "cliente" },
+            Modelo.CamposDe(Modelo.TextoDe(new[]
+            {
+                Modelo.CrearFragmento("Hola [["),
+                Modelo.CrearFragmento("cliente]]"),
+            })));
+    }
+
+    [TestMethod]
+    public void test_los_fragmentos_seguidos_con_el_mismo_formato_se_unen()
+    {
+        // Lo que devuelve el editor al escribir letra a letra.
+        var runs = "hola".Select(c => Modelo.CrearFragmento(c.ToString())).ToList();
+
+        var s = Modelo.CrearSnippet(runs, "Correo");
+
+        Assert.HasCount(1, s.Runs);
+        Assert.AreEqual("hola", s.Runs[0].T);
+    }
+
+    [TestMethod]
+    public void test_los_saltos_del_editor_se_normalizan_al_guardar()
+    {
+        var s = Modelo.CrearSnippet(
+            [Modelo.CrearFragmento("una\rdos"), Modelo.CrearFragmento("\rtres", negrita: 1)],
+            "Correo");
+
+        Assert.AreEqual("una\r\ndos\r\ntres", Modelo.TextoDe(s.Runs));
+    }
+
+    [TestMethod]
+    public void test_vinetas_van_y_vienen()
+    {
+        const string bloque = "uno\rdos\rtres";
+
+        string con = Modelo.AlternarVinetas(bloque);
+        Assert.AreEqual("• uno\r• dos\r• tres", con);
+
+        // Y el mismo boton las quita.
+        Assert.AreEqual(bloque, Modelo.AlternarVinetas(con));
+    }
+
+    [TestMethod]
+    public void test_numeros_van_y_vienen_y_sustituyen_a_la_vineta()
+    {
+        string num = Modelo.AlternarNumeros("uno\rdos\rtres");
+        Assert.AreEqual("1. uno\r2. dos\r3. tres", num);
+
+        Assert.AreEqual("uno\rdos\rtres", Modelo.AlternarNumeros(num));
+
+        // Una linea ya numerada no se numera dos veces al pasar a viñeta.
+        Assert.AreEqual("• uno\r• dos\r• tres", Modelo.AlternarVinetas(num));
+    }
+
+    [TestMethod]
+    public void test_las_lineas_en_blanco_se_quedan_como_estan()
+    {
+        Assert.AreEqual("• uno\r\r• dos", Modelo.AlternarVinetas("uno\r\rdos"));
+        Assert.AreEqual("1. uno\r\r2. dos", Modelo.AlternarNumeros("uno\r\rdos"));
+    }
+
+    [TestMethod]
+    public void test_la_sangria_se_pone_y_se_quita()
+    {
+        string mas = Modelo.Sangrar("uno\rdos", true);
+        Assert.AreEqual("\tuno\r\tdos", mas);
+
+        Assert.AreEqual("uno\rdos", Modelo.Sangrar(mas, false));
+
+        // Sin sangria, quitarla no muerde el texto.
+        Assert.AreEqual("uno\rdos", Modelo.Sangrar("uno\rdos", false));
+    }
+}
+
 [TestClass]
 public sealed class PruebaEnlaces
 {
@@ -968,6 +1342,104 @@ public sealed class PruebaAutoarranque : BaseConCarpetaTemporal
         Assert.IsFalse(Autoarranque.Quiere("no"));
         Assert.IsFalse(Autoarranque.Quiere(""));
         Assert.IsFalse(Autoarranque.Quiere("cualquier cosa"));
+    }
+}
+
+[TestClass]
+public sealed class PruebaVersiones
+{
+    /// <summary>
+    /// La trampa de comparar versiones: como texto, "4.0.10" sale MENOR
+    /// que "4.0.9" porque compara el "1" con el "9". Con diez parches
+    /// publicados el aviso dejaria de aparecer, y en silencio.
+    /// </summary>
+    [TestMethod]
+    public void test_la_decima_es_mayor_que_la_novena()
+    {
+        Assert.IsTrue(Versiones.HayNovedad("4.0.9", "4.0.10"),
+            "4.0.10 tiene que ser mas nueva que 4.0.9");
+
+        Assert.IsFalse(Versiones.HayNovedad("4.0.10", "4.0.9"));
+
+        // Y que no sea casualidad de esos dos numeros.
+        Assert.IsTrue(Versiones.HayNovedad("4.9.0", "4.10.0"));
+        Assert.IsTrue(Versiones.HayNovedad("9.0.0", "10.0.0"));
+    }
+
+    [TestMethod]
+    public void test_la_misma_version_no_es_novedad()
+    {
+        Assert.IsFalse(Versiones.HayNovedad("4.0.1", "4.0.1"));
+
+        // Con distinto numero de partes tampoco: System.Version trata
+        // las que faltan como -1, y "4.0.1" le saldria menor que
+        // "4.0.1.0" si no se normalizaran.
+        Assert.IsFalse(Versiones.HayNovedad("4.0.1", "4.0.1.0"));
+        Assert.IsFalse(Versiones.HayNovedad("4.0.1.0", "4.0.1"));
+    }
+
+    [TestMethod]
+    public void test_la_v_del_tag_se_quita()
+    {
+        Assert.AreEqual("4.0.1", Versiones.SinLaV("v4.0.1"));
+        Assert.AreEqual("4.0.1", Versiones.SinLaV("4.0.1"));
+        Assert.AreEqual("", Versiones.SinLaV(null));
+
+        // Y el tag entero tambien vale para comparar.
+        Assert.IsTrue(Versiones.HayNovedad("4.0.1", "v4.1.0"));
+    }
+
+    /// <summary>
+    /// Lo que no se entiende no avisa. Mejor callarse que sacarle al
+    /// usuario una banda con cualquier cosa dentro.
+    /// </summary>
+    [TestMethod]
+    public void test_lo_que_no_se_entiende_no_avisa()
+    {
+        Assert.IsFalse(Versiones.HayNovedad("4.0.1", "cuatro"));
+        Assert.IsFalse(Versiones.HayNovedad("4.0.1", ""));
+        Assert.IsFalse(Versiones.HayNovedad("4.0.1", null));
+        Assert.IsFalse(Versiones.HayNovedad(null, "4.1.0"));
+
+        // Un tag de prueba tampoco: no se interpreta y no se avisa.
+        Assert.IsFalse(Versiones.HayNovedad("4.0.1", "v4.1.0-beta1"));
+    }
+
+    [TestMethod]
+    public void test_se_comprueba_una_vez_al_dia()
+    {
+        var ahora = new DateTimeOffset(2026, 8, 13, 10, 0, 0, TimeSpan.Zero);
+
+        // Sin fecha guardada: primer arranque, toca.
+        Assert.IsTrue(Versiones.TocaComprobar(null, ahora));
+
+        // Ya se miro hoy, aunque se reabra el programa diez veces.
+        Assert.IsFalse(Versiones.TocaComprobar("2026-08-13", ahora));
+
+        Assert.IsTrue(Versiones.TocaComprobar("2026-08-12", ahora));
+
+        // Una fecha que no se entiende no puede dejar el aviso apagado
+        // para siempre.
+        Assert.IsTrue(Versiones.TocaComprobar("ayer", ahora));
+
+        Assert.AreEqual("2026-08-13", Versiones.Hoy(ahora));
+    }
+
+    /// <summary>
+    /// De cada version se avisa una sola vez. Una banda que sale todos
+    /// los dias se deja de leer.
+    /// </summary>
+    [TestMethod]
+    public void test_no_se_repite_el_aviso_de_la_misma_version()
+    {
+        Assert.IsTrue(Versiones.TocaAvisar("4.0.1", "4.1.0", null));
+        Assert.IsFalse(Versiones.TocaAvisar("4.0.1", "4.1.0", "4.1.0"));
+
+        // Pero de la siguiente si.
+        Assert.IsTrue(Versiones.TocaAvisar("4.0.1", "4.2.0", "4.1.0"));
+
+        // Y si no hay novedad, no se avisa aunque no conste avisada.
+        Assert.IsFalse(Versiones.TocaAvisar("4.1.0", "4.1.0", null));
     }
 }
 

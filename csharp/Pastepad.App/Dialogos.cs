@@ -1,5 +1,6 @@
 ﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Pastepad.Nucleo;
@@ -129,6 +130,15 @@ public static class Dialogos
                 : VerticalAlignment.Top,
         };
 
+        // El subrayado de foco lo pinta la plantilla del TextBox con el
+        // acento de **Windows**, no con el nuestro. Medido sobre la
+        // captura del editor de carpeta: 491 px de #F38064 —el naranja
+        // del sistema— debajo de la caja, en una aplicacion cuyo acento
+        // era el menta #2DD4A7. El buscador del panel ya se enmarca en el
+        // nuestro; los campos de los dialogos no.
+        caja.Resources["TextControlBorderBrushFocused"] =
+            Estilo.Pincel(Estilo.ColorAcento.Color);
+
         if (!una)
         {
             caja.MinHeight = alto;
@@ -142,6 +152,65 @@ public static class Dialogos
 
         // Ahora si: con AcceptsReturn ya puesto, el texto entra entero.
         caja.Text = valor;
+
+        return caja;
+    }
+
+    /// <summary>
+    /// La caja de texto con formato.
+    ///
+    /// **Sobre papel blanco en todos los temas, y no sobre la tarjeta.**
+    /// Los colores de un guardado son absolutos —el de fabrica es negro
+    /// #000000— porque su destino es un correo, que se lee sobre blanco.
+    /// Pintados sobre el fondo oscuro del panel, el texto de fabrica
+    /// quedaria negro sobre #1B1B1F: 1.1:1 de contraste, o sea invisible.
+    /// Aqui lo que se ve es lo que se pega, que es la razon de tener
+    /// barra de formato.
+    /// </summary>
+    static RichEditBox CajaRica()
+    {
+        var blanco = new SolidColorBrush(Microsoft.UI.Colors.White);
+
+        var caja = new RichEditBox
+        {
+            // Sin FontSize. Medido: con FontSize=13 el documento arrancaba
+            // en 10, porque el tamaño del control va en pixeles y el del
+            // documento en puntos —13 px son 9,75 pt— y el segundo se
+            // quedaba con el primero. Quien manda es el formato de
+            // caracter por defecto, que es Calibri 11 pt, que es lo que
+            // luego viaja a Outlook.
+            // La fuente si se declara aqui, y no solo en el formato de
+            // caracter por defecto del documento: medido, el nombre del
+            // control gana al del documento y el desplegable de la barra
+            // salia en blanco porque leia una fuente que no es ninguna de
+            // las suyas.
+            FontFamily = new FontFamily(Config.FuenteDef),
+            Background = blanco,
+            BorderBrush = Estilo.Pincel(Estilo.Actual.Borde),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(10),
+            Padding = new Thickness(12, 8, 10, 8),
+            MinHeight = 180,
+            IsSpellCheckEnabled = false,
+            TextWrapping = TextWrapping.Wrap,
+            // El cursor, la seleccion y el menu del boton derecho los
+            // pinta el sistema segun el tema pedido, no segun nuestro
+            // fondo: sobre papel blanco tienen que ser los de claro.
+            RequestedTheme = ElementTheme.Light,
+        };
+
+        // La plantilla trae sus propios fondos por estado y volvian gris
+        // el papel al pasar el raton por encima.
+        foreach (var clave in (string[])[
+            "TextControlBackground",
+            "TextControlBackgroundPointerOver",
+            "TextControlBackgroundFocused"])
+        {
+            caja.Resources[clave] = blanco;
+        }
+
+        caja.Resources["TextControlBorderBrushFocused"] =
+            Estilo.Pincel(Estilo.ColorAcento.Color);
 
         return caja;
     }
@@ -396,8 +465,9 @@ public static class Dialogos
         });
         fila.Children.Add(elegirCarpeta);
 
+        var caja = CajaRica();
+
         string texto = original is null ? "" : Modelo.TextoDe(original.Runs);
-        var caja = Campo(texto, lineas: 10, alto: 220);
 
         // El nombre del marcador. Solo asoma cuando lo que hay escrito es
         // un enlace: en un texto normal la primera linea ya hace de
@@ -425,7 +495,7 @@ public static class Dialogos
 
         void MirarSiEsEnlace()
         {
-            bloqueNombre.Visibility = Modelo.EsEnlace(caja.Text.Trim())
+            bloqueNombre.Visibility = Modelo.EsEnlace(Formato.TextoPlano(caja).Trim())
                 ? Visibility.Visible
                 : Visibility.Collapsed;
         }
@@ -436,9 +506,21 @@ public static class Dialogos
         var cancelar = Boton(Textos.T("Cancelar"), "normal");
         var guardar = Boton(Textos.T("Guardar"), "acento", 94);
 
+        // Por debajo de 520 px de hueco, el cuerpo deja de repartirse y
+        // se desplaza.
+        //
+        // Con la barra de formato encima, la caja ya no cabe en un panel
+        // pequeño: medido con el panel en su minimo de 340, el area de
+        // escritura se quedaba en **0 px** —titulo, carpeta, barra, nota
+        // y botones se repartian los 324 disponibles y no sobraba nada—
+        // y el dialogo salia sin ningun sitio donde escribir. Sin tope,
+        // la rejilla toma su alto natural, la caja conserva sus 180 y lo
+        // que no entra se alcanza deslizando. Con el panel de fabrica no
+        // cambia nada: 560 dejan 544, y ahi la caja sigue creciendo con
+        // la ventana.
         var cuerpo = CuerpoConHueco(
-            Disponible(raiz),
-            [Titulo(titulo), fila, bloqueNombre],
+            Disponible(raiz) < 520 ? double.PositiveInfinity : Disponible(raiz),
+            [Titulo(titulo), fila, bloqueNombre, BarraDeFormato(caja)],
             caja,
             [
                 new Border { Height = Estilo.E3, Background = null },
@@ -447,7 +529,14 @@ public static class Dialogos
                 Pie(cancelar, guardar),
             ]);
 
-        var dialogo = Caja(raiz, cuerpo);
+        var dialogo = Caja(raiz, new ScrollViewer
+        {
+            Content = cuerpo,
+            MaxHeight = Disponible(raiz),
+            // Hidden y no Auto, como en Apariencia: la barra se quedaria
+            // puesta siempre y la rueda y el teclado siguen desplazando.
+            VerticalScrollBarVisibility = ScrollBarVisibility.Hidden,
+        });
 
         Snippet? salida = null;
 
@@ -455,7 +544,9 @@ public static class Dialogos
 
         guardar.Click += (_, _) =>
         {
-            string valor = caja.Text.Trim();
+            var runs = Formato.Leer(caja);
+
+            string valor = Modelo.TextoDe(runs).Trim();
             if (valor.Length == 0) return;
 
             // Lo arma el nucleo porque acaba en snippets.json. Del
@@ -478,17 +569,343 @@ public static class Dialogos
             }
 
             salida = Modelo.CrearSnippet(
-                valor,
+                runs,
                 elegirCarpeta.SelectedItem as string ?? Config.CarpetaDef,
                 comoSeLlama);
 
             dialogo.Hide();
         };
 
-        dialogo.Opened += (_, _) => caja.Focus(FocusState.Programmatic);
+        // El texto se carga **con el dialogo ya abierto**, no al
+        // construir la caja. Medido: cargado antes, el guardado salia con
+        // sus negritas pero sin sus colores —una linea guardada en
+        // #C00000 se abria en negro y se guardaba en negro—, porque el
+        // RichEditBox reparte su propio Foreground por el documento
+        // cuando entra en el arbol visual, y eso pasa despues. Es el
+        // mismo tipo de trampa que el TextBox con AcceptsReturn.
+        dialogo.Opened += (_, _) =>
+        {
+            Formato.Cargar(caja, original?.Runs ?? []);
+            MirarSiEsEnlace();
+            caja.Focus(FocusState.Programmatic);
+        };
 
         await dialogo.ShowAsync();
         return salida;
+    }
+
+    // ------------------------------------------------ barra de formato
+
+    /// <summary>
+    /// Los diez colores de la paleta de texto, comprobados por calculo
+    /// sobre papel blanco, que es donde acaba el correo: el peor de los
+    /// diez es el oro #8A6D00 con 4.92:1, por encima del 4.5:1 que pide
+    /// WCAG AA para texto normal. El mejor es el negro, con 21:1.
+    /// </summary>
+    static readonly (string Hex, string Nombre)[] Tintas =
+    [
+        ("#000000", "Negro"), ("#595959", "Gris"), ("#C00000", "Rojo"),
+        ("#B45309", "Naranja"), ("#8A6D00", "Oro"), ("#2E7D32", "Verde"),
+        ("#0F766E", "Turquesa"), ("#1F4E79", "Azul"), ("#6A1B9A", "Morado"),
+        ("#7F4F24", "Marrón"),
+    ];
+
+    /// <summary>Un boton cuadrado de la barra.</summary>
+    static Button BotonBarra(string rotulo, UIElement dentro)
+    {
+        var b = new Button
+        {
+            Content = dentro,
+            // 26 y no 30: los nueve botones mas su separacion tienen que
+            // caber en los 264 px utiles del dialogo con el panel en su
+            // ancho de fabrica. Medido con 30 px, la barra pedia 302 y el
+            // ultimo boton —quitar el formato— se quedaba fuera de la
+            // vista. Con 26 y 3 de hueco son 258 y entran los nueve. Es
+            // ademas la medida de los botones del pie.
+            Width = 26,
+            Height = 26,
+            MinWidth = 26,
+            MinHeight = 26,
+            Padding = new Thickness(0),
+            CornerRadius = new CornerRadius(Estilo.RControl),
+            Background = Estilo.Pincel(Estilo.Actual.Tarjeta),
+            BorderBrush = Estilo.Pincel(Estilo.Actual.Borde),
+            BorderThickness = new Thickness(Estilo.EsClaro ? 1 : 0),
+        };
+
+        ToolTipService.SetToolTip(b, rotulo);
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(b, rotulo);
+
+        return b;
+    }
+
+    /// <summary>
+    /// La letra de un boton de la barra. N, K y S y no iconos: son las
+    /// mismas letras que usa Word en español, se leen a cualquier tamaño
+    /// y no dependen de que un glifo exista en la fuente de iconos —dos
+    /// veces se colo un icono equivocado por darlo por bueno sin
+    /// dibujarlo—.
+    /// </summary>
+    static TextBlock Letra(
+        string texto, bool negrita = false, bool cursiva = false,
+        bool subrayado = false, double tam = 14)
+    {
+        var t = new TextBlock
+        {
+            Text = texto,
+            FontSize = tam,
+            Foreground = Estilo.Pincel(Estilo.Actual.Texto),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+
+        if (negrita) t.FontWeight = Microsoft.UI.Text.FontWeights.Bold;
+        if (cursiva) t.FontStyle = Windows.UI.Text.FontStyle.Italic;
+
+        if (subrayado)
+            t.TextDecorations = Windows.UI.Text.TextDecorations.Underline;
+
+        return t;
+    }
+
+    static TextBlock Glifo(string codigo) => new()
+    {
+        Text = codigo,
+        FontFamily = new FontFamily("Segoe Fluent Icons"),
+        FontSize = 15,
+        Foreground = Estilo.Pincel(Estilo.Actual.Texto),
+        HorizontalAlignment = HorizontalAlignment.Center,
+        VerticalAlignment = VerticalAlignment.Center,
+    };
+
+    /// <summary>
+    /// La barra de formato de la maqueta que pidio el usuario: fuente,
+    /// tamaño, negrita, cursiva, subrayado, color, viñetas, numeracion,
+    /// sangrias y quitar el formato.
+    ///
+    /// **En dos filas y con la segunda desplazable.** El panel baja hasta
+    /// 300 px de ancho, que dejan 236 utiles dentro del dialogo, y once
+    /// controles en una fila no caben ni de lejos. Es la misma salida que
+    /// ya usan las fichas de carpeta: se desliza en horizontal en vez de
+    /// apretarse hasta no poder pulsarse.
+    /// </summary>
+    static FrameworkElement BarraDeFormato(RichEditBox caja)
+    {
+        bool sincronizando = false;
+
+        var fuentes = new ComboBox
+        {
+            Height = 32,
+            MinHeight = 32,
+            MinWidth = 110,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            CornerRadius = new CornerRadius(Estilo.RControl),
+            FontSize = Estilo.TMenor,
+        };
+
+        foreach (var f in Formato.Fuentes) fuentes.Items.Add(f);
+        fuentes.SelectedItem = Config.FuenteDef;
+        ToolTipService.SetToolTip(fuentes, Textos.T("Fuente"));
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(
+            fuentes, Textos.T("Fuente"));
+
+        var tamanos = new ComboBox
+        {
+            Width = 64,
+            Height = 32,
+            MinHeight = 32,
+            CornerRadius = new CornerRadius(Estilo.RControl),
+            FontSize = Estilo.TMenor,
+        };
+
+        foreach (var t in Formato.Tamanos) tamanos.Items.Add(t);
+        tamanos.SelectedItem = Config.TamDef;
+        ToolTipService.SetToolTip(tamanos, Textos.T("Tamaño"));
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(
+            tamanos, Textos.T("Tamaño"));
+
+        fuentes.SelectionChanged += (_, _) =>
+        {
+            if (!sincronizando && fuentes.SelectedItem is string n)
+                Formato.Fuente(caja, n);
+        };
+
+        tamanos.SelectionChanged += (_, _) =>
+        {
+            if (!sincronizando && tamanos.SelectedItem is int t)
+                Formato.Tamano(caja, t);
+        };
+
+        var arriba = new Grid { ColumnSpacing = Estilo.E2 };
+        arriba.ColumnDefinitions.Add(new ColumnDefinition
+        {
+            Width = new GridLength(1, GridUnitType.Star),
+        });
+        arriba.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+        Grid.SetColumn(tamanos, 1);
+        arriba.Children.Add(fuentes);
+        arriba.Children.Add(tamanos);
+
+        // ------------------------------------------------ los botones
+        var negrita = BotonBarra(Textos.T("Negrita"), Letra("N", negrita: true));
+        negrita.Click += (_, _) => Formato.Negrita(caja);
+
+        var cursiva = BotonBarra(Textos.T("Cursiva"), Letra("K", cursiva: true));
+        cursiva.Click += (_, _) => Formato.Cursiva(caja);
+
+        // Sin boton de subrayado: lo quito el usuario. El soporte de
+        // Formato y la clave "u" del archivo SE QUEDAN — un guardado que
+        // ya lo lleve tiene que conservarlo al abrirse y guardarse, y
+        // quitar la lectura lo borraria en silencio al primer editado.
+        // Lo que desaparece es la forma de ponerlo, no de conservarlo.
+
+        // La "A" con su franja de color debajo, como en Word: dice a la
+        // vez que es color de texto y cual esta puesto.
+        var franja = new Border
+        {
+            Height = 3,
+            Width = 14,
+            CornerRadius = new CornerRadius(1),
+            Background = Estilo.Pincel(Tintas[0].Hex),
+        };
+
+        var muestra = new StackPanel
+        {
+            Spacing = 1,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        muestra.Children.Add(Letra("A", tam: 13));
+        muestra.Children.Add(franja);
+
+        var color = BotonBarra(Textos.T("Color del texto"), muestra);
+        color.Flyout = TintasFlyout(caja, franja);
+
+        var vinetas = BotonBarra(Textos.T("Viñetas"), Letra("•", tam: 17));
+        vinetas.Click += (_, _) => Formato.Vinetas(caja);
+
+        var numeros = BotonBarra(Textos.T("Numeración"), Letra("1.", tam: 12));
+        numeros.Click += (_, _) => Formato.Numeros(caja);
+
+        var menos = BotonBarra(Textos.T("Menos sangría"), Glifo(""));
+        menos.Click += (_, _) => Formato.Sangria(caja, false);
+
+        var mas = BotonBarra(Textos.T("Más sangría"), Glifo(""));
+        mas.Click += (_, _) => Formato.Sangria(caja, true);
+
+        var limpiar = BotonBarra(
+            Textos.T("Quitar el formato"), Glifo(Estilo.Iconos.Escoba));
+        limpiar.Click += (_, _) => Formato.Limpiar(caja);
+
+        var botones = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = 3,
+        };
+
+        foreach (var b in new[]
+        {
+            negrita, cursiva, color,
+            vinetas, numeros, menos, mas, limpiar,
+        })
+        {
+            botones.Children.Add(b);
+        }
+
+        var abajo = new ScrollViewer
+        {
+            Content = botones,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden,
+            HorizontalScrollMode = ScrollMode.Enabled,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            VerticalScrollMode = ScrollMode.Disabled,
+            Margin = new Thickness(0, Estilo.E1, 0, 0),
+        };
+
+        // Los desplegables siguen al cursor: con el caret dentro de una
+        // palabra en Arial 14, la barra no puede seguir diciendo Calibri
+        // 11 — es la diferencia entre informar y mentir.
+        caja.SelectionChanged += (_, _) =>
+        {
+            var cf = Formato.Seleccion(caja)?.CharacterFormat;
+            if (cf is null) return;
+
+            sincronizando = true;
+
+            try
+            {
+                string nombre = cf.Name;
+
+                fuentes.SelectedItem =
+                    Formato.Fuentes.Contains(nombre) ? nombre : null;
+
+                int tam = (int)Math.Round(cf.Size);
+                tamanos.SelectedItem =
+                    Formato.Tamanos.Contains(tam) ? tam : (object?)null;
+
+                franja.Background = Estilo.Pincel(Formato.AHex(cf.ForegroundColor));
+            }
+            finally
+            {
+                sincronizando = false;
+            }
+        };
+
+        var todo = new StackPanel { Margin = new Thickness(0, 0, 0, Estilo.E3) };
+        todo.Children.Add(arriba);
+        todo.Children.Add(abajo);
+
+        return todo;
+    }
+
+    static Flyout TintasFlyout(RichEditBox caja, Border franja)
+    {
+        var rejilla = new VariableSizedWrapGrid
+        {
+            Orientation = Orientation.Horizontal,
+            MaximumRowsOrColumns = 5,
+        };
+
+        var flyout = new Flyout
+        {
+            Content = rejilla,
+            Placement = FlyoutPlacementMode.Bottom,
+        };
+
+        foreach (var (hex, nombre) in Tintas)
+        {
+            var bolita = new Button
+            {
+                Width = 28,
+                Height = 28,
+                MinWidth = 28,
+                MinHeight = 28,
+                Margin = new Thickness(0, 0, Estilo.E1, Estilo.E1),
+                Padding = new Thickness(0),
+                CornerRadius = new CornerRadius(14),
+                Background = Estilo.Pincel(hex),
+                BorderBrush = Estilo.Pincel(Estilo.Actual.Borde),
+                BorderThickness = new Thickness(1),
+            };
+
+            ToolTipService.SetToolTip(bolita, Textos.T(nombre));
+            Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(
+                bolita, Textos.T(nombre));
+
+            string cual = hex;
+
+            bolita.Click += (_, _) =>
+            {
+                Formato.Color(caja, cual);
+                franja.Background = Estilo.Pincel(cual);
+                flyout.Hide();
+            };
+
+            rejilla.Children.Add(bolita);
+        }
+
+        return flyout;
     }
 
     // --------------------------------------------------------- campos
@@ -852,101 +1269,167 @@ public static class Dialogos
     }
 
     /// <summary>
-    /// Lo que hay dentro de una carpeta, para elegir que se toca.
-    /// Devuelve el texto elegido, o null si se cerro sin elegir.
+    /// La carpeta entera en una sola caja, una nota por linea, cargada
+    /// con lo que ya hay. Devuelve el texto que el usuario deja, o null
+    /// si se cancelo.
     ///
-    /// Es una lista y no un editor: el editor ya existe —el mismo
-    /// dialogo de Editar texto— y dos ContentDialog no pueden estar
-    /// abiertos a la vez, asi que este se cierra y abre aquel. El
-    /// usuario pidio llegar desde el menu de la carpeta a "actualizar
-    /// alguna informacion" de dentro, y hasta ahora habia que salir del
-    /// menu, filtrar por la carpeta y buscar la fila.
+    /// Sustituye a la lista con un lapiz por nota de la 4.0.1, que era lo
+    /// que se habia entendido mal: con 3000 notas, quitar cien de una en
+    /// una son trescientos clics. Aqui es el mismo gesto que "Agregar a
+    /// esta carpeta" —la caja que el usuario ya conoce— pero precargada.
+    ///
+    /// **Sin las opciones de "Agregar".** Ahi se elige entre una nota por
+    /// linea y todo junto en una sola; aqui "todo junto" convertiria 3000
+    /// notas en una y no hay forma de deshacerlo. Y quitar numeracion y
+    /// vinetas sirve para material recien pegado de fuera, no para lo que
+    /// el propio programa guardo.
+    ///
+    /// La confirmacion va en bucle y no anidada: dos ContentDialog no
+    /// pueden estar abiertos a la vez, asi que este se cierra, pregunta,
+    /// y si el usuario se echa atras vuelve a abrirse **con lo que habia
+    /// escrito**. Perder cien ediciones por haber dicho que no seria el
+    /// mismo fallo que se venia a arreglar.
     /// </summary>
-    public static async Task<Snippet?> Contenido(
-        XamlRoot raiz, string carpeta, IReadOnlyList<Snippet> textos)
+    public static async Task<string?> EditarCarpeta(
+        XamlRoot raiz, string carpeta, Modelo.CarpetaEnLineas antes)
     {
-        var lista = new StackPanel { Spacing = Estilo.E1 };
+        string valor = antes.Texto;
 
-        Snippet? elegido = null;
-        ContentDialog? dialogo = null;
-
-        foreach (var texto in textos)
+        while (true)
         {
-            var nombre = new TextBlock
+            var (texto, seVan) = await PasadaCarpeta(raiz, carpeta, antes, valor);
+
+            if (texto is null) return null;
+            if (seVan == 0) return texto;
+
+            string aviso = Textos.T(
+                seVan == 1
+                    ? "¿Guardar? Se eliminará %d nota de %s. Esto no se puede deshacer."
+                    : "¿Guardar? Se eliminarán %d notas de %s. Esto no se puede deshacer.",
+                seVan, carpeta);
+
+            if (await Confirmar(raiz, aviso)) return texto;
+
+            valor = texto;
+        }
+    }
+
+    /// <summary>
+    /// Una apertura del editor de carpeta. Devuelve lo escrito y cuantas
+    /// notas desapareceran, o null si se cancelo.
+    /// </summary>
+    static async Task<(string? Texto, int SeVan)> PasadaCarpeta(
+        XamlRoot raiz, string carpeta, Modelo.CarpetaEnLineas antes, string valor)
+    {
+        var caja = Campo(valor, lineas: 10, alto: 200);
+
+        var cuenta = new TextBlock
+        {
+            FontSize = Estilo.TMenor,
+            Foreground = Estilo.Pincel(Estilo.Actual.Tenue),
+        };
+
+        // El numero de bajas va aparte y en rojo. Es el dato por el que
+        // este dialogo puede hacer daño: guardar aqui borra de golpe todo
+        // lo que ya no este escrito, y eso tiene que verse antes de
+        // pulsar, no despues.
+        var bajas = new TextBlock
+        {
+            FontSize = Estilo.TMenor,
+            FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+            Foreground = Estilo.Pincel(Estilo.Rojo),
+            TextWrapping = TextWrapping.Wrap,
+            Visibility = Visibility.Collapsed,
+        };
+
+        var cancelar = Boton(Textos.T("Cancelar"), "normal");
+        var guardar = Boton(Textos.T("Guardar"), "acento", 94);
+
+        int seVan = 0;
+
+        void Recontar()
+        {
+            var f = Modelo.FusionarCarpeta(antes, caja.Text, carpeta);
+
+            seVan = f.Quitadas.Count;
+
+            cuenta.Text = Textos.T(
+                f.Resultado.Count == 1 ? "%d nota" : "%d notas", f.Resultado.Count);
+
+            bajas.Visibility = seVan == 0 ? Visibility.Collapsed : Visibility.Visible;
+
+            if (seVan > 0)
             {
-                Text = Modelo.UnaLinea(texto.Titulo, 60),
-                FontSize = Estilo.TMenor,
-                Foreground = Estilo.Pincel(Estilo.Actual.Texto),
-                TextTrimming = TextTrimming.CharacterEllipsis,
-                VerticalAlignment = VerticalAlignment.Center,
-            };
+                bajas.Text = Textos.T(
+                    seVan == 1
+                        ? "Se eliminará %d nota al guardar"
+                        : "Se eliminarán %d notas al guardar",
+                    seVan);
+            }
 
-            var editar = IconoFila(
-                Estilo.Iconos.Editar, Textos.T("Editar texto"),
-                Estilo.Actual.Medio);
+            // Y el boton se vuelve rojo cuando guardar borra: es la misma
+            // señal que ya lleva "Sí, borrar", sin depender de leer.
+            guardar.Background = Estilo.Pincel(
+                seVan > 0 ? Estilo.Peligro : Estilo.ColorAcento.Color);
 
-            var fila = new Grid
-            {
-                Background = Estilo.Pincel(Estilo.Actual.Tarjeta),
-                BorderBrush = Estilo.Pincel(Estilo.Actual.Borde),
-                BorderThickness = new Thickness(Estilo.EsClaro ? 1 : 0),
-                CornerRadius = new CornerRadius(Estilo.RControl),
-                Padding = new Thickness(Estilo.E3, 0, Estilo.E1, 0),
-                Height = 40,
-            };
-
-            fila.ColumnDefinitions.Add(new ColumnDefinition
-            {
-                Width = new GridLength(1, GridUnitType.Star),
-            });
-            fila.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-
-            Grid.SetColumn(editar, 1);
-            fila.Children.Add(nombre);
-            fila.Children.Add(editar);
-
-            var cual = texto;
-
-            editar.Click += (_, _) =>
-            {
-                elegido = cual;
-                dialogo?.Hide();
-            };
-
-            lista.Children.Add(fila);
+            guardar.Foreground = seVan > 0
+                ? new SolidColorBrush(Microsoft.UI.Colors.White)
+                : Estilo.Pincel(Estilo.ColorAcento.Sobre);
         }
 
-        if (textos.Count == 0)
-            lista.Children.Add(Nota(Textos.T("La carpeta está vacía.")));
+        Recontar();
+        caja.TextChanged += (_, _) => Recontar();
 
-        var cerrar = Boton(Textos.T("Cerrar"), "normal");
+        var abajo = new List<UIElement>
+        {
+            new Border { Height = Estilo.E3 },
+            Nota(Textos.T("Una nota por línea. Al guardar, la carpeta "
+                        + "queda como lo que dejes aquí.")),
+        };
 
-        var pie = new Grid { Margin = new Thickness(0, Estilo.E4 + Estilo.E2, 0, 0) };
-        pie.Children.Add(cerrar);
-        cerrar.HorizontalAlignment = HorizontalAlignment.Right;
+        // Solo cuando las hay: una nota al pie que casi siempre dice
+        // "cero" es ruido que se deja de leer.
+        if (antes.DeVariasLineas.Count > 0)
+        {
+            abajo.Add(Nota(Textos.T(
+                "Las notas de varias líneas (%d) se quedan como están.",
+                antes.DeVariasLineas.Count)));
+        }
+
+        abajo.Add(cuenta);
+        abajo.Add(bajas);
+        abajo.Add(Pie(cancelar, guardar));
 
         var cuerpo = CuerpoConHueco(
             Disponible(raiz),
             [Titulo(Textos.T("Contenido de %s", carpeta))],
-            new ScrollViewer
-            {
-                Content = lista,
-                VerticalScrollBarVisibility = ScrollBarVisibility.Hidden,
-            },
-            [pie]);
+            caja,
+            abajo);
 
-        dialogo = Caja(raiz, cuerpo);
+        var dialogo = Caja(raiz, cuerpo);
 
-        cerrar.Click += (_, _) => dialogo.Hide();
+        string? salida = null;
+
+        cancelar.Click += (_, _) => dialogo.Hide();
+
+        guardar.Click += (_, _) =>
+        {
+            salida = caja.Text;
+            dialogo.Hide();
+        };
+
+        dialogo.Opened += (_, _) => caja.Focus(FocusState.Programmatic);
 
         await dialogo.ShowAsync();
-        return elegido;
+
+        return (salida, seVan);
     }
 
     // ----------------------------------------------------- apariencia
 
     public sealed record Preferencias(
-        string Acento, string Tema, string Atajo, string Carpetas, string Idioma);
+        string Acento, string Tema, string Atajo, string Carpetas, string Idioma,
+        bool AvisarNovedades);
 
     /// <summary>
     /// Una fila de ajuste al estilo de la Configuracion de Windows 11:
@@ -1214,6 +1697,27 @@ public static class Dialogos
         };
 
         cuerpo.Children.Add(Ajuste(Textos.T("Idioma"), null, lenguas));
+
+        // El interruptor del aviso de versiones, visible desde el primer
+        // dia que existe el aviso. Un programa que llama a casa sin que
+        // se pueda decir que no es un programa que no respeta a quien lo
+        // usa, y el detalle dice a donde llama.
+        var novedades = new ToggleSwitch
+        {
+            IsOn = actual.AvisarNovedades,
+            OnContent = null,
+            OffContent = null,
+            MinWidth = 0,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+
+        novedades.Toggled += (_, _) =>
+            elegido = elegido with { AvisarNovedades = novedades.IsOn };
+
+        cuerpo.Children.Add(Ajuste(
+            Textos.T("Avisar de versiones nuevas"),
+            Textos.T("Comprueba una vez al día en GitHub"),
+            novedades));
 
         var cancelar = Boton(Textos.T("Cancelar"), "normal");
         var aplicar = Boton(Textos.T("Aplicar"), "acento", 94);

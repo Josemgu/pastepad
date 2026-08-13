@@ -368,6 +368,33 @@ public sealed class Almacen
         GuardarDatos();
     }
 
+    /// <summary>
+    /// Deja la carpeta con exactamente estos guardados, en este orden.
+    /// Lo de fuera de la carpeta no se toca y conserva su sitio.
+    ///
+    /// De una sola escritura: guardar 3000 notas quitando cien no puede
+    /// ser tres mil borrados y tres mil altas, cada uno serializando el
+    /// archivo entero.
+    /// </summary>
+    public void ReemplazarContenido(string carpeta, IReadOnlyList<Snippet> nuevos)
+    {
+        int donde = Snippets.FindIndex(s => s.Categoria == carpeta);
+
+        var fuera = Snippets.Where(s => s.Categoria != carpeta).ToList();
+
+        // La carpeta vuelve donde empezaba: sin esto, editarla la mandaba
+        // al final de snippets.json y el orden de la pestana cambiaba
+        // solo por haber abierto el editor.
+        fuera.InsertRange(donde < 0 ? fuera.Count : Math.Min(donde, fuera.Count),
+                          nuevos);
+
+        Snippets = fuera;
+
+        if (!Carpetas.Contains(carpeta)) Carpetas.Add(carpeta);
+
+        GuardarDatos();
+    }
+
     public bool ReemplazarSnippet(Snippet viejo, Snippet nuevo)
     {
         int i = Snippets.IndexOf(viejo);

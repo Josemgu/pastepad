@@ -19,6 +19,19 @@ public partial class App : Application
     Bandeja? _bandeja;
     Panel? _panel;
     Timer? _volcado;
+    Timer? _novedades;
+
+    /// <summary>
+    /// Cuanto se espera antes de la primera comprobacion de version, y
+    /// cada cuanto despues.
+    ///
+    /// El retraso no es por prudencia: el arranque esta medido en ~420 ms
+    /// y no se toca por una consulta a internet que nadie ha pedido y a
+    /// nadie le corre prisa.
+    /// </summary>
+    static readonly TimeSpan PrimeraComprobacion = TimeSpan.FromSeconds(45);
+
+    static readonly TimeSpan CadaDia = TimeSpan.FromHours(24);
 
     /// <summary>
     /// La ventana que tenia el foco cuando se pulso el atajo. Se guarda
@@ -104,6 +117,14 @@ public partial class App : Application
         if (_buzon.Problema is not null)
             _panel.Avisar(_buzon.Problema);
 
+        // Todo lo que toca el almacen va por el hilo de interfaz, que es
+        // desde donde se toca en todos los demas sitios. Lo unico que
+        // sale de ahi es la peticion, que se espera con await.
+        _novedades = new Timer(
+            _ => _panel?.DispatcherQueue.TryEnqueue(async () =>
+                await ComprobarNovedades()),
+            null, PrimeraComprobacion, CadaDia);
+
         // Cuanto tarda en estar listo, desde la primera linea de Main.
         // En caliente sale una cosa y en frio otra muy distinta: el
         // arranque en frio de verdad son 476 archivos que nadie ha
@@ -177,6 +198,65 @@ public partial class App : Application
         Registro.Anotar(
             $"arranque con Windows: no se registra ({Autoarranque.Clave}"
             + $"='{preferencia}')");
+    }
+
+    // ------------------------------------------- version nueva
+
+    /// <summary>
+    /// Mira si hay version nueva y, si la hay y no se ha avisado ya de
+    /// esa, la enseña en la banda del panel.
+    ///
+    /// Nunca lanza: es lo que se le pide a algo que corre solo, de
+    /// fondo, y que el usuario no ha pedido. Un fallo aqui no puede
+    /// tumbar la aplicacion ni salir en pantalla; se anota y se
+    /// reintenta mañana.
+    /// </summary>
+    async Task ComprobarNovedades()
+    {
+        try
+        {
+            if (!Almacen.Pref(Versiones.ClaveAvisar, Versiones.AvisarDef))
+                return;
+
+            var ahora = DateTimeOffset.Now;
+            string? ultima = Almacen.Pref<string>(Versiones.ClaveComprobacion);
+
+            if (!Versiones.TocaComprobar(ultima, ahora)) return;
+
+            var publicada = await Actualizacion.Consultar();
+
+            // La fecha se guarda solo si la consulta salio bien. Si
+            // fallo, que se vuelva a intentar y no se pierda un dia.
+            if (publicada is null) return;
+
+            Almacen.PonerPref(Versiones.ClaveComprobacion, Versiones.Hoy(ahora));
+
+            string? avisada = Almacen.Pref<string>(Versiones.ClaveAvisada);
+
+            if (!Versiones.TocaAvisar(Config.Version, publicada.Version, avisada))
+            {
+                // Tambien se anota lo que sale bien: el dia que el aviso
+                // deje de funcionar, el fallo es que nadie se entera de
+                // que nadie se entera.
+                Registro.Anotar(
+                    $"actualizaciones: instalada {Config.Version}, publicada "
+                    + $"{publicada.Version}; nada que avisar");
+
+                return;
+            }
+
+            Almacen.PonerPref(Versiones.ClaveAvisada, publicada.Version);
+
+            Registro.Anotar(
+                $"actualizaciones: hay {publicada.Version} y se tiene "
+                + $"{Config.Version}; se avisa");
+
+            _panel?.AvisarNovedad(publicada.Version, publicada.Pagina);
+        }
+        catch (Exception e)
+        {
+            Registro.Fallo("comprobar si hay version nueva", e);
+        }
     }
 
     // ------------------------------------------------------- el atajo
@@ -414,6 +494,7 @@ public partial class App : Application
         Almacen.Volcar(forzar: true);
 
         _volcado?.Dispose();
+        _novedades?.Dispose();
         _bandeja?.Dispose();
         _buzon?.Dispose();
 

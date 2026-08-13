@@ -3,6 +3,44 @@
 All notable changes to this project are documented here.
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [4.1.0] - 2026-08-13
+
+**This is the last version you have to install by hand.** From here on
+pastepad checks for new releases and tells you inside the panel. If you
+are coming from 4.0.0, you are carrying six faults, two of which
+destroyed text without saying so.
+
+### Added
+- **A whole folder can be edited at once**, as one note per line, in the
+  same box used to add them. Removing a hundred notes out of three
+  thousand took a hundred trips through search, menu, edit and save; now
+  it is one edit and one Save. Lines you did not touch keep their
+  original note, so a bookmark keeps the name you gave it and a
+  formatted note keeps its formatting. Notes that span several lines are
+  left out and left whole, and the dialog says so. Before saving you are
+  told how many notes will disappear, and backing out returns you to
+  what you had typed.
+- **A formatting bar for saved texts**: font, size, bold, italic, ten
+  text colours, bullets, numbering, indent and clear formatting. The
+  data format already carried all of it and the RTF that reaches Outlook
+  and Word already understood it — there had simply never been a way to
+  set it.
+- **A notice when a new version is out**, shown inside the panel with a
+  link to the release. It can be turned off under Appearance. Nothing is
+  downloaded or installed on its own: that stays a decision you make.
+
+### Fixed
+- Text fields drew their focus underline in Windows' accent colour
+  rather than the one you picked. A mint-accented app was showing 491
+  pixels of orange.
+- Colours were lost when reopening a formatted text, because the editor
+  was loaded before the dialog was on screen.
+- Right-clicking a folder did nothing on the drop-down and offered only
+  rename and delete on the chips.
+
+### Changed
+- 51 tests to 74.
+
 ## [4.0.1] - 2026-08-13
 
 The first day of real use turned up three faults, and measuring them

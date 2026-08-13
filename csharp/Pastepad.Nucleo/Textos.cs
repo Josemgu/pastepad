@@ -260,8 +260,39 @@ public static class Textos
                 "Edit what is in %s...",
             ["Contenido de %s"] =
                 "What is in %s",
-            ["La carpeta está vacía."] =
-                "The folder is empty.",
+            ["Fuente"] = "Font",
+            ["Tamaño"] = "Size",
+            ["Negrita"] = "Bold",
+            ["Cursiva"] = "Italic",
+            ["Subrayado"] = "Underline",
+            ["Color del texto"] = "Text colour",
+            ["Viñetas"] = "Bullets",
+            ["Numeración"] = "Numbering",
+            ["Menos sangría"] = "Decrease indent",
+            ["Más sangría"] = "Increase indent",
+            ["Quitar el formato"] = "Clear formatting",
+            ["Negro"] = "Black",
+            ["Gris"] = "Grey",
+            ["Rojo"] = "Red",
+            ["Naranja"] = "Orange",
+            ["Oro"] = "Gold",
+            ["Verde"] = "Green",
+            ["Turquesa"] = "Teal",
+            ["Azul"] = "Blue",
+            ["Morado"] = "Purple",
+            ["Marrón"] = "Brown",
+            ["Una nota por línea. Al guardar, la carpeta queda como lo que dejes aquí."] =
+                "One note per line. Saving leaves the folder as whatever you leave here.",
+            ["Las notas de varias líneas (%d) se quedan como están."] =
+                "Notes that span several lines (%d) are left as they are.",
+            ["Se eliminará %d nota al guardar"] =
+                "Saving deletes %d note",
+            ["Se eliminarán %d notas al guardar"] =
+                "Saving deletes %d notes",
+            ["¿Guardar? Se eliminará %d nota de %s. Esto no se puede deshacer."] =
+                "Save? This deletes %d note from %s. This cannot be undone.",
+            ["¿Guardar? Se eliminarán %d notas de %s. Esto no se puede deshacer."] =
+                "Save? This deletes %d notes from %s. This cannot be undone.",
             ["Nombre del marcador"] =
                 "Bookmark name",
             ["Cómo quieres llamarlo"] =
@@ -290,6 +321,14 @@ public static class Textos
                 "Chips in a row",
             ["Sistema"] =
                 "System",
+            ["Hay una versión nueva: %s"] =
+                "A new version is available: %s",
+            ["Ver la novedad"] =
+                "See what's new",
+            ["Avisar de versiones nuevas"] =
+                "Tell me about new versions",
+            ["Comprueba una vez al día en GitHub"] =
+                "Checks GitHub once a day",
             ["Ya hay una carpeta llamada %s."] =
                 "There is already a folder called %s.",
             ["No se pudo renombrar: ya hay una carpeta %s."] =
@@ -471,8 +510,39 @@ public static class Textos
                 "Editar o conteúdo de %s...",
             ["Contenido de %s"] =
                 "Conteúdo de %s",
-            ["La carpeta está vacía."] =
-                "A pasta está vazia.",
+            ["Fuente"] = "Tipo de letra",
+            ["Tamaño"] = "Tamanho",
+            ["Negrita"] = "Negrito",
+            ["Cursiva"] = "Itálico",
+            ["Subrayado"] = "Sublinhado",
+            ["Color del texto"] = "Cor do texto",
+            ["Viñetas"] = "Marcas",
+            ["Numeración"] = "Numeração",
+            ["Menos sangría"] = "Menos avanço",
+            ["Más sangría"] = "Mais avanço",
+            ["Quitar el formato"] = "Limpar a formatação",
+            ["Negro"] = "Preto",
+            ["Gris"] = "Cinzento",
+            ["Rojo"] = "Vermelho",
+            ["Naranja"] = "Laranja",
+            ["Oro"] = "Ouro",
+            ["Verde"] = "Verde",
+            ["Turquesa"] = "Turquesa",
+            ["Azul"] = "Azul",
+            ["Morado"] = "Roxo",
+            ["Marrón"] = "Castanho",
+            ["Una nota por línea. Al guardar, la carpeta queda como lo que dejes aquí."] =
+                "Uma nota por linha. Ao guardar, a pasta fica como o que deixes aqui.",
+            ["Las notas de varias líneas (%d) se quedan como están."] =
+                "As notas de várias linhas (%d) ficam como estão.",
+            ["Se eliminará %d nota al guardar"] =
+                "Guardar elimina %d nota",
+            ["Se eliminarán %d notas al guardar"] =
+                "Guardar elimina %d notas",
+            ["¿Guardar? Se eliminará %d nota de %s. Esto no se puede deshacer."] =
+                "Guardar? Elimina %d nota de %s. Isto não se pode desfazer.",
+            ["¿Guardar? Se eliminarán %d notas de %s. Esto no se puede deshacer."] =
+                "Guardar? Elimina %d notas de %s. Isto não se pode desfazer.",
             ["Nombre del marcador"] =
                 "Nome do marcador",
             ["Cómo quieres llamarlo"] =
@@ -501,6 +571,14 @@ public static class Textos
                 "Fichas em linha",
             ["Sistema"] =
                 "Sistema",
+            ["Hay una versión nueva: %s"] =
+                "Há uma versão nova: %s",
+            ["Ver la novedad"] =
+                "Ver a novidade",
+            ["Avisar de versiones nuevas"] =
+                "Avisar sobre versões novas",
+            ["Comprueba una vez al día en GitHub"] =
+                "Verifica uma vez por dia no GitHub",
             ["Ya hay una carpeta llamada %s."] =
                 "Já existe uma pasta chamada %s.",
             ["No se pudo renombrar: ya hay una carpeta %s."] =
@@ -682,8 +760,39 @@ public static class Textos
                 "Modifier le contenu de %s...",
             ["Contenido de %s"] =
                 "Contenu de %s",
-            ["La carpeta está vacía."] =
-                "Le dossier est vide.",
+            ["Fuente"] = "Police",
+            ["Tamaño"] = "Taille",
+            ["Negrita"] = "Gras",
+            ["Cursiva"] = "Italique",
+            ["Subrayado"] = "Souligné",
+            ["Color del texto"] = "Couleur du texte",
+            ["Viñetas"] = "Puces",
+            ["Numeración"] = "Numérotation",
+            ["Menos sangría"] = "Diminuer le retrait",
+            ["Más sangría"] = "Augmenter le retrait",
+            ["Quitar el formato"] = "Effacer la mise en forme",
+            ["Negro"] = "Noir",
+            ["Gris"] = "Gris",
+            ["Rojo"] = "Rouge",
+            ["Naranja"] = "Orange",
+            ["Oro"] = "Or",
+            ["Verde"] = "Vert",
+            ["Turquesa"] = "Turquoise",
+            ["Azul"] = "Bleu",
+            ["Morado"] = "Violet",
+            ["Marrón"] = "Marron",
+            ["Una nota por línea. Al guardar, la carpeta queda como lo que dejes aquí."] =
+                "Une note par ligne. À l'enregistrement, le dossier devient ce que vous laissez ici.",
+            ["Las notas de varias líneas (%d) se quedan como están."] =
+                "Les notes de plusieurs lignes (%d) restent telles quelles.",
+            ["Se eliminará %d nota al guardar"] =
+                "Enregistrer supprime %d note",
+            ["Se eliminarán %d notas al guardar"] =
+                "Enregistrer supprime %d notes",
+            ["¿Guardar? Se eliminará %d nota de %s. Esto no se puede deshacer."] =
+                "Enregistrer ? Cela supprime %d note de %s. Ceci est irréversible.",
+            ["¿Guardar? Se eliminarán %d notas de %s. Esto no se puede deshacer."] =
+                "Enregistrer ? Cela supprime %d notes de %s. Ceci est irréversible.",
             ["Nombre del marcador"] =
                 "Nom du signet",
             ["Cómo quieres llamarlo"] =
@@ -712,6 +821,14 @@ public static class Textos
                 "Puces en ligne",
             ["Sistema"] =
                 "Système",
+            ["Hay una versión nueva: %s"] =
+                "Une nouvelle version est disponible : %s",
+            ["Ver la novedad"] =
+                "Voir la nouveauté",
+            ["Avisar de versiones nuevas"] =
+                "Signaler les nouvelles versions",
+            ["Comprueba una vez al día en GitHub"] =
+                "Vérifie une fois par jour sur GitHub",
             ["Ya hay una carpeta llamada %s."] =
                 "Il existe déjà un dossier nommé %s.",
             ["No se pudo renombrar: ya hay una carpeta %s."] =
