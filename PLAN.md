@@ -505,6 +505,23 @@ tiene que cerrar pastepad es pastepad, volcando primero.
   reinicio funcionando ya sobra, y quitarlo abriría pastepad a quien
   instale en silencio sin tenerlo abierto.
 
+  **Comprobado con el instalador de verdad**, encima de la instalación
+  del usuario y con pastepad corriendo. La actualización 4.1.0 → 4.2.0
+  dejó pastepad instalado y **cerrado**, como se esperaba: quien cierra
+  es la versión vieja, que todavía no sabía pedir que la reabrieran. Ese
+  es el último update que se comporta así.
+
+  Repetido el ciclo contra la 4.2.0 ya instalada: cierre limpio en
+  205 ms, reapertura en 52 ms, vuelve con su atajo en 414 ms, y una copia
+  que estaba **sin volcar** sobrevive. En el log queda `nos cierran para
+  actualizarnos; volcando`.
+
+  Una advertencia para quien repita la prueba: el volcado diferido puede
+  dispararse dentro de la ventana de medio segundo entre copiar y lanzar
+  el instalador, y entonces la copia ya está en disco y la prueba no
+  demuestra nada. Hay que mirar la línea «ya en disco» antes de creerse
+  el resultado — la primera vuelta salió así.
+
 - **El botón que descarga y lanza el instalador** sigue pendiente, y
   ahora se apoya en algo verificado. Antes de escribirlo hay que decidir
   si pastepad se lanza a sí mismo el instalador o si se limita a abrir la
