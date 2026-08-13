@@ -1,4 +1,4 @@
-namespace Pastepad.Nucleo;
+﻿namespace Pastepad.Nucleo;
 
 /// <summary>
 /// Las reglas de los datos, sin nada de interfaz. Todo lo de aqui se
@@ -28,9 +28,51 @@ public static class Modelo
         string.Concat(fragmentos.Select(f => f.T));
 
     /// <summary>
-    /// Resumen de una linea. Corta antes de separar en palabras: con
-    /// textos de miles de lineas, hacerlo al reves cuesta casi un
-    /// segundo.
+    /// La primera linea con algo escrito, con los espacios de dentro
+    /// normalizados. Ni corta ni añade: lo que devuelve esta contenido
+    /// tal cual en el texto del usuario.
+    ///
+    /// Es la que vale para GUARDAR. Para la pantalla esta
+    /// <see cref="UnaLinea"/>, que marca el recorte con puntos
+    /// suspensivos — y esos puntos no pueden acabar en un archivo.
+    /// </summary>
+    public static string PrimeraLinea(string texto)
+    {
+        if (string.IsNullOrEmpty(texto)) return "";
+
+        foreach (var linea in texto.Split('\n'))
+        {
+            string limpio = string.Join(" ", linea.Split(
+                (char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+
+            if (limpio.Length > 0) return limpio;
+        }
+
+        return "";
+    }
+
+    /// <summary>
+    /// Un guardado nuevo a partir de lo que el usuario escribio.
+    ///
+    /// Vive aqui y no en cada dialogo porque el titulo es un dato que va
+    /// a snippets.json y tiene que decidirse en un solo sitio. Se
+    /// guardaba resumido con <see cref="UnaLinea"/>, y el resumen dejaba
+    /// los puntos suspensivos DENTRO del archivo: quien leyera el titulo
+    /// se encontraba un texto que el usuario nunca escribio. Acortarlo
+    /// para que quepa en la fila es cosa de la interfaz, que es la unica
+    /// que sabe cuanto cabe.
+    /// </summary>
+    public static Snippet CrearSnippet(string texto, string categoria) => new()
+    {
+        Titulo = PrimeraLinea(texto),
+        Categoria = categoria,
+        Runs = [CrearFragmento(texto)],
+    };
+
+    /// <summary>
+    /// Resumen de una linea, para ensenar. Corta antes de separar en
+    /// palabras: con textos de miles de lineas, hacerlo al reves cuesta
+    /// casi un segundo.
     /// </summary>
     public static string UnaLinea(string texto, int tope = 52)
     {

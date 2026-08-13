@@ -26,16 +26,20 @@ public static class Config
         ?? "0.0.0";
 
     // --- ventana
-    public static readonly IReadOnlyDictionary<string, (int Ancho, int Alto)>
-        Tamanos = new Dictionary<string, (int, int)>
-        {
-            ["mini"] = (300, 380),
-            ["chico"] = (340, 460),
-            ["mediano"] = (380, 560),
-            ["grande"] = (470, 700),
-        };
 
-    public const string TamanoDef = "mediano";
+    /// <summary>
+    /// Lo que mide el panel la primera vez, antes de que el usuario haya
+    /// arrastrado nada.
+    ///
+    /// Es un valor suelto y no un preajuste elegible: los preajustes
+    /// (mini, chico, mediano, grande) se retiraron porque el panel es
+    /// adaptable —se estira por los bordes y recuerda el tamaño—, y unas
+    /// medidas fijas al lado de algo que ya se ajusta solo sobraban.
+    /// Vive junto a los limites de abajo porque es de su misma especie:
+    /// una medida del panel, no una opcion.
+    /// </summary>
+    public const int AnchoDef = 380;
+    public const int AltoDef = 560;
 
     public const int MinAncho = 300;
     public const int MinAlto = 340;
@@ -55,6 +59,17 @@ public static class Config
         };
 
     public const string AtajoDef = "ctrl+shift+v";
+
+    /// <summary>
+    /// La carpeta que se crea sola cuando no hay ninguna.
+    ///
+    /// No se traduce, y por eso vive aqui y no en <see cref="Textos"/>:
+    /// acaba escrita en snippets.json como categoria de cada texto.
+    /// Traducirla partiria los datos en cuatro, porque cambiar de idioma
+    /// dejaria los textos guardados en una carpeta que ya no se llama
+    /// asi. Es un dato con valor inicial, no un rotulo.
+    /// </summary>
+    public const string CarpetaDef = "Mis textos";
 
     // --- limites
     public const int MaxHist = 80;

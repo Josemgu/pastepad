@@ -32,6 +32,28 @@ public sealed class Almacen
     /// </summary>
     public event Action<string, Exception>? Incidencia;
 
+    /// <summary>
+    /// Lo que merece una linea en el registro sin ser un fallo: sobre
+    /// todo, que una lectura que habia fallado saliera bien al reintento.
+    /// Ese dato es el que cierra el diagnostico de por que a veces no se
+    /// podia leer el historial.
+    /// </summary>
+    public event Action<string>? Aviso;
+
+    /// <summary>
+    /// Cuantas veces se reintenta una lectura que da <see
+    /// cref="IOException"/>, y cuanto se espera entre una y otra.
+    ///
+    /// La hipotesis del fallo abierto es una violacion de uso compartido
+    /// con la instancia anterior todavia muriendose: el archivo se libera
+    /// en milisegundos. Si es eso, el segundo intento entra y el registro
+    /// lo dice; si no lo es, tres intentos cuestan 200 ms una vez en el
+    /// arranque y no se pierde nada.
+    /// </summary>
+    const int Intentos = 3;
+
+    static readonly TimeSpan EsperaEntreIntentos = TimeSpan.FromMilliseconds(100);
+
     public Rutas Rutas { get; }
 
     public List<string> Carpetas { get; private set; } = [];
@@ -75,8 +97,22 @@ public sealed class Almacen
           + "abrirlo."
         : null;
 
-    public Almacen(Rutas? rutas = null)
+    /// <summary>
+    /// Los dos avisadores se reciben aqui y no se enganchan despues a
+    /// proposito: todas las lecturas pasan en este constructor. Suscrito
+    /// desde fuera, el registro se perdia entero justo el dia que hacia
+    /// falta —el arranque en el que no se pudo leer el historial es el
+    /// unico que tiene algo que contar— y quedaba un Problema en pantalla
+    /// sin una sola linea en errores.log que lo explicara.
+    /// </summary>
+    public Almacen(
+        Rutas? rutas = null,
+        Action<string, Exception>? incidencia = null,
+        Action<string>? aviso = null)
     {
+        if (incidencia is not null) Incidencia += incidencia;
+        if (aviso is not null) Aviso += aviso;
+
         Rutas = rutas ?? Rutas.Predeterminadas();
 
         _prefs = Leer<JsonObject>(Rutas.Preferencias) ?? [];
@@ -96,41 +132,67 @@ public sealed class Almacen
 
     // ------------------------------------------------------- archivos
 
+    /// <summary>
+    /// Que el archivo no exista es normal: primer arranque. Que exista y
+    /// no se pueda leer es otra cosa muy distinta, y hay que
+    /// distinguirlas — de eso depende que se escriba encima o no.
+    ///
+    /// Se abre una sola vez en lugar de preguntar con File.Exists y leer
+    /// despues. La referencia de .NET lo dice literal: File.Exists
+    /// devuelve false si no hay permiso para leer, y no lanza. Con la
+    /// pregunta delante, un archivo al que se nos deniega el acceso
+    /// pasaba por "primer arranque": el programa cargaba un historial
+    /// vacio, no lo marcaba como ilegible, y al cerrarse lo escribia
+    /// encima del bueno. Abriendolo, "no existe" y "no puedo" llegan como
+    /// dos excepciones distintas y no hay forma de confundirlas.
+    /// </summary>
     T? Leer<T>(string ruta) where T : class
     {
-        // Que el archivo no exista es normal: primer arranque. Que
-        // exista y no se pueda leer es otra cosa muy distinta, y hay que
-        // distinguirlas.
-        bool existe;
+        for (int intento = 1; ; intento++)
+        {
+            try
+            {
+                // FileShare.ReadWrite: solo se lee, y bloquear a quien
+                // esta escribiendo no ayudaria a nadie.
+                using var flujo = new FileStream(
+                    ruta, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 
-        try
-        {
-            existe = File.Exists(ruta);
-        }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
-        {
-            // Ni siquiera se pudo mirar. Se trata como ilegible.
-            Incidencia?.Invoke($"no se pudo comprobar {ruta}", e);
-            _ilegibles.Add(ruta);
-            return null;
-        }
+                var dato = JsonSerializer.Deserialize<T>(flujo);
 
-        if (!existe) return null;
+                if (intento > 1)
+                {
+                    Aviso?.Invoke($"{ruta} se leyo bien al intento {intento} "
+                                + $"de {Intentos}");
+                }
 
-        try
-        {
-            return JsonSerializer.Deserialize<T>(File.ReadAllText(ruta));
-        }
-        catch (Exception e) when (e is IOException
-                                    or JsonException
-                                    or UnauthorizedAccessException)
-        {
-            // El programa arranca igual, pero marcado: a partir de aqui
-            // este archivo no se toca.
-            Incidencia?.Invoke($"no se pudo leer {ruta}; no se escribira "
-                             + "sobre el en toda la sesion", e);
-            _ilegibles.Add(ruta);
-            return null;
+                return dato;
+            }
+            catch (Exception e) when (e is FileNotFoundException
+                                        or DirectoryNotFoundException)
+            {
+                // El unico caso benigno, y el unico que no se marca.
+                return null;
+            }
+            catch (IOException e) when (intento < Intentos)
+            {
+                Incidencia?.Invoke(
+                    $"no se pudo leer {ruta} (intento {intento} de {Intentos}); "
+                    + $"se reintenta en {EsperaEntreIntentos.TotalMilliseconds:F0} ms",
+                    e);
+
+                Thread.Sleep(EsperaEntreIntentos);
+            }
+            catch (Exception e)
+            {
+                // Cualquier otra cosa es ilegible, sin lista de tipos que
+                // acertar: el programa arranca igual, pero a partir de
+                // aqui este archivo no se toca. Equivocarse por este lado
+                // cuesta una sesion; por el otro, el historial entero.
+                Incidencia?.Invoke($"no se pudo leer {ruta}; no se escribira "
+                                 + "sobre el en toda la sesion", e);
+                _ilegibles.Add(ruta);
+                return null;
+            }
         }
     }
 
