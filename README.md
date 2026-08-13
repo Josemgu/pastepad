@@ -27,7 +27,7 @@ working in.
 
 <div align="center">
 
-<img src="docs/capturas/en-flujo.gif" alt="Pressing Ctrl+Shift+V over a draft, typing two letters to filter, and the saved text landing at the cursor" width="880">
+<img src="docs/capturas/en-flujo.gif" alt="Pressing Ctrl+Shift+V over a draft, typing two letters to filter, and the saved text landing at the cursor" width="620">
 
 <img src="docs/capturas/en-saved.png" alt="Saved tab" width="270">
 <img src="docs/capturas/en-appearance.png" alt="Appearance dialog" width="270">
