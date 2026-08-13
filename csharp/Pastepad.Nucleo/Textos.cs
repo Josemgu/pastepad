@@ -1,4 +1,4 @@
-﻿namespace Pastepad.Nucleo;
+namespace Pastepad.Nucleo;
 
 /// <summary>
 /// Los textos de la interfaz en cuatro idiomas.
@@ -295,6 +295,9 @@ public static class Textos
                 "Save? This deletes %d notes from %s. This cannot be undone.",
             ["Nombre del marcador"] =
                 "Bookmark name",
+
+            ["Nombre"] =
+                "Name",
             ["Cómo quieres llamarlo"] =
                 "What to call it",
             ["Editar carpetas..."] =
@@ -545,6 +548,9 @@ public static class Textos
                 "Guardar? Elimina %d notas de %s. Isto não se pode desfazer.",
             ["Nombre del marcador"] =
                 "Nome do marcador",
+
+            ["Nombre"] =
+                "Nome",
             ["Cómo quieres llamarlo"] =
                 "Como queres chamá-lo",
             ["Editar carpetas..."] =
@@ -795,6 +801,9 @@ public static class Textos
                 "Enregistrer ? Cela supprime %d notes de %s. Ceci est irréversible.",
             ["Nombre del marcador"] =
                 "Nom du signet",
+
+            ["Nombre"] =
+                "Nom",
             ["Cómo quieres llamarlo"] =
                 "Comment l'appeler",
             ["Editar carpetas..."] =

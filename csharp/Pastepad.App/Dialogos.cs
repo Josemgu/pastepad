@@ -190,7 +190,16 @@ public static class Dialogos
             BorderThickness = new Thickness(1),
             CornerRadius = new CornerRadius(10),
             Padding = new Thickness(12, 8, 10, 8),
-            MinHeight = 180,
+
+            // Eran 180 hasta la 4.3.0. Pedir el nombre en todos los
+            // guardados y no solo en los enlaces cuesta 51 px de alto, y
+            // con 180 aqui el boton Guardar se quedaba medio debajo del
+            // pliegue en el panel de fabrica: habia que deslizar para
+            // guardar. Estos 40 son justo lo que hacia falta.
+            //
+            // La caja se desplaza por dentro, asi que lo que se pierde no
+            // es sitio para escribir: es cuanto se ve de una vez.
+            MinHeight = 140,
             IsSpellCheckEnabled = false,
             TextWrapping = TextWrapping.Wrap,
             // El cursor, la seleccion y el menu del boton derecho los
@@ -469,57 +478,72 @@ public static class Dialogos
 
         string texto = original is null ? "" : Modelo.TextoDe(original.Runs);
 
-        // El nombre del marcador. Solo asoma cuando lo que hay escrito es
-        // un enlace: en un texto normal la primera linea ya hace de
-        // titulo y pedirlo aparte seria un campo mas que rellenar para
-        // guardar dos frases.
+        // El nombre. Se pide para cualquier guardado, no solo para los
+        // enlaces, y dejarlo en blanco se comporta como siempre: el
+        // titulo sale de la primera linea. Asi quien guarda dos frases no
+        // rellena nada de mas —que era el motivo de esconderlo— y quien
+        // monta una biblioteca puede distinguir sus piezas.
+        //
+        // Lo pidio el usuario con un caso concreto: cinco cuerpos de
+        // correo que empiezan todos por "Hi team," son cinco filas
+        // identicas recortadas a 80 caracteres. La carpeta dice que son
+        // cuerpos; no dice cual es cual.
         var nombre = Campo();
         nombre.PlaceholderText = Textos.T("Cómo quieres llamarlo");
+
+        var etiquetaNombre = Etiqueta(Textos.T("Nombre"));
 
         var bloqueNombre = new StackPanel
         {
             Margin = new Thickness(0, 0, 0, Estilo.E3),
-            Visibility = Visibility.Collapsed,
         };
-        bloqueNombre.Children.Add(Etiqueta(Textos.T("Nombre del marcador")));
+        bloqueNombre.Children.Add(etiquetaNombre);
         bloqueNombre.Children.Add(nombre);
 
-        // Un titulo que es el propio enlace no es un titulo: lo puso el
-        // programa por no haber otro. Se ofrece en blanco para que el
-        // marcador que ya existe pueda estrenar nombre.
+        // Un titulo que es la primera linea del propio texto no es un
+        // nombre: lo puso el programa por no haber otro. Se ofrece en
+        // blanco para que un guardado que ya existe pueda estrenarlo, y
+        // relleno cuando de verdad le pusieron uno.
         if (original is not null
             && original.Titulo != Modelo.PrimeraLinea(texto))
         {
             nombre.Text = original.Titulo;
         }
 
-        void MirarSiEsEnlace()
+        // En un enlace el nombre no es opcional en la practica: la
+        // primera linea ES la direccion, y una lista de direcciones no se
+        // busca por nombre. La etiqueta lo dice cuando toca.
+        void AjustarEtiqueta()
         {
-            bloqueNombre.Visibility = Modelo.EsEnlace(Formato.TextoPlano(caja).Trim())
-                ? Visibility.Visible
-                : Visibility.Collapsed;
+            etiquetaNombre.Text = Modelo.EsEnlace(Formato.TextoPlano(caja).Trim())
+                ? Textos.T("Nombre del marcador")
+                : Textos.T("Nombre");
         }
 
-        MirarSiEsEnlace();
-        caja.TextChanged += (_, _) => MirarSiEsEnlace();
+        AjustarEtiqueta();
+        caja.TextChanged += (_, _) => AjustarEtiqueta();
 
         var cancelar = Boton(Textos.T("Cancelar"), "normal");
         var guardar = Boton(Textos.T("Guardar"), "acento", 94);
 
-        // Por debajo de 520 px de hueco, el cuerpo deja de repartirse y
-        // se desplaza.
+        // La rejilla toma su alto natural SIEMPRE, y de recortar se
+        // encarga el ScrollViewer de abajo. Antes esto solo pasaba por
+        // debajo de 520 px de hueco, y por encima se le daba el alto
+        // disponible para que la rejilla lo repartiera.
         //
-        // Con la barra de formato encima, la caja ya no cabe en un panel
-        // pequeño: medido con el panel en su minimo de 340, el area de
-        // escritura se quedaba en **0 px** —titulo, carpeta, barra, nota
-        // y botones se repartian los 324 disponibles y no sobraba nada—
-        // y el dialogo salia sin ningun sitio donde escribir. Sin tope,
-        // la rejilla toma su alto natural, la caja conserva sus 180 y lo
-        // que no entra se alcanza deslizando. Con el panel de fabrica no
-        // cambia nada: 560 dejan 544, y ahi la caja sigue creciendo con
-        // la ventana.
+        // Repartir no funcionaba. La caja tiene 180 de minimo, asi que su
+        // fila no podia ceder ni un pixel, y lo que cedia era el PIE.
+        // Medido sobre la 4.2.0 ya publicada, con el panel de fabrica y
+        // un enlace escrito —que es cuando asomaba el campo del nombre—:
+        // Cancelar y Guardar en 19 px de alto en vez de 32. Con el campo
+        // visible siempre, eso pasaria de ser un caso raro a ser el caso
+        // normal.
+        //
+        // Y lo que se perdia repartiendo no era nada: medido a 560 y a
+        // 900 de panel, la caja daba 180 en los dos. Nunca crecio con la
+        // ventana, aunque este comentario dijera que si.
         var cuerpo = CuerpoConHueco(
-            Disponible(raiz) < 520 ? double.PositiveInfinity : Disponible(raiz),
+            double.PositiveInfinity,
             [Titulo(titulo), fila, bloqueNombre, BarraDeFormato(caja)],
             caja,
             [
@@ -549,12 +573,12 @@ public static class Dialogos
             string valor = Modelo.TextoDe(runs).Trim();
             if (valor.Length == 0) return;
 
-            // Lo arma el nucleo porque acaba en snippets.json. Del
-            // nombre solo se hace caso si hay enlace: si el usuario
-            // escribio uno y luego cambio el texto, el campo se escondio
-            // pero lo escrito sigue ahi.
-            string comoSeLlama =
-                bloqueNombre.Visibility == Visibility.Visible ? nombre.Text : "";
+            // Lo arma el nucleo porque acaba en snippets.json. Antes se
+            // miraba si el campo estaba visible, porque se escondia al
+            // dejar de ser un enlace y lo escrito seguia ahi. Ya no se
+            // esconde nunca, asi que lo escrito es siempre lo que quiso
+            // el usuario.
+            string comoSeLlama = nombre.Text;
 
             // Guardar sin haber tocado el texto no puede cambiar el
             // titulo. Sin esto, abrir un guardado con nombre propio y
@@ -586,7 +610,7 @@ public static class Dialogos
         dialogo.Opened += (_, _) =>
         {
             Formato.Cargar(caja, original?.Runs ?? []);
-            MirarSiEsEnlace();
+            AjustarEtiqueta();
             caja.Focus(FocusState.Programmatic);
         };
 

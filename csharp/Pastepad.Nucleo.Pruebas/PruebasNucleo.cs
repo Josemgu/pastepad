@@ -662,6 +662,34 @@ public sealed class PruebaTituloGuardado : BaseConCarpetaTemporal
     }
 
     /// <summary>
+    /// Desde la 4.3.0 el nombre se pide para cualquier guardado y no
+    /// solo para los enlaces, asi que este reparto pasa de valer para los
+    /// marcadores a valer para todo lo que se guarda.
+    ///
+    /// Dejarlo en blanco tiene que seguir dando la primera linea: es lo
+    /// que hace que quien guarda dos frases no tenga que rellenar un
+    /// campo mas.
+    /// </summary>
+    [TestMethod]
+    public void test_el_nombre_en_blanco_deja_la_primera_linea()
+    {
+        const string cuerpo = "Hi team,\rI am practicing Git.";
+
+        foreach (string? vacio in new[] { null, "", "   ", "\r\n" })
+        {
+            Assert.AreEqual("Hi team,",
+                Modelo.CrearSnippet(cuerpo, "Cuerpos", vacio).Titulo,
+                $"con el nombre en '{vacio ?? "null"}'");
+        }
+
+        // Y con nombre gana el nombre, que es el caso que pidio el
+        // usuario: cinco cuerpos que empiezan igual y hay que
+        // distinguirlos en la fila.
+        Assert.AreEqual("Practicando Git",
+            Modelo.CrearSnippet(cuerpo, "Cuerpos", "  Practicando Git  ").Titulo);
+    }
+
+    /// <summary>
     /// Y las lineas se cuentan igual vengan como vengan: el dialogo de
     /// agregar una lista contaba "1 nota" con sesenta lineas pegadas.
     /// </summary>

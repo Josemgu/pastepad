@@ -3,6 +3,34 @@
 All notable changes to this project are documented here.
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [4.3.0] - 2026-08-13
+
+### Added
+- **Any saved text can be given a name**, not just bookmarks. Leaving it
+  blank behaves as before and the first line is used, so saving two
+  sentences still takes no extra typing. It matters when you build a
+  library rather than jot things down: five email bodies that all open
+  with "Hi team," are five identical rows, and the folder tells you they
+  are bodies without telling you which is which.
+
+### Fixed
+- **The Save and Cancel buttons could end up half below the fold** in the
+  New dialog, at the default panel size, once the name field appeared —
+  which until now only happened when what you typed was a link. The
+  dialog was handing the leftover height to the text box first and the
+  buttons last. Measured on 4.2.0: 19 pixels of button instead of 32.
+  Making the name field permanent would have turned that from a corner
+  case into the normal one.
+
+### Changed
+- The writing box in the New dialog shows 140 pixels at a time instead of
+  180. That is what the name field costs, and the box scrolls inside
+  itself, so it is a change in how much you see at once rather than in
+  how much you can write. Measured at four panel heights: the buttons now
+  stay whole at every size except the 340-pixel minimum, where they sit
+  below the fold exactly as they already did.
+- 78 tests to 79.
+
 ## [4.2.0] - 2026-08-13
 
 **Updating pastepad no longer costs you the clipboard you just copied,
