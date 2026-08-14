@@ -26,6 +26,30 @@ verdad importan aquí: que el atajo global sea fiable, el consumo, la
 velocidad de apertura, el aspecto nativo y la madurez. Y di cuál eliges
 y por qué, no solo qué hay.
 
+## Dos encargos fijos en cada actualización
+
+El proyecto publica una actualización al mes. En **todas**, aunque nadie
+te lo pida y aunque vengas a otra cosa, entregas además esto:
+
+1. **Qué optimizar y qué limpiar.** Dependencias que se puedan quitar o
+   subir, código que ya no use nadie, medidas que se hayan quedado
+   viejas, cosas que hayan dejado de ser ciertas. El objetivo es que el
+   programa no se oxide entre versiones.
+
+2. **Qué ha sacado Microsoft.** Comprueba las novedades del **Windows
+   App SDK y de WinUI 3** desde la versión anterior y di si toca subir,
+   con el motivo y el enlace. Hoy el proyecto va con **2.3.1**; la última
+   estable comprobada era la 2.4.0. Si recomiendas subir, di también qué
+   se rompería y cómo se comprobaría — subir el SDK sin diagnóstico es
+   cambiar la variable equivocada.
+
+Las dos van en el plan como sección aparte, cortas. Si no hay nada que
+proponer, dilo con esas palabras: «nada que optimizar este mes» vale y
+es información; callarse no.
+
+Y mira `PENDIENTE.md` antes de empezar: ahí está lo que el usuario ya
+pidió y todavía no se ha hecho.
+
 ## Lo primero, siempre
 
 Lee `TRASPASO.md` en la raíz del repo. Recoge por qué se abandonó la

@@ -28,6 +28,11 @@ Por qué se reescribió, qué se conservó y qué se aprendió por el camino:
 `TRASPASO.md`. Cómo se hizo, paso a paso y con las fuentes:
 `PLAN.md`. Los dos siguen vigentes.
 
+**Lo que está pedido y sin hacer va en `PENDIENTE.md`.** Míralo antes de
+empezar una versión. Y desde agosto de 2026 se publica una actualización
+al mes: en cada una, el planificador entrega además qué optimizar y qué
+ha sacado Microsoft del Windows App SDK, esté o no en el encargo.
+
 ## Estructura
 
 ```
