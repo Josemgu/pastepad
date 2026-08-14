@@ -392,6 +392,48 @@ public sealed partial class Panel : Window
         Buscador.Focus(FocusState.Programmatic);
     }
 
+    bool _faltaDiagnostico = true;
+
+    /// <summary>
+    /// Lo que hay que saber del PRIMER fotograma, y solo de ese.
+    ///
+    /// Existe por un fallo del que no se sabe la causa: hay primeras
+    /// aperturas en las que la fila de la cabecera sale sin pintar —ni
+    /// la etiqueta del atajo ni los tres botones— y la siguiente sale
+    /// bien. Es intermitente y asoma con la maquina cargada.
+    ///
+    /// **Ninguna comprobacion por automatizacion lo ve**: el arbol de
+    /// accesibilidad tiene los elementos las dos veces. Solo se ve
+    /// mirando pixeles, y para entonces ya paso. Estas cinco cifras son
+    /// lo que separa las hipotesis sin tener que estar delante:
+    ///
+    /// - anchos a 0    -> la fila no llego a disponerse
+    /// - anchos buenos -> se dispuso y lo que fallo fue el pintado
+    /// - color igual al fondo -> es el tema resolviendose tarde
+    ///
+    /// Se anota una vez por proceso: es el primer fotograma lo que se
+    /// investiga, y pagarlo en cada apertura seria gravar justo la ruta
+    /// que tiene que ser instantanea.
+    /// </summary>
+    public string? Diagnostico()
+    {
+        if (!_faltaDiagnostico) return null;
+        _faltaDiagnostico = false;
+
+        var tinta = (EtiquetaAtajo.Foreground as
+            Microsoft.UI.Xaml.Media.SolidColorBrush)?.Color;
+
+        return string.Format(
+            "primer fotograma: atajo {0:F0}x{1:F0} '{2}' tinta {3}, "
+            + "boton cerrar {4:F0}x{5:F0}, tema {6}, barra extendida {7}",
+            EtiquetaAtajo.ActualWidth, EtiquetaAtajo.ActualHeight,
+            EtiquetaAtajo.Text,
+            tinta is { } c ? $"#{c.R:X2}{c.G:X2}{c.B:X2} alfa {c.A}" : "(no es un color plano)",
+            BotonCerrar.ActualWidth, BotonCerrar.ActualHeight,
+            Marco.ActualTheme,
+            ExtendsContentIntoTitleBar);
+    }
+
     /// <summary>
     /// Avisa una sola vez, cuando el panel se haya dibujado de verdad.
     ///
@@ -594,8 +636,8 @@ public sealed partial class Panel : Window
     }
 
     /// <summary>
-    /// Guardados en cuatro grupos plegables: marcadores, plantillas,
-    /// correos y notas.
+    /// Guardados en cinco grupos plegables: marcadores, plantillas,
+    /// correos, prompts de IA y notas.
     ///
     /// Ninguno es otro tipo de dato: son guardados que se separan porque
     /// no se usan igual. El grupo lo elige el usuario al guardar, y
@@ -603,10 +645,11 @@ public sealed partial class Panel : Window
     /// [[campos]], o ni una cosa ni otra—, que es lo que se hacia antes
     /// de que se pudiera elegir.
     ///
-    /// El cuarto grupo, correos, existe porque era el que no se podia
-    /// deducir: un cuerpo de correo es texto corriente y no hay nada
-    /// dentro que lo distinga de una nota. Sin poder elegir, cinco
-    /// cuerpos de correo eran cinco notas mas.
+    /// Los dos que no se deducen, correos y prompts, son justo los que
+    /// hacian falta: los dos son texto corriente y no hay nada dentro que
+    /// los distinga de una nota. Sin poder elegir, cinco cuerpos de
+    /// correo eran cinco notas mas, y una biblioteca de prompts se
+    /// perdia entera entre ellas.
     ///
     /// La carpeta sigue siendo otra cosa: el grupo dice QUE es, la
     /// carpeta dice DONDE esta.
@@ -629,6 +672,9 @@ public sealed partial class Panel : Window
 
         Volcar("correos", Textos.T("Correos"), porTipo[Tipos.Correo],
                Estilo.Iconos.Correo, true, conCabecera);
+
+        Volcar("prompts", Textos.T("Prompts IA"), porTipo[Tipos.Prompt],
+               Estilo.Iconos.Prompt, true, conCabecera);
 
         Volcar("notas", Textos.T("Notas"), porTipo[Tipos.Nota],
                Estilo.Iconos.Nota, false, conCabecera);

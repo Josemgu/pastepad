@@ -1204,6 +1204,55 @@ public sealed class PruebaTipos
     }
 
     [TestMethod]
+    public void test_el_prompt_tampoco_se_deduce()
+    {
+        // Y con el prompt es peor que con el correo: alli al menos hay
+        // una arroba de la que tirar. Aqui es texto y ya.
+        Assert.AreEqual(Tipos.Nota,
+            Tipos.Deducir("Actúa como un revisor de código y explica..."));
+
+        Assert.AreEqual(Tipos.Nota, Tipos.Deducir("Eres un asistente útil"));
+    }
+
+    [TestMethod]
+    public void test_un_prompt_con_campos_se_propone_plantilla()
+    {
+        // Y esta bien: lo que decide si pregunta antes de pegar es el
+        // texto, no el tipo. Quien lo quiera entre sus prompts lo cambia
+        // a mano y le sigue preguntando los campos igual.
+        Assert.AreEqual(Tipos.Plantilla,
+            Tipos.Deducir("Resume esto en [[palabras]] palabras"));
+
+        Assert.AreEqual(Tipos.Prompt, Tipos.De(
+            Tipos.Prompt, "Resume esto en [[palabras]] palabras"));
+    }
+
+    [TestMethod]
+    public void test_el_prompt_elegido_se_guarda()
+    {
+        var s = Modelo.CrearSnippet(
+            "Actúa como un editor exigente", "Trabajo", null, Tipos.Prompt);
+
+        Assert.AreEqual(Tipos.Prompt, s.Tipo);
+        Assert.AreEqual(Tipos.Prompt, Tipos.De(s));
+    }
+
+    [TestMethod]
+    public void test_los_cinco_tipos_y_sin_repetir()
+    {
+        // Todos alimenta el desplegable y los grupos del panel: uno
+        // repetido saldria dos veces en la lista, y uno que falte deja
+        // sus guardados sin grupo.
+        Assert.HasCount(5, Tipos.Todos);
+        Assert.HasCount(5, Tipos.Todos.Distinct().ToList());
+
+        foreach (var t in Tipos.Todos) Assert.IsTrue(Tipos.Vale(t), t);
+
+        // La nota va la ultima: es el cajon de sastre.
+        Assert.AreEqual(Tipos.Nota, Tipos.Todos[^1]);
+    }
+
+    [TestMethod]
     public void test_lo_que_elige_el_usuario_manda()
     {
         // El caso que trajo todo esto: un cuerpo de correo es texto

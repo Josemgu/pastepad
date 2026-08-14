@@ -24,14 +24,24 @@ public static class Tipos
     public const string Marcador = "marcador";
     public const string Plantilla = "plantilla";
     public const string Correo = "correo";
+
+    /// <summary>
+    /// Un texto que se le da a una IA. Lo pidio quien guarda prompts
+    /// como parte de su trabajo: mezclados entre las notas no se
+    /// encuentran, y son de las cosas que mas se reutilizan tal cual.
+    /// </summary>
+    public const string Prompt = "prompt";
+
     public const string Nota = "nota";
 
     /// <summary>
     /// En el orden en el que se enseñan, que es tambien el de los grupos
-    /// del panel: de lo mas especifico a lo mas general.
+    /// del panel: de lo mas especifico a lo mas general. La nota va la
+    /// ultima porque es el cajon de sastre — lo que no es ninguna de las
+    /// otras cuatro.
     /// </summary>
     public static readonly string[] Todos =
-        [Marcador, Plantilla, Correo, Nota];
+        [Marcador, Plantilla, Correo, Prompt, Nota];
 
     /// <summary>
     /// El tipo que se propone leyendo el texto. Es exactamente lo que la
@@ -41,10 +51,17 @@ public static class Tipos
     /// Un enlace con [[campos]] cuenta como marcador: entre los dos gana
     /// el que se reconoce con mas certeza.
     ///
-    /// «Correo» no se deduce nunca. No hay nada en un cuerpo de correo
-    /// que lo separe de una nota, y proponerlo por que lleve una arroba
-    /// convertiria cualquier texto con una direccion dentro en un correo.
-    /// Es el tipo que existe precisamente para elegirlo a mano.
+    /// **Ni «correo» ni «prompt» se deducen nunca.** Los dos son texto
+    /// corriente y no llevan dentro nada que los separe de una nota.
+    /// Proponer correo por una arroba convertiria en correo cualquier
+    /// texto que mencione una direccion, y con un prompt es todavia peor:
+    /// no hay ni siquiera una arroba a la que agarrarse. Son justo los
+    /// dos tipos que existen para elegirlos a mano.
+    ///
+    /// Un prompt con [[campos]] se propondra como plantilla, y esta bien
+    /// que asi sea: lo que decide si te pregunta antes de pegar es el
+    /// texto, no el tipo. Quien lo quiera entre sus prompts lo cambia, y
+    /// sigue preguntandole los campos igual.
     /// </summary>
     public static string Deducir(string? texto)
     {

@@ -3,6 +3,39 @@
 All notable changes to this project are documented here.
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [4.5.0] - 2026-08-14
+
+### Added
+- **AI prompts are the fifth type**, next to bookmarks, templates, emails
+  and notes. Asked for by someone who keeps prompts as part of how they
+  work: mixed in among the notes they cannot be found, and they are among
+  the things most often reused word for word.
+
+  Like emails, this one is never guessed. A prompt is ordinary text, and
+  where an email at least has an @ to grab at, a prompt has nothing —
+  which is precisely why it has to be picked by hand. A prompt with
+  `[[fields]]` is still proposed as a template, and that is right: what
+  decides whether you get asked before pasting is the text, not the type.
+  Move it to prompts and it still asks for its fields.
+- **The first frame of the panel now leaves a line in the log**, once per
+  run: the measured size and colour of the shortcut label and of the
+  close button, the resolved theme, and whether the title bar is
+  extended. It exists because of a fault reported from real use — the
+  first time the panel opens, the header sometimes appears unpainted, and
+  the next time it is fine — that no automated check can see, because the
+  accessibility tree has the elements both times. It is only visible by
+  looking at pixels, and by then it has passed.
+
+  What that line already ruled out: the row is laid out correctly at the
+  first frame (label 49×15, close button 20×20) and its colour is opaque
+  and visible, so neither "it never got laid out" nor "the theme resolved
+  late" is the explanation. Measuring the whole window rather than the
+  header strip showed the first frame is partially painted **everywhere**,
+  not just in the header, which also rules out the title bar being at
+  fault. The severe form did not reproduce in 12 attempts under load or 8
+  without, so nothing was changed to chase it: see the note in the report.
+- 90 tests to 94.
+
 ## [4.4.0] - 2026-08-13
 
 ### Fixed
@@ -33,9 +66,12 @@ This project follows [Semantic Versioning](https://semver.org/).
   because the text contains an @ would turn every note that mentions an
   address into an email.
 - What you pick is only written to `snippets.json` when it contradicts
-  what would have been deduced anyway. Opening a saved text and pressing
-  Save cannot give it a key it did not have, and files written by earlier
-  versions come back unchanged.
+  what would have been deduced anyway, so opening a saved text and
+  pressing Save cannot give it a `tipo` key it did not have. Note this
+  covers the type key only: re-saving a text still normalises its line
+  breaks to `\r\n`, which is the repair 4.0.1 introduced and which grows
+  a file written before it by one byte per line, without touching a
+  character of the content.
 
 ### Changed
 - **The installer now says when it found an existing copy.** It always

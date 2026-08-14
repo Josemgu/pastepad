@@ -42,11 +42,15 @@ Pin what you use often and it stays on top.
 Saved texts live in folders you name, and one with `[[fields]]` in it
 becomes a template — pastepad asks for them before pasting.
 
-Every saved text is one of four things — bookmark, template, email or
-note — and Saved keeps each in its own collapsible group. pastepad
-proposes the one that fits what you wrote and you change it if it got it
-wrong. Email is the one it never guesses: a message body is ordinary
-text, and there is nothing inside it that says so.
+Every saved text is one of five things — bookmark, template, email, AI
+prompt or note — and Saved keeps each in its own collapsible group.
+pastepad proposes the one that fits what you wrote and you change it if
+it got it wrong.
+
+Emails and AI prompts are the two it never guesses, which is exactly why
+you can pick them: both are ordinary text with nothing inside them that
+says what they are. Five email bodies that all open with "Hi team," were
+five more notes, and a library of prompts disappeared among them.
 
 Copy a web address on its own and the row shows the domain and an Open
 in browser entry in its menu. Clicking still pastes, like everything

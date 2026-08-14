@@ -13,7 +13,7 @@ las pierde al reiniciar.
 
 ## Estado
 
-Versión 4.4.0, reescrita en C# con WinUI 3 sobre el Windows App SDK
+Versión 4.5.0, reescrita en C# con WinUI 3 sobre el Windows App SDK
 2.3.1 y .NET 10. Desempaquetada y self-contained.
 
 La versión anterior (3.x, Python con Flet) **ya no está en el repo**.
@@ -41,7 +41,7 @@ csharp/
     Argumentos.cs            la linea con la que Windows nos reabre
     Tipos.cs                 de que es cada guardado, y cuando se escribe
     Config.cs, Datos.cs, Autoarranque.cs, Rutas
-  Pastepad.Nucleo.Pruebas/   90 pruebas, sin abrir ventana
+  Pastepad.Nucleo.Pruebas/   94 pruebas, sin abrir ventana
   Pastepad.App/
     Sistema/                 todo lo que habla con Win32
       Buzon.cs               ventana solo-mensajes: atajo y portapapeles
@@ -49,7 +49,7 @@ csharp/
       Portapapeles.cs        lectura, escritura, formatos privados, RTF
       Foco.cs                devolver el foco y pegar
       Actualizacion.cs       consulta la API de GitHub. Solo consulta
-      Arranque.cs              autoarranque: clave Run Y tarea al iniciar sesion
+      Arranque.cs            autoarranque: clave Run Y tarea de sesion
       Bandeja.cs, Pantalla.cs, Nativo.cs
     Panel.xaml(.cs)          el panel
     Formato.cs               la barra de formato sobre RichEditBox
@@ -61,7 +61,7 @@ docs/                        35 maquetas, especificacion, logos
 ```
 
 `Pastepad.Nucleo` no importa nada gráfico **a propósito**. Es lo que
-permite que 90 pruebas corran sin abrir ventana y sin el Windows App
+permite que 94 pruebas corran sin abrir ventana y sin el Windows App
 SDK. No metas WinUI ahí dentro.
 
 Ese reparto es también por qué `Versiones.cs` está en el núcleo y
@@ -222,6 +222,31 @@ Tres trampas que ya costaron caras:
 - Al comparar longitudes, la caja carga **tantos caracteres menos como
   saltos de línea tenga** el archivo. Con 100 líneas, 5290 en disco son
   5191 en la caja. Si la cuenta cuadra, no hay pérdida.
+
+### El árbol de accesibilidad no dice nada de lo que se pinta
+
+El usuario reportó que el atajo de la cabecera no se veía en la primera
+apertura. **Los volcados de UI Automation lo veían las dos veces**, así
+que ninguna comprobación por automatización lo iba a detectar nunca. Y
+lo que la automatización reporta como «Esc» ni siquiera es una etiqueta:
+no existe esa cadena en el código, es el `KeyboardAccelerator` con
+`Key="Escape"`, que UIA expone como propiedad.
+
+**Para cualquier cosa que sea «no se ve», hay que capturar píxeles.** Y
+capturar la ventana ENTERA, no un recorte: con un recorte de 44 px de la
+cabecera se concluyó que «solo fallaba esa fila», y al medir la ventana
+completa resultó que el primer fotograma está a medio pintar en todas
+partes —de ~5.500 píxeles de contenido a 0 ms a ~36.500 a los 300 ms—.
+El recorte solo probaba que el borde del buscador estaba dibujado.
+
+Cuidado además con dónde se toma el color de fondo de referencia: la
+ventana tiene esquinas redondeadas, así que en `(2,2)` se cuela el
+escritorio y la cuenta se dispara.
+
+Y para capturar el panel hay un obstáculo: **se esconde solo al perder
+el foco**. Sacarlo lanzando una segunda instancia, o invocar algo por
+UIA, devuelve el foco a la terminal y el panel desaparece antes de la
+captura. Hay que sacarlo con el atajo y sondear cada 100-150 ms.
 
 ### Y para automatizar la interfaz
 

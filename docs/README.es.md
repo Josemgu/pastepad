@@ -40,11 +40,16 @@ Los textos guardados van en carpetas que nombras tú, y uno que lleve
 `[[campos]]` dentro se convierte en plantilla: pastepad te los pregunta
 antes de pegar.
 
-Cada texto guardado es una de cuatro cosas —marcador, plantilla, correo
-o nota— y Guardados tiene un grupo plegable para cada una. pastepad te
-propone la que encaja con lo que escribiste y tú la cambias si no
-acertó. El correo es la única que no adivina nunca: un cuerpo de correo
-es texto corriente y no lleva nada dentro que lo diga.
+Cada texto guardado es una de cinco cosas —marcador, plantilla, correo,
+prompt de IA o nota— y Guardados tiene un grupo plegable para cada una.
+pastepad te propone la que encaja con lo que escribiste y tú la cambias
+si no acertó.
+
+El correo y el prompt de IA son los dos que no adivina nunca, y por eso
+mismo se pueden elegir: los dos son texto corriente y no llevan nada
+dentro que diga lo que son. Cinco cuerpos de correo que empiezan todos
+por «Hola equipo,» eran cinco notas más, y una biblioteca de prompts se
+perdía entera entre ellas.
 
 Si lo que copias es una dirección web y nada más, la fila enseña el
 dominio y su menú trae «Abrir en el navegador». El clic pega, como en

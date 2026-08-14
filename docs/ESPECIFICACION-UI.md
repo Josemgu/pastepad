@@ -285,10 +285,16 @@ del buscador, y «Pegar» y «Pegar sin formato» del menú—, así que un
 enlace no se podía pegar en ningún campo: el elemento que decía «Pegar»
 abría Chrome. Comprobado de punta a punta contra el Bloc de notas.
 
-**Guardados va en cuatro grupos plegables: marcadores, plantillas,
-correos y notas.** Ninguno es otro tipo de dato: son guardados que se
-separan porque no se usan igual, y mezclarlos obliga a leer la lista
-entera para encontrar cualquiera de ellos.
+**Guardados va en cinco grupos plegables: marcadores, plantillas,
+correos, prompts de IA y notas.** Ninguno es otro tipo de dato: son
+guardados que se separan porque no se usan igual, y mezclarlos obliga a
+leer la lista entera para encontrar cualquiera de ellos.
+
+Iconos por tipo, todos de Segoe Fluent Icons y verificados en la lista
+oficial: marcador `E71B` (Link), plantilla `E943` (Code), correo `E715`
+(Mail), prompt `EAB7` (ChatSparkle — la familia «sparkle» con la que
+Windows marca lo de IA). La nota no lleva icono: es la mayoría, y una
+columna de iconos en todas las filas sería ruido.
 
 **El tipo lo elige el usuario** en el desplegable del diálogo de
 guardar, que comparte línea con la etiqueta «Nombre». pastepad propone
@@ -298,10 +304,16 @@ usuario lo toca. Lo elegido solo se escribe en `snippets.json` si
 contradice a lo deducido, así que un archivo de antes de la 4.4.0 se
 vuelve a escribir sin una clave de más.
 
-**Correo no se deduce nunca.** No hay nada en un cuerpo de correo que lo
-separe de una nota, y proponerlo por llevar una arroba convertiría en
-correo cualquier texto que mencione una dirección. Es el tipo que existe
-precisamente para elegirlo a mano.
+**Ni correo ni prompt de IA se deducen nunca.** No hay nada en un cuerpo
+de correo que lo separe de una nota, y proponerlo por llevar una arroba
+convertiría en correo cualquier texto que mencione una dirección. Con un
+prompt es peor: no hay ni siquiera una arroba de la que tirar. Son los
+dos tipos que existen precisamente para elegirlos a mano.
+
+Un prompt con `[[campos]]` se propone como plantilla, y está bien que
+así sea: lo que decide si pregunta antes de pegar es el texto, no el
+tipo. Quien lo quiera entre sus prompts lo cambia y le sigue
+preguntando los campos igual.
 
 La cabecera de grupo mide 32px, lleva chevron, icono y contador, y
 **solo aparece cuando hay más de un grupo con algo dentro**: con uno

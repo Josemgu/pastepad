@@ -332,16 +332,23 @@ public partial class App : Application
         double asomar = System.Diagnostics.Stopwatch
             .GetElapsedTime(marca).TotalMilliseconds;
 
-        _panel.AlPrimerFotograma(() => Registro.Anotar(string.Format(
-            "panel: cola {0} ms + asomar {1:F1} ms + dibujo {2:F1} ms "
-            + "= {3:F1} ms (llevaba {4:F1} min parado)",
-            cola,
-            asomar,
-            System.Diagnostics.Stopwatch.GetElapsedTime(marca).TotalMilliseconds
-                - asomar,
-            cola + System.Diagnostics.Stopwatch
-                .GetElapsedTime(marca).TotalMilliseconds,
-            parado.TotalMinutes)));
+        _panel.AlPrimerFotograma(() =>
+        {
+            Registro.Anotar(string.Format(
+                "panel: cola {0} ms + asomar {1:F1} ms + dibujo {2:F1} ms "
+                + "= {3:F1} ms (llevaba {4:F1} min parado)",
+                cola,
+                asomar,
+                System.Diagnostics.Stopwatch.GetElapsedTime(marca).TotalMilliseconds
+                    - asomar,
+                cola + System.Diagnostics.Stopwatch
+                    .GetElapsedTime(marca).TotalMilliseconds,
+                parado.TotalMinutes));
+
+            // Solo en la primera apertura del proceso, que es la unica
+            // en la que se ha visto la cabecera sin pintar.
+            if (_panel?.Diagnostico() is { } detalle) Registro.Anotar(detalle);
+        });
 
         Actividad();
     }

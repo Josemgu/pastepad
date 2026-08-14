@@ -402,6 +402,13 @@ public static class Estilo
         public const string Editar = "\uE70F";       // Edit
         public const string Plantilla = "\uE943";    // Code
         public const string Correo = "\uE715";       // Mail
+
+        /// <summary>
+        /// ChatSparkle. Es la familia \u00ABsparkle\u00BB con la que Windows marca
+        /// lo de IA, asi que se lee como tal sin tener que explicarlo.
+        /// Verificado en la lista oficial de Segoe Fluent Icons.
+        /// </summary>
+        public const string Prompt = "\uEAB7";       // ChatSparkle
         public const string Papelera = "\uE74D";     // Delete
         public const string Deshacer = "\uE7A7";     // Undo
     }

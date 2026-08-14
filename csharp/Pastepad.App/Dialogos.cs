@@ -706,6 +706,7 @@ public static class Dialogos
         Tipos.Marcador => Textos.T("Marcador"),
         Tipos.Plantilla => Textos.T("Plantilla"),
         Tipos.Correo => Textos.T("Correo"),
+        Tipos.Prompt => Textos.T("Prompt IA"),
         _ => Textos.T("Nota"),
     };
 

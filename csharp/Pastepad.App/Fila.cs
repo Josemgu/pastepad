@@ -161,7 +161,7 @@ public sealed class Fila : ItemLista, INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Los tres tipos con nombre llevan icono; la nota, ninguno. Una
+    /// Los cuatro tipos con nombre llevan icono; la nota, ninguno. Una
     /// fila con icono en todas seria una columna de ruido, y la nota es
     /// la mayoria.
     /// </summary>
@@ -170,6 +170,7 @@ public sealed class Fila : ItemLista, INotifyPropertyChanged
         Tipos.Marcador => Estilo.Iconos.Enlace,
         Tipos.Plantilla => Estilo.Iconos.Plantilla,
         Tipos.Correo => Estilo.Iconos.Correo,
+        Tipos.Prompt => Estilo.Iconos.Prompt,
         _ => "",
     };
 

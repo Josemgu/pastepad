@@ -170,6 +170,10 @@ public static class Textos
                 "Notes",
             ["Correos"] =
                 "Emails",
+            ["Prompts IA"] =
+                "AI prompts",
+            ["Prompt IA"] =
+                "AI prompt",
             ["Tipo"] =
                 "Type",
             ["Marcador"] =
@@ -435,6 +439,10 @@ public static class Textos
                 "Notas",
             ["Correos"] =
                 "E-mails",
+            ["Prompts IA"] =
+                "Prompts de IA",
+            ["Prompt IA"] =
+                "Prompt de IA",
             ["Tipo"] =
                 "Tipo",
             ["Marcador"] =
@@ -700,6 +708,10 @@ public static class Textos
                 "Notes",
             ["Correos"] =
                 "Courriels",
+            ["Prompts IA"] =
+                "Prompts IA",
+            ["Prompt IA"] =
+                "Prompt IA",
             ["Tipo"] =
                 "Type",
             ["Marcador"] =
