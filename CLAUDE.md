@@ -13,7 +13,7 @@ las pierde al reiniciar.
 
 ## Estado
 
-Versión 4.6.0, reescrita en C# con WinUI 3 sobre el Windows App SDK
+Versión 4.7.0, reescrita en C# con WinUI 3 sobre el Windows App SDK
 2.3.1 y .NET 10. Desempaquetada y self-contained.
 
 La versión anterior (3.x, Python con Flet) **ya no está en el repo**.
@@ -41,7 +41,7 @@ csharp/
     Argumentos.cs            la linea con la que Windows nos reabre
     Tipos.cs                 de que es cada guardado, y cuando se escribe
     Config.cs, Datos.cs, Autoarranque.cs, Rutas
-  Pastepad.Nucleo.Pruebas/   94 pruebas, sin abrir ventana
+  Pastepad.Nucleo.Pruebas/   99 pruebas, sin abrir ventana
   Pastepad.App/
     Sistema/                 todo lo que habla con Win32
       Buzon.cs               ventana solo-mensajes: atajo y portapapeles
@@ -50,6 +50,7 @@ csharp/
       Foco.cs                devolver el foco y pegar
       Actualizacion.cs       consulta la API de GitHub. Solo consulta
       Arranque.cs            autoarranque: clave Run Y tarea de sesion
+      Paquete.cs             si nuestros archivos acaban en otro sitio
       Bandeja.cs, Pantalla.cs, Nativo.cs
     Panel.xaml(.cs)          el panel
     Formato.cs               la barra de formato sobre RichEditBox
@@ -61,7 +62,7 @@ docs/                        35 maquetas, especificacion, logos
 ```
 
 `Pastepad.Nucleo` no importa nada gráfico **a propósito**. Es lo que
-permite que 94 pruebas corran sin abrir ventana y sin el Windows App
+permite que 99 pruebas corran sin abrir ventana y sin el Windows App
 SDK. No metas WinUI ahí dentro.
 
 Ese reparto es también por qué `Versiones.cs` está en el núcleo y
@@ -279,16 +280,66 @@ botón de tres puntos de una fila asome, además hay que seleccionar la
 fila por patrón. Eso dejó dos comprobaciones sin hacer en dos rondas
 distintas antes de descubrirse.
 
-## Fallo abierto
+**Si los archivos no acaban donde se pidieron, no se escribe nada.**
+`Sistema/Paquete.cs` + `Almacen.Congelar`. Cuando otra aplicación
+empaquetada abre pastepad, este hereda su contenedor y Windows redirige
+`%LOCALAPPDATA%` a `…\Packages\<paquete>\LocalCache\Local`. pastepad
+calcula bien su ruta, cree que la lee, y lee y escribe una copia; el
+usuario lo abre después desde su sitio y **su historial y sus textos han
+desaparecido**, aunque en disco sigan intactos. Pasó el 14 ago 2026.
 
-Una instancia arrancó sin poder leer ni escribir en su carpeta, con el
-atajo funcionando perfectamente, y al cerrarse guardó un historial vacío
-encima del real. **No se ha reproducido.** El daño está contenido —un
-archivo ilegible queda marcado y no se sobrescribe, con cuatro pruebas
-que lo fijan— y ahora deja rastro: `HResult` en el log, reintento con
-espera, y la ruta real del almacén en la línea de arranque.
+Detectarlo costó tres medidas, y dos de ellas parecían buenas y no lo
+eran:
 
-Detalle en `PLAN.md`.
+- **La identidad de paquete no vale.** `GetCurrentPackageFullName`
+  devuelve `APPMODEL_ERROR_NO_PACKAGE`: el proceso hijo hereda la
+  redirección de archivos pero **no** la identidad.
+- **Un handle de directorio tampoco.** La carpeta se resuelve a sí
+  misma; solo un archivo delata la redirección.
+- **Y el archivo tiene que estar recién escrito.** Es copia-al-escribir,
+  archivo a archivo: uno que ya estuviera resuelve a la ruta real hasta
+  que alguien lo escribe.
+
+Por eso la comprobación es una sonda que se escribe al arrancar, con
+`DELETE_ON_CLOSE` para que no deje rastro.
+
+**Y ojo al probar con `--datos`: entrecomilla la ruta.** `Start-Process
+-ArgumentList` no lo hace, y con un perfil que lleva espacios el
+programa recibe la ruta partida y usa `C:\Users\Jose` como carpeta de
+datos. Eso hizo que el guardián "no saltara" durante varias rondas: lo
+que fallaba era la prueba. Todas las rutas del scratchpad usan
+`JOSEMI~1`, que no tiene espacios, y por eso el fallo no se veía ahí.
+
+## El fallo que estuvo abierto, y cómo se cerró
+
+Durante cinco versiones hubo esto anotado: *«una instancia arrancó sin
+poder leer ni escribir en su carpeta, con el atajo funcionando
+perfectamente, y al cerrarse guardó un historial vacío encima del real.
+No se ha reproducido.»*
+
+**Se reprodujo el 14 ago 2026 y era la redirección de contenedor**
+descrita más arriba. El usuario abrió pastepad y se encontró sus notas,
+sus estilos y su atajo borrados; en el disco estaban intactos, y lo que
+él veía era una copia dentro de
+`…\Packages\<paquete>\LocalCache\Local`. Se recuperó copiando desde esa
+copia, con el programa cerrado y desde fuera del contenedor.
+
+Lo que lo convirtió en «se borró todo» no fue la redirección sino el
+silencio: pastepad arrancó vacío y siguió como si eso fuera normal. Por
+eso el arreglo no es solo detectarlo, es **congelar la sesión**:
+`Almacen.Congelar` corta todas las escrituras en `Escribir<T>`, que es
+el único sitio por el que pasan, y el panel se abre con el motivo.
+
+Dos avisos para quien investigue algo parecido:
+
+- **Desde una sesión que viva dentro de un contenedor, lo que leas de
+  `%LOCALAPPDATA%` no es lo que hay en el disco.** Pasó aquí: durante
+  horas se diagnosticó sobre una vista redirigida. Para ver el disco de
+  verdad hay que salir del contenedor — una tarea programada sirve, la
+  lanza el Programador y no hereda nada.
+- **Comprueba tu prueba antes de creerte el resultado.** El guardián
+  «no saltaba» en tres rondas seguidas y funcionaba: lo que fallaba era
+  la ruta sin comillas del `--datos`.
 
 ## Estilo del código
 

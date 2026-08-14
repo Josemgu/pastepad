@@ -69,6 +69,25 @@ public partial class App : Application
             Program.CarpetaDatos is { } carpeta ? Rutas.EnCarpeta(carpeta) : null,
             Registro.Fallo,
             Registro.Anotar);
+        // Antes de que escriba nada. Si los archivos estan acabando en
+        // otro sitio, lo que leemos no es lo del usuario y lo que
+        // escribieramos tampoco iria donde el cree: mejor una sesion
+        // inutil que uno de esos arranques en blanco que parecen «se
+        // borro todo».
+        if (Paquete.RutaDesviada(Almacen.Rutas.Carpeta) is { } real)
+        {
+            Registro.Anotar(
+                $"ATENCION: se pidio la carpeta {Almacen.Rutas.Carpeta} y "
+                + $"Windows la esta sirviendo desde {real}. Los archivos que "
+                + "se ven NO son los del usuario. Sesion en solo lectura.");
+
+            Almacen.Congelar(Textos.T(
+                "pastepad se ha abierto dentro de otra aplicación y Windows "
+              + "está desviando sus archivos, así que no ve tus datos reales. "
+              + "Para no dañarlos, esta sesión no guardará nada. Ciérralo y "
+              + "ábrelo desde el menú Inicio."));
+        }
+
         Indice = new Indice(Almacen);
 
         // Antes de crear el panel: sus textos se resuelven al construirlo.

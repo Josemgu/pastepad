@@ -3,6 +3,53 @@
 All notable changes to this project are documented here.
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [4.7.0] - 2026-08-14
+
+**pastepad will no longer start empty and act as if that were normal.**
+
+### Fixed
+- **If pastepad's files are being served from somewhere other than where
+  it asked for them, it now says so and refuses to write.** This is the
+  fault that had been open since 4.0.1 as *"one instance started unable
+  to read or write its folder and, on closing, saved an empty history
+  over the real one. Not reproduced."* It reproduced, and the cause is
+  known now.
+
+  When another packaged application launches pastepad, pastepad inherits
+  that application's container and Windows redirects everything under
+  `%LOCALAPPDATA%` into `…\Packages\<package>\LocalCache\Local`. pastepad
+  works out its path correctly, believes it is reading it, and is in fact
+  reading and writing a copy. Open it later from its own shortcut and
+  **the history and the saved texts are gone** — while on disk they are
+  untouched. That is what happened on 14 August 2026, and starting from
+  scratch without a word is what turned an accident of the environment
+  into "it deleted everything".
+
+  At startup pastepad now writes a probe into its data folder and asks
+  Windows where that file actually landed. If the answer is not where it
+  asked, the session goes read-only for good: **nothing is written, in
+  any file**, the reason is logged with both paths, and the panel opens
+  with the explanation instead of an empty list.
+
+  Three things had to be measured to get this right, and two of them
+  looked correct and were not:
+  - **Package identity does not detect it.** `GetCurrentPackageFullName`
+    returns `APPMODEL_ERROR_NO_PACKAGE`: the child process inherits the
+    file redirection but not the identity. Tried first, and it never
+    fired.
+  - **A directory handle does not either.** The folder resolves to
+    itself; only a file reveals the redirection.
+  - **The file has to be freshly written.** Redirection is copy-on-write,
+    file by file, so a file that was already there resolves to the real
+    path until somebody writes it.
+
+  The guard is a single probe at startup, created with `DELETE_ON_CLOSE`
+  so Windows removes it even if the process dies holding it.
+- 94 tests to 99. The five new ones fix the guarantee that matters: a
+  frozen session writes nothing — not the preferences, not the deferred
+  history dump, and not the things saved instantly like pin, delete and
+  empty, which is what the person actually did on purpose.
+
 ## [4.6.0] - 2026-08-14
 
 **Two things that failed in silence.** One you could see and not believe,

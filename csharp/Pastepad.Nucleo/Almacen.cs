@@ -85,17 +85,46 @@ public sealed class Almacen
     public bool LecturaIncompleta => _ilegibles.Count > 0;
 
     /// <summary>
+    /// Por que esta sesion no debe escribir NADA, si es el caso.
+    ///
+    /// Es mas fuerte que <see cref="_ilegibles"/>: aquello protege los
+    /// archivos que no se pudieron leer, uno a uno, y esto para la
+    /// sesion entera. Se usa cuando lo que falla no es un archivo sino
+    /// el sitio: si lo que se lee no es lo que el usuario tiene, lo que
+    /// se escriba tampoco ira donde el usuario cree.
+    /// </summary>
+    string? _congelado;
+
+    /// <summary>
+    /// Deja la sesion en solo lectura, para siempre. No hay vuelta
+    /// atras a proposito: quien decide esto lo hace al arrancar y con
+    /// motivo, y una sesion que se descongela sola es justo la que
+    /// acabaria escribiendo donde no debe.
+    /// </summary>
+    public void Congelar(string motivo)
+    {
+        _congelado ??= motivo;
+        Aviso?.Invoke("almacen congelado: " + motivo);
+    }
+
+    public bool Congelado => _congelado is not null;
+
+    /// <summary>
     /// Que contarle al usuario, si hay algo que contarle. La interfaz
     /// tiene que enseñarlo: un fallo de datos que no se ve es peor que
     /// uno que se ve.
+    ///
+    /// El congelado va primero porque explica el otro: cuando los
+    /// archivos que se ven no son los del usuario, «no pude leer tus
+    /// datos» describe el sintoma y no la causa.
     /// </summary>
-    public string? Problema => LecturaIncompleta
+    public string? Problema => _congelado ?? (LecturaIncompleta
         ? "No pude leer tus datos guardados ("
           + string.Join(", ", _ilegibles.Select(Path.GetFileName))
           + "). Para no perderlos, no voy a escribir sobre ellos: lo de "
           + "esta sesion no se guardara. Cierra el programa y vuelve a "
           + "abrirlo."
-        : null;
+        : null);
 
     /// <summary>
     /// Los dos avisadores se reciben aqui y no se enganchan despues a
@@ -203,6 +232,22 @@ public sealed class Almacen
     /// </summary>
     bool Escribir<T>(string ruta, T datos)
     {
+        // Sesion congelada: no se escribe nada, en ningun archivo.
+        //
+        // Este es el unico sitio por el que pasan TODAS las escrituras,
+        // asi que es el unico donde la garantia se puede dar de verdad.
+        // Ponerlo en Volcar dejaria fuera lo que se guarda al instante
+        // —fijar, borrar, vaciar—, que es justo lo que el usuario hace a
+        // proposito y lo que mas duele perder.
+        if (_congelado is not null)
+        {
+            Incidencia?.Invoke(
+                $"no se escribe {ruta}: {_congelado}",
+                new InvalidOperationException("almacen congelado"));
+
+            return false;
+        }
+
         // Lo que no se pudo leer no se sobrescribe. Preferimos perder lo
         // de esta sesion a perder lo de todas las anteriores.
         if (_ilegibles.Contains(ruta))

@@ -1169,6 +1169,93 @@ public sealed class PruebaEnlaces
 }
 
 /// <summary>
+/// La sesion congelada: cuando lo que se lee no es lo del usuario, no
+/// se escribe NADA.
+///
+/// Esto no es teoria. El 14 de agosto de 2026 pastepad se abrio dentro
+/// del contenedor de otra aplicacion empaquetada, Windows le redirigio
+/// los archivos, y el usuario se encontro el programa vacio. Sus datos
+/// estaban intactos en el disco; lo que fallaba era el sitio. Si esa
+/// sesion hubiera escrito, se los habria llevado por delante de verdad.
+/// </summary>
+[TestClass]
+public sealed class PruebaCongelado : BaseConCarpetaTemporal
+{
+    [TestMethod]
+    public void test_congelado_no_escribe_ni_una_preferencia()
+    {
+        var a = new Almacen(Rutas);
+        a.PonerPref("atajo", "ctrl+q");
+
+        // Y ahora se congela, con el archivo ya en disco.
+        a.Congelar("de prueba");
+        a.PonerPref("atajo", "ctrl+j");
+
+        // Lo de antes sigue; lo de despues no llego.
+        Assert.AreEqual("ctrl+q", new Almacen(Rutas).Pref<string>("atajo"));
+    }
+
+    [TestMethod]
+    public void test_congelado_no_escribe_lo_que_se_guarda_al_instante()
+    {
+        // Fijar, borrar y vaciar se escriben en el acto y no por el
+        // volcado diferido. Si la garantia viviera en Volcar, esto se
+        // colaria — y es justo lo que el usuario hace a proposito.
+        var a = new Almacen(Rutas);
+        a.AnadirSnippet(Modelo.CrearSnippet("uno", "Mis textos"));
+
+        a.Congelar("de prueba");
+        a.AnadirSnippet(Modelo.CrearSnippet("dos", "Mis textos"));
+
+        Assert.HasCount(1, new Almacen(Rutas).Snippets);
+    }
+
+    [TestMethod]
+    public void test_congelado_no_vuelca_el_historial()
+    {
+        var a = new Almacen(Rutas);
+        a.Anotar(new Entrada { Tipo = Entrada.Texto_, Texto = "antes" });
+        a.Volcar(forzar: true);
+
+        a.Congelar("de prueba");
+        a.Anotar(new Entrada { Tipo = Entrada.Texto_, Texto = "despues" });
+        a.Volcar(forzar: true);
+
+        var leido = new Almacen(Rutas);
+        Assert.HasCount(1, leido.Hist);
+        Assert.AreEqual("antes", leido.Hist[0].Texto);
+    }
+
+    [TestMethod]
+    public void test_el_usuario_se_entera()
+    {
+        var a = new Almacen(Rutas);
+        Assert.IsNull(a.Problema);
+        Assert.IsFalse(a.Congelado);
+
+        a.Congelar("me abrieron en el sitio equivocado");
+
+        Assert.IsTrue(a.Congelado);
+        Assert.AreEqual("me abrieron en el sitio equivocado", a.Problema);
+    }
+
+    [TestMethod]
+    public void test_no_se_descongela()
+    {
+        // Una sesion que se descongela sola es la que acabaria
+        // escribiendo donde no debe. El primer motivo manda.
+        var a = new Almacen(Rutas);
+        a.Congelar("el primero");
+        a.Congelar("el segundo");
+
+        Assert.AreEqual("el primero", a.Problema);
+
+        a.PonerPref("x", "y");
+        Assert.IsNull(new Almacen(Rutas).Pref<string>("x"));
+    }
+}
+
+/// <summary>
 /// De que es cada guardado. Lo que se prueba aqui no es la propuesta
 /// —que es la clasificacion de siempre— sino las dos reglas nuevas: que
 /// lo que elige el usuario gana, y que lo que no elige no se escribe.

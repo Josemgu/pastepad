@@ -361,6 +361,43 @@ internal static partial class Nativo
     [LibraryImport("user32.dll")]
     public static partial int GetDpiForWindow(nint hwnd);
 
+    // --- donde acaban de verdad los archivos -------------------------
+
+    public const uint GENERIC_WRITE = 0x40000000;
+    public const uint CREATE_ALWAYS = 2;
+
+    /// <summary>
+    /// El archivo se borra solo al cerrar el handle. Asi la sonda no
+    /// deja rastro ni aunque el programa muera con ella abierta.
+    /// </summary>
+    public const uint FILE_FLAG_DELETE_ON_CLOSE = 0x04000000;
+
+    public static readonly nint HANDLE_INVALIDO = -1;
+
+    [LibraryImport("kernel32.dll", EntryPoint = "CreateFileW",
+                   StringMarshalling = StringMarshalling.Utf16,
+                   SetLastError = true)]
+    public static partial nint CreateFileW(
+        string nombre, uint acceso, uint comparte, nint seguridad,
+        uint creacion, uint banderas, nint plantilla);
+
+    /// <summary>
+    /// La ruta REAL del archivo o carpeta que hay detras de un handle,
+    /// que no tiene por que ser la que se pidio: cuando el proceso vive
+    /// dentro del contenedor de una aplicacion empaquetada, Windows
+    /// redirige %LOCALAPPDATA% y esta es la unica forma de verlo desde
+    /// dentro. Devuelve la longitud, o 0 si fallo.
+    /// </summary>
+    [LibraryImport("kernel32.dll", EntryPoint = "GetFinalPathNameByHandleW",
+                   StringMarshalling = StringMarshalling.Utf16,
+                   SetLastError = true)]
+    public static partial uint GetFinalPathNameByHandleW(
+        nint handle, [Out] char[] buffer, uint largo, uint banderas);
+
+    [LibraryImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool CloseHandle(nint handle);
+
     // --- bandeja ----------------------------------------------------
 
     // Igual que RegisterClassW: NOTIFYICONDATAW lleva cadenas de tamaño

@@ -114,4 +114,11 @@ public sealed record Rutas(
         Path.Combine(carpeta, "historial.json"),
         Path.Combine(carpeta, "config.json"),
         Path.Combine(carpeta, "imagenes"));
+
+    /// <summary>
+    /// La carpeta que las contiene a todas. Se deduce y no se guarda
+    /// aparte para que no puedan discrepar: las cuatro rutas salen
+    /// siempre de la misma, incluso cuando vienen de <c>--datos</c>.
+    /// </summary>
+    public string Carpeta => Path.GetDirectoryName(Datos) ?? "";
 }
