@@ -118,7 +118,10 @@ public partial class App : Application
 
         string atajo = Almacen.Pref("atajo", Config.AtajoDef) ?? Config.AtajoDef;
 
-        if (!_buzon.PonerAtajo(atajo) && _buzon.PonerAtajo(Config.AtajoDef))
+        bool suyo = _buzon.PonerAtajo(atajo);
+        bool deFabrica = !suyo && _buzon.PonerAtajo(Config.AtajoDef);
+
+        if (deFabrica)
             Registro.Anotar($"'{atajo}' no se pudo poner; se uso el de fabrica");
 
         _bandeja = new Bandeja(_buzon.Handle, "pastepad");
@@ -144,8 +147,47 @@ public partial class App : Application
             _ => _panel?.DispatcherQueue.TryEnqueue(() => Almacen.Volcar()),
             null, Almacen.IntervaloVolcado, Almacen.IntervaloVolcado);
 
-        if (_buzon.Problema is not null)
-            _panel.Avisar(_buzon.Problema);
+        // Si lo que fallo es el ATAJO, el aviso no puede vivir solo en el
+        // panel: el panel se abre con el atajo. Quien tiene el problema
+        // es exactamente quien no puede llegar al mensaje que se lo
+        // explica, y desde fuera eso se ve como «esta arrancado y no
+        // hace nada».
+        //
+        // Paso en una maquina de trabajo, donde otro programa ya tenia
+        // cogido el Ctrl+Q: la tecla se le colaba al programa de delante
+        // —que es la señal de que pastepad no la registro— y no habia
+        // forma de enterarse. El globo de la bandeja si llega, y el
+        // propio icono es el camino para abrir el panel y cambiarlo.
+        if (_buzon.Problema is not null) _panel.Avisar(_buzon.Problema);
+
+        // **El caso peor no es quedarse sin atajo: es cambiarlo sin
+        // decirlo.** Cuando el atajo del usuario esta cogido por otro
+        // programa, pastepad cae al de fabrica y hasta ahora se quedaba
+        // tan ancho — sin Problema que enseñar, porque el de fabrica si
+        // habia entrado—. El usuario sigue pulsando el suyo para siempre,
+        // no pasa nada, y encima la tecla se le cuela al programa que
+        // tenga delante, que es la señal de que pastepad no la recibio.
+        //
+        // Pasa en maquinas de trabajo, donde hay mas programas peleando
+        // por las combinaciones. Y no se puede avisar solo en el panel:
+        // el panel se abre con el atajo.
+        if (deFabrica)
+        {
+            _bandeja?.Avisar(
+                Textos.T("Tu atajo estaba ocupado"),
+                Textos.T("Otro programa ya usa %s, así que pastepad está "
+                       + "usando %s. Haz clic en este icono para abrir el "
+                       + "panel y elegir otro.",
+                    Config.Legible(atajo), Config.Legible(Config.AtajoDef)));
+        }
+        else if (!suyo)
+        {
+            _bandeja?.Avisar(
+                Textos.T("pastepad se ha quedado sin atajo"),
+                Textos.T("Ninguna de las combinaciones se pudo registrar. "
+                       + "Haz clic en este icono para abrir el panel y "
+                       + "elegir otra."));
+        }
 
         // Todo lo que toca el almacen va por el hilo de interfaz, que es
         // desde donde se toca en todos los demas sitios. Lo unico que

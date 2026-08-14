@@ -3,6 +3,39 @@
 All notable changes to this project are documented here.
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [4.8.0] - 2026-08-14
+
+### Fixed
+- **pastepad no longer changes your shortcut without telling you.** If
+  the combination you picked is already taken by another program,
+  `RegisterHotKey` refuses it — error 1409 — and pastepad quietly fell
+  back to the factory one and carried on. Nothing was shown, because the
+  fallback had worked. You keep pressing your shortcut forever, nothing
+  happens, and the keystroke goes through to whatever program is in
+  front, which is the giveaway that pastepad never received it.
+
+  This is common on a work machine, where more programs compete for
+  combinations. It now says so **through the tray icon**, naming both the
+  one that was taken and the one being used instead. It cannot be said in
+  the panel alone: the panel is opened with the shortcut, so the person
+  with the problem is exactly the one who cannot reach the message
+  explaining it. Clicking that same icon opens the panel to change it.
+- **Updating over a running copy now closes it first, properly.** The
+  installer used to hand you Windows' own "Preparing to Install" page,
+  which lists pastepad and asks whether it may close it. That is a
+  question with one correct answer, and choosing "do not close the
+  applications" replaced the files underneath a copy that was still
+  running — which is why installing over an existing version did not
+  behave like a clean install.
+
+  pastepad is now closed before Setup even looks at which files are in
+  use, so that page never appears. It is closed through the same door
+  Windows uses when shutting down, so it flushes what it has not written
+  yet, releases the global shortcut and removes its tray icon, rather
+  than being killed. When the installation finishes it is reopened
+  without asking, including on a silent install: you did not close it,
+  and what you asked for was an update.
+
 ## [4.7.0] - 2026-08-14
 
 **pastepad will no longer start empty and act as if that were normal.**

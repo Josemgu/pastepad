@@ -61,6 +61,14 @@ public static class Config
     public const string AtajoDef = "ctrl+shift+v";
 
     /// <summary>
+    /// El atajo tal como se le enseña al usuario. Si no es de los de la
+    /// lista sale tal cual: config.json se edita a mano, y es mejor
+    /// enseñar «ctrl+j» que no enseñar nada.
+    /// </summary>
+    public static string Legible(string atajo) =>
+        Atajos.TryGetValue(atajo, out var bonito) ? bonito : atajo;
+
+    /// <summary>
     /// La carpeta que se crea sola cuando no hay ninguna.
     ///
     /// No se traduce, y por eso vive aqui y no en <see cref="Textos"/>:

@@ -118,8 +118,18 @@ Name: "{autodesktop}\pastepad"; Filename: "{app}\pastepad.exe"; Tasks: escritori
 ; su preferencia en config.json y la aplicacion la vuelve a aplicar sola.
 
 [Run]
+; Si lo cerramos nosotros para poder actualizar, se vuelve a abrir sin
+; preguntar y tambien en instalacion silenciosa: el usuario no lo cerro,
+; y lo que pidio fue actualizar. Esto sustituye a RestartApplications
+; para este caso, porque al haberlo cerrado antes el Restart Manager ya
+; no lo ve en uso y no tiene a quien reabrir.
+Filename: "{app}\pastepad.exe"; Flags: nowait; Check: HayQueReabrir
+
+; Y el de siempre —con su casilla— solo cuando NO lo estabamos usando:
+; ofrecer "abrir pastepad" a quien lo tenia abierto hace diez segundos
+; no tiene sentido.
 Filename: "{app}\pastepad.exe"; Description: "Abrir pastepad"; \
-    Flags: nowait postinstall skipifsilent
+    Flags: nowait postinstall skipifsilent; Check: NoSeCerroSolo
 
 ; El registro de reserva que la aplicacion escribe junto a su ejecutable.
 ; No lo instala el instalador —lo crea el programa al arrancar—, asi que
@@ -161,9 +171,17 @@ const
     cuadro de mensaje es de Windows. }
   Salto = #13#10#13#10;
 
+  { La ventana de escucha de cierre de pastepad. Es de nivel superior a
+    proposito —una ventana solo-mensajes «cannot be enumerated»— y por
+    eso se la puede encontrar desde aqui. Al recibir WM_CLOSE vuelca los
+    datos y termina, que es la misma puerta que usa Windows al apagar. }
+  ClaseCierre = 'pastepad_cierre_3ff1c0de';
+  WM_CLOSE = $0010;
+
 var
   Instalada: string;
   EsActualizacion: Boolean;
+  EstabaCorriendo: Boolean;
 
 { Compara dos versiones. No se usa el signo que devuelve
   ComparePackedVersion porque su documentacion dice que devuelve un
@@ -257,4 +275,74 @@ procedure CurPageChanged(IdPagina: Integer);
 begin
   if (IdPagina = wpReady) and EsActualizacion then
     WizardForm.NextButton.Caption := '&Actualizar';
+end;
+
+{ Cierra la copia que este corriendo, y espera a que se vaya de verdad.
+  Devuelve True solo si estaba corriendo Y se cerro. }
+function CerrarLaQueCorre(): Boolean;
+var
+  v: HWND;
+  i: Integer;
+  enviado: Boolean;
+begin
+  Result := False;
+
+  v := FindWindowByClassName(ClaseCierre);
+  if v = 0 then exit;
+
+  { WM_CLOSE y no matar el proceso: asi vuelca lo que tenga sin guardar
+    —el historial se escribe cada pocos segundos, no en cada copia—,
+    suelta el atajo global y se quita de la bandeja. Matarlo se llevaria
+    por delante hasta tres segundos de copias y dejaria el icono muerto
+    junto al reloj hasta pasarle el raton por encima. }
+  { El resultado se recoge en una variable en vez de descartarlo: Pascal
+    Script no es Delphi y no hace falta averiguar por las malas si
+    admite llamar a una funcion como si fuera un procedimiento. }
+  enviado := PostMessage(v, WM_CLOSE, 0, 0);
+  if not enviado then exit;
+
+  { Hasta 10 s. Se espera a que la VENTANA desaparezca, que es la señal
+    de que termino de verdad y solto los archivos; si se siguiera sin
+    esperar, el instalador se encontraria el ejecutable en uso y
+    volveria a salir la pagina que esto quiere evitar. }
+  for i := 1 to 100 do
+  begin
+    Sleep(100);
+    if FindWindowByClassName(ClaseCierre) = 0 then
+    begin
+      Result := True;
+      exit;
+    end;
+  end;
+end;
+
+{ Aqui, y no en PrepareToInstall, porque esto tiene que pasar ANTES de
+  que Setup mire que archivos estan en uso. Si para entonces pastepad ya
+  se cerro, no hay nada en uso y la pagina «Preparandose para instalar»
+  —esa que pregunta si puede cerrar las aplicaciones— no llega a salir.
+
+  Que salga esa pagina no era solo feo: dejaba en manos del usuario algo
+  que tiene una sola respuesta correcta, y si elegia «No cerrar las
+  aplicaciones» los archivos se reemplazaban con la copia vieja aun
+  viva. Instalar encima quedaba distinto que instalar limpio, que es lo
+  que se noto usandolo. }
+function NextButtonClick(IdPagina: Integer): Boolean;
+begin
+  Result := True;
+
+  if IdPagina = wpReady then
+    EstabaCorriendo := CerrarLaQueCorre();
+end;
+
+{ Para el [Run] de abajo: si lo cerramos nosotros, lo volvemos a abrir
+  nosotros y sin preguntar. El usuario no lo cerro, y lo que pidio fue
+  actualizar, no quedarse sin el programa. }
+function HayQueReabrir(): Boolean;
+begin
+  Result := EstabaCorriendo;
+end;
+
+function NoSeCerroSolo(): Boolean;
+begin
+  Result := not EstabaCorriendo;
 end;

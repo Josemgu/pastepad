@@ -13,7 +13,7 @@ las pierde al reiniciar.
 
 ## Estado
 
-Versión 4.7.0, reescrita en C# con WinUI 3 sobre el Windows App SDK
+Versión 4.8.0, reescrita en C# con WinUI 3 sobre el Windows App SDK
 2.3.1 y .NET 10. Desempaquetada y self-contained.
 
 La versión anterior (3.x, Python con Flet) **ya no está en el repo**.
@@ -238,6 +238,19 @@ not»— para no robarle el primer plano a nadie al iniciar sesión, y a
 virtual de la máquina de pruebas iba de `X -2560..2560, Y 0..1440`. Y
 **no toca `EstaVisible`**, así que el manejador que esconde el panel al
 perder el foco sale por su primera línea y no se entera.
+
+**Un atajo que no se puede registrar se avisa por la bandeja, no por el
+panel.** El panel se abre con el atajo: quien tiene el problema es
+exactamente quien no puede llegar al mensaje que se lo explica.
+
+Y lo peor no es quedarse sin atajo, es **cambiarlo sin decirlo**. Si el
+del usuario está cogido, pastepad cae al de fábrica, y hasta la 4.8.0 se
+quedaba tan ancho porque el de fábrica sí entraba y no había `Problema`
+que enseñar. El usuario sigue pulsando el suyo para siempre y la tecla
+se le cuela al programa de delante — que es justo la señal de que
+pastepad no la recibió. Reproducido con dos instancias peleándose:
+`Windows rechazo ctrl+alt+p (error 1409)`, que es
+`ERROR_HOTKEY_ALREADY_REGISTERED`.
 
 **Los avisos de cuando el panel no está delante van por la bandeja.**
 Al pegar, el panel se esconde ANTES de devolver el foco, así que el

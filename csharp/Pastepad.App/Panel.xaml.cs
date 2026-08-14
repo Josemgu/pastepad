@@ -183,9 +183,7 @@ public sealed partial class Panel : Window
 
         string atajo = Almacen.Pref("atajo", Config.AtajoDef) ?? Config.AtajoDef;
 
-        EtiquetaAtajo.Text = Config.Atajos.TryGetValue(atajo, out var legible)
-            ? legible
-            : atajo;
+        EtiquetaAtajo.Text = Config.Legible(atajo);
 
         Traducir();
 
