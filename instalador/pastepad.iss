@@ -132,6 +132,12 @@ Filename: "{app}\pastepad.exe"; Description: "Abrir pastepad"; \
 [UninstallDelete]
 Type: files; Name: "{app}\errores.log"
 
+; Nada de [UninstallDelete] sobre la carpeta de DATOS, y no es un olvido.
+; %LOCALAPPDATA%\pastepad —historial, textos guardados e imagenes— es del
+; usuario y no lo instalo yo, asi que no me toca borrarlo. Desinstalar se
+; lleva {app} y nada mas: la entrada de arranque tampoco, porque la
+; gestiona la aplicacion segun la preferencia del usuario.
+
 ; ---------------------------------------------------------------------
 ; Reconocer lo que ya hay puesto antes de instalar nada
 ; ---------------------------------------------------------------------
@@ -142,6 +148,12 @@ Type: files; Name: "{app}\errores.log"
 ; sabe si esta actualizando o duplicando, ni si sus textos guardados
 ; sobreviven, y la respuesta a lo segundo —que si— es justo la que hay
 ; que dar antes y no despues.
+;
+; **[Code] va la ultima de todas, y eso no es estetica.** A partir de
+; aqui el archivo es Pascal, donde ";" no abre un comentario sino que
+; cierra una sentencia. Un bloque de comentarios de los de arriba
+; colocado detras de esta linea se compila como codigo: "'BEGIN'
+; expected. Compile aborted." Paso exactamente eso.
 [Code]
 
 const
@@ -246,9 +258,3 @@ begin
   if (IdPagina = wpReady) and EsActualizacion then
     WizardForm.NextButton.Caption := '&Actualizar';
 end;
-
-; Nada de [UninstallDelete] sobre la carpeta de DATOS, y no es un olvido.
-; %LOCALAPPDATA%\pastepad —historial, textos guardados e imagenes— es del
-; usuario y no lo instalo yo, asi que no me toca borrarlo. Desinstalar se
-; lleva {app} y nada mas: la entrada de arranque tampoco, porque la
-; gestiona la aplicacion segun la preferencia del usuario.
