@@ -13,7 +13,7 @@ las pierde al reiniciar.
 
 ## Estado
 
-Versión 4.2.0, reescrita en C# con WinUI 3 sobre el Windows App SDK
+Versión 4.4.0, reescrita en C# con WinUI 3 sobre el Windows App SDK
 2.3.1 y .NET 10. Desempaquetada y self-contained.
 
 La versión anterior (3.x, Python con Flet) **ya no está en el repo**.
@@ -39,8 +39,9 @@ csharp/
     Textos.cs                4 idiomas
     Versiones.cs             comparar versiones y decidir si toca avisar
     Argumentos.cs            la linea con la que Windows nos reabre
+    Tipos.cs                 de que es cada guardado, y cuando se escribe
     Config.cs, Datos.cs, Autoarranque.cs, Rutas
-  Pastepad.Nucleo.Pruebas/   78 pruebas, sin abrir ventana
+  Pastepad.Nucleo.Pruebas/   90 pruebas, sin abrir ventana
   Pastepad.App/
     Sistema/                 todo lo que habla con Win32
       Buzon.cs               ventana solo-mensajes: atajo y portapapeles
@@ -48,7 +49,8 @@ csharp/
       Portapapeles.cs        lectura, escritura, formatos privados, RTF
       Foco.cs                devolver el foco y pegar
       Actualizacion.cs       consulta la API de GitHub. Solo consulta
-      Bandeja.cs, Pantalla.cs, Arranque.cs, Nativo.cs
+      Arranque.cs              autoarranque: clave Run Y tarea al iniciar sesion
+      Bandeja.cs, Pantalla.cs, Nativo.cs
     Panel.xaml(.cs)          el panel
     Formato.cs               la barra de formato sobre RichEditBox
     Dialogos.cs, Estilo.cs, Fila.cs
@@ -59,7 +61,7 @@ docs/                        35 maquetas, especificacion, logos
 ```
 
 `Pastepad.Nucleo` no importa nada gráfico **a propósito**. Es lo que
-permite que 74 pruebas corran sin abrir ventana y sin el Windows App
+permite que 90 pruebas corran sin abrir ventana y sin el Windows App
 SDK. No metas WinUI ahí dentro.
 
 Ese reparto es también por qué `Versiones.cs` está en el núcleo y
@@ -148,6 +150,39 @@ de más y el panel crece en cada apertura.
 columnas no cabe hasta un panel de ~455 px, y el de fábrica son 380. El
 desplegable no pone puntos suspensivos: recorta por la izquierda, y
 salía `l + Shift + V` en vez de `Ctrl + Shift + V`.
+
+**El autoarranque va por dos caminos, y es a propósito.** La clave
+`HKCU\...\Run` y una tarea al iniciar sesión con 30 s de retraso. No es
+cinturón y tirantes por gusto: hubo un arranque en el que la clave era
+correcta, el ejecutable existía, no estaba desactivada en el
+Administrador de tareas, y Windows sí procesó esa clave —OneDrive, que
+está en la misma, arrancó 15 s después de explorer— y pastepad no dejó
+**ni una línea** en ninguno de los dos logs ni informe de fallo. O el
+proceso no llegó a crearse, o murió antes de su primera instrucción, que
+es donde el host de .NET falla en silencio. La causa sigue sin saberse.
+
+La tarea se registra sin ser administrador porque va con
+`InteractiveToken` y `LeastPrivilege`: «you do not need to specify a
+password when registering the task if you register the task to run under
+the security context of your account and you use the S4U or interactive
+logon type». Con `Password` o `S4U` haría falta el privilegio de inicio
+de sesión como proceso por lotes, que un usuario normal no tiene.
+Comprobado registrándola y borrándola sin elevación.
+
+**No se puede registrar lo que no pasa.** Por eso cada arranque anota
+cuánto llevaba Windows encendido (`Environment.TickCount64`): unos
+segundos significa que nos abrió Windows, unas horas que el autoarranque
+falló y abrió el usuario. Es lo único que convierte «no arrancó» en algo
+que se lee.
+
+**Medir el atajo de punta a punta, no solo el trozo cómodo.** La medida
+vieja empezaba en `AlAtajo` y acababa en `Activate()`, y decía 25 ms
+mientras el usuario notaba esperas. Se dejaban fuera los dos trozos donde
+puede estar el retraso: lo que el mensaje espera en la cola —que sale de
+`GetTickCount - GetMessageTime()`, y es donde asoma un proceso que
+Windows echó de memoria o frenó por estar en segundo plano— y lo que
+tarda en dibujarse el primer fotograma, porque `AppWindow.Show()` vuelve
+antes de que haya píxeles.
 
 ## Cosas que romperás si no tienes cuidado
 

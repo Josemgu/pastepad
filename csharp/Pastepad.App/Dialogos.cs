@@ -492,12 +492,58 @@ public static class Dialogos
         nombre.PlaceholderText = Textos.T("Cómo quieres llamarlo");
 
         var etiquetaNombre = Etiqueta(Textos.T("Nombre"));
+        etiquetaNombre.VerticalAlignment = VerticalAlignment.Center;
+        etiquetaNombre.Margin = new Thickness(0);
+
+        // De que es esto. Se propone leyendo el texto —lo que pastepad
+        // hacia solo y sin poder discutirse— y el usuario lo cambia si no
+        // acierta. El caso que lo pedia: un cuerpo de correo es texto
+        // corriente, no hay nada dentro que lo separe de una nota, y sin
+        // poder decirlo cinco correos eran cinco notas mas.
+        var elegirTipo = new ComboBox
+        {
+            MinWidth = 112,
+            Height = 28,
+            MinHeight = 28,
+            CornerRadius = new CornerRadius(10),
+            FontSize = Estilo.TMenor,
+            Padding = new Thickness(12, 0, 8, 0),
+            HorizontalAlignment = HorizontalAlignment.Right,
+        };
+
+        foreach (var t in Tipos.Todos) elegirTipo.Items.Add(RotuloTipo(t));
+
+        // Comparte linea con la etiqueta del nombre, asi que no tiene un
+        // rotulo propio que leer. Sin esto, un lector de pantalla anuncia
+        // un desplegable sin decir de que — y con «Marcador» dentro, lo
+        // razonable es pensar que es el nombre. La carpeta de al lado si
+        // tiene su «Guardar en» delante.
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(
+            elegirTipo, Textos.T("Tipo"));
+
+        // El tipo va en la MISMA linea que la etiqueta del nombre, y no
+        // en una fila propia como la carpeta. Una fila entera cuesta unos
+        // 40 px de alto y aqui no sobran: la 4.3.0 tuvo que recortar la
+        // caja de escribir de 180 a 140 para que el boton Guardar no se
+        // quedara medio debajo del pliegue. Compartir la linea de la
+        // etiqueta cuesta la diferencia entre un rotulo y un desplegable,
+        // que son unos 13.
+        var cabeceraNombre = new Grid();
+        cabeceraNombre.ColumnDefinitions.Add(
+            new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        cabeceraNombre.ColumnDefinitions.Add(
+            new ColumnDefinition { Width = GridLength.Auto });
+
+        Grid.SetColumn(elegirTipo, 1);
+        cabeceraNombre.Children.Add(etiquetaNombre);
+        cabeceraNombre.Children.Add(elegirTipo);
 
         var bloqueNombre = new StackPanel
         {
             Margin = new Thickness(0, 0, 0, Estilo.E3),
+            Spacing = Estilo.E1,
         };
-        bloqueNombre.Children.Add(etiquetaNombre);
+        bloqueNombre.Children.Add(cabeceraNombre);
         bloqueNombre.Children.Add(nombre);
 
         // Un titulo que es la primera linea del propio texto no es un
@@ -510,15 +556,45 @@ public static class Dialogos
             nombre.Text = original.Titulo;
         }
 
+        // Mientras el usuario no toque el desplegable, el tipo sigue a lo
+        // que se escribe: pegar una direccion lo pone en Marcador,
+        // escribir [[campos]] en Plantilla. En cuanto lo toca, deja de
+        // moverse — una propuesta que se corrige sola no es una eleccion.
+        bool loEligioElUsuario = Tipos.Vale(original?.Tipo);
+        bool poniendoloNosotros = false;
+
+        void PonerTipo(string tipo)
+        {
+            poniendoloNosotros = true;
+            elegirTipo.SelectedIndex = Math.Max(0, Array.IndexOf(Tipos.Todos, tipo));
+            poniendoloNosotros = false;
+        }
+
+        elegirTipo.SelectionChanged += (_, _) =>
+        {
+            if (!poniendoloNosotros) loEligioElUsuario = true;
+        };
+
+        string TipoElegido() =>
+            Tipos.Todos[Math.Max(0, elegirTipo.SelectedIndex)];
+
         // En un enlace el nombre no es opcional en la practica: la
         // primera linea ES la direccion, y una lista de direcciones no se
         // busca por nombre. La etiqueta lo dice cuando toca.
         void AjustarEtiqueta()
         {
-            etiquetaNombre.Text = Modelo.EsEnlace(Formato.TextoPlano(caja).Trim())
+            string plano = Formato.TextoPlano(caja).Trim();
+
+            etiquetaNombre.Text = Modelo.EsEnlace(plano)
                 ? Textos.T("Nombre del marcador")
                 : Textos.T("Nombre");
+
+            if (!loEligioElUsuario) PonerTipo(Tipos.Deducir(plano));
         }
+
+        PonerTipo(original is not null
+            ? Tipos.De(original)
+            : Tipos.Deducir(texto));
 
         AjustarEtiqueta();
         caja.TextChanged += (_, _) => AjustarEtiqueta();
@@ -595,7 +671,8 @@ public static class Dialogos
             salida = Modelo.CrearSnippet(
                 runs,
                 elegirCarpeta.SelectedItem as string ?? Config.CarpetaDef,
-                comoSeLlama);
+                comoSeLlama,
+                TipoElegido());
 
             dialogo.Hide();
         };
@@ -617,6 +694,20 @@ public static class Dialogos
         await dialogo.ShowAsync();
         return salida;
     }
+
+    /// <summary>
+    /// Como se llama cada tipo en pantalla. La constante que va al
+    /// archivo no se traduce nunca —cambiar de idioma dejaria los
+    /// guardados clasificados con una palabra que ya no se reconoce—,
+    /// igual que pasa con el nombre de la carpeta de fabrica.
+    /// </summary>
+    static string RotuloTipo(string tipo) => tipo switch
+    {
+        Tipos.Marcador => Textos.T("Marcador"),
+        Tipos.Plantilla => Textos.T("Plantilla"),
+        Tipos.Correo => Textos.T("Correo"),
+        _ => Textos.T("Nota"),
+    };
 
     // ------------------------------------------------ barra de formato
 

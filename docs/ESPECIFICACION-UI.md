@@ -274,22 +274,38 @@ fijado, el alfiler se queda visible siempre, para saber qué está
 fijado sin pasar el mouse por cada fila.
 
 **Fila de enlace.** Solo si el texto completo copiado es una URL
-(`modelo.es_enlace()`) — no si el texto *contiene* una URL en medio de
-una oración. Cuando aplica: icono de enlace en vez del icono normal,
-y el dominio (`modelo.dominio_de()`) en vez del contador de
-caracteres. Un clic abre el navegador en vez de pegar.
+(`Modelo.EsEnlace`) — no si el texto *contiene* una URL en medio de una
+oración. Cuando aplica: el dominio (`Modelo.DominioDe`) en vez del
+contador de caracteres, y «Abrir en el navegador» en el menú de la
+fila. **El clic pega**, como en cualquier otra fila.
 
-**Guardados va en dos grupos plegables: marcadores y notas.** Esto
-faltaba en este documento y estaba en el README y en `filas.py`. Un
-**marcador no es otro tipo de dato**: es un guardado cuyo texto entero
-es un enlace (`Modelo.EsEnlace`). Se separan porque no se usan igual —
-un marcador se abre en el navegador y una nota se pega — y mezclarlos
-obliga a leer la lista entera para encontrar cualquiera de los dos.
+Hasta la 4.3.0 el clic abría el navegador. Se quitó porque por el mismo
+sitio pasaban los cuatro caminos que llevan a pegar —el clic, el Enter
+del buscador, y «Pegar» y «Pegar sin formato» del menú—, así que un
+enlace no se podía pegar en ningún campo: el elemento que decía «Pegar»
+abría Chrome. Comprobado de punta a punta contra el Bloc de notas.
+
+**Guardados va en cuatro grupos plegables: marcadores, plantillas,
+correos y notas.** Ninguno es otro tipo de dato: son guardados que se
+separan porque no se usan igual, y mezclarlos obliga a leer la lista
+entera para encontrar cualquiera de ellos.
+
+**El tipo lo elige el usuario** en el desplegable del diálogo de
+guardar, que comparte línea con la etiqueta «Nombre». pastepad propone
+el que se deduce del texto —una URL entera es marcador, unos
+`[[campos]]` plantilla, el resto nota— y deja de proponer en cuanto el
+usuario lo toca. Lo elegido solo se escribe en `snippets.json` si
+contradice a lo deducido, así que un archivo de antes de la 4.4.0 se
+vuelve a escribir sin una clave de más.
+
+**Correo no se deduce nunca.** No hay nada en un cuerpo de correo que lo
+separe de una nota, y proponerlo por llevar una arroba convertiría en
+correo cualquier texto que mencione una dirección. Es el tipo que existe
+precisamente para elegirlo a mano.
 
 La cabecera de grupo mide 32px, lleva chevron, icono y contador, y
-**solo aparece cuando hay de los dos**: con un solo grupo no hay nada
-que separar. Al hacer clic en un marcador se abre el navegador, no se
-pega.
+**solo aparece cuando hay más de un grupo con algo dentro**: con uno
+solo no hay nada que separar.
 
 **Carpetas: dos modos intercambiables.** `menu` (desplegable, un solo
 botón) o `fichas` (una cápsula por carpeta en fila horizontal). Se

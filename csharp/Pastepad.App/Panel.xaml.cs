@@ -392,6 +392,29 @@ public sealed partial class Panel : Window
         Buscador.Focus(FocusState.Programmatic);
     }
 
+    /// <summary>
+    /// Avisa una sola vez, cuando el panel se haya dibujado de verdad.
+    ///
+    /// <see cref="Asomar"/> vuelve en cuanto ha pedido la ventana, no
+    /// cuando hay algo en pantalla. Lo que el usuario llama «tardar» es
+    /// hasta ver el panel, y ese trozo se quedaba fuera de la medida: el
+    /// log decia 25 ms mientras se notaba una espera larga.
+    ///
+    /// Rendering se dispara en cada fotograma, asi que hay que
+    /// desengancharse en el primero. Si no, se paga en cada cuadro de
+    /// toda la vida del programa.
+    /// </summary>
+    public void AlPrimerFotograma(Action aviso)
+    {
+        void UnaVez(object? _, object __)
+        {
+            Microsoft.UI.Xaml.Media.CompositionTarget.Rendering -= UnaVez;
+            aviso();
+        }
+
+        Microsoft.UI.Xaml.Media.CompositionTarget.Rendering += UnaVez;
+    }
+
     public void Esconder()
     {
         if (!EstaVisible) return;
@@ -571,40 +594,43 @@ public sealed partial class Panel : Window
     }
 
     /// <summary>
-    /// Guardados en tres grupos plegables: marcadores, plantillas y
-    /// notas.
+    /// Guardados en cuatro grupos plegables: marcadores, plantillas,
+    /// correos y notas.
     ///
-    /// Ninguno es otro tipo de dato: son guardados que se distinguen por
-    /// lo que llevan dentro —un enlace, unos [[campos]], o ni una cosa
-    /// ni otra—. Se separan porque no se usan igual: uno se abre en el
-    /// navegador, otro pregunta antes de pegar y el tercero se pega tal
-    /// cual. La carpeta la elige el usuario; el grupo sale del texto y
-    /// no hay que mantenerlo.
+    /// Ninguno es otro tipo de dato: son guardados que se separan porque
+    /// no se usan igual. El grupo lo elige el usuario al guardar, y
+    /// mientras no elija se propone leyendo el texto —una direccion, unos
+    /// [[campos]], o ni una cosa ni otra—, que es lo que se hacia antes
+    /// de que se pudiera elegir.
     ///
-    /// Un enlace con [[campos]] cuenta como marcador: lo que manda es
-    /// que ese clic abre el navegador.
+    /// El cuarto grupo, correos, existe porque era el que no se podia
+    /// deducir: un cuerpo de correo es texto corriente y no hay nada
+    /// dentro que lo distinga de una nota. Sin poder elegir, cinco
+    /// cuerpos de correo eran cinco notas mas.
+    ///
+    /// La carpeta sigue siendo otra cosa: el grupo dice QUE es, la
+    /// carpeta dice DONDE esta.
     /// </summary>
     void Agrupar()
     {
-        var marcadores = _filas.Where(f => f.EsEnlace).ToList();
-        var plantillas = _filas.Where(f => f.EsPlantilla).ToList();
-        var notas = _filas.Where(f => !f.EsEnlace && !f.EsPlantilla).ToList();
+        var porTipo = Tipos.Todos.ToDictionary(
+            t => t,
+            t => _filas.Where(f => f.Tipo == t).ToList());
 
         // Con un solo grupo la cabecera sobra: no hay nada que separar,
         // y plegarlo dejaria la pestana en blanco.
-        int cuantos = (marcadores.Count > 0 ? 1 : 0)
-                    + (plantillas.Count > 0 ? 1 : 0)
-                    + (notas.Count > 0 ? 1 : 0);
+        bool conCabecera = porTipo.Values.Count(g => g.Count > 0) > 1;
 
-        bool conCabecera = cuantos > 1;
-
-        Volcar("marcadores", Textos.T("Marcadores"), marcadores,
+        Volcar("marcadores", Textos.T("Marcadores"), porTipo[Tipos.Marcador],
                Estilo.Iconos.Enlace, true, conCabecera);
 
-        Volcar("plantillas", Textos.T("Plantillas"), plantillas,
+        Volcar("plantillas", Textos.T("Plantillas"), porTipo[Tipos.Plantilla],
                Estilo.Iconos.Plantilla, true, conCabecera);
 
-        Volcar("notas", Textos.T("Notas"), notas,
+        Volcar("correos", Textos.T("Correos"), porTipo[Tipos.Correo],
+               Estilo.Iconos.Correo, true, conCabecera);
+
+        Volcar("notas", Textos.T("Notas"), porTipo[Tipos.Nota],
                Estilo.Iconos.Nota, false, conCabecera);
     }
 
@@ -1385,16 +1411,21 @@ public sealed partial class Panel : Window
 
     /// <summary>
     /// Pega la fila. Si es una plantilla con [[campos]], primero
-    /// pregunta; si es un enlace, abre el navegador en vez de pegar.
+    /// pregunta.
+    ///
+    /// Un enlace se pega como cualquier otra cosa. Hasta la 4.3.0 se
+    /// abria en el navegador, y por aqui pasan los cuatro caminos que
+    /// llevan a pegar —el clic, el Enter del buscador, y «Pegar» y
+    /// «Pegar sin formato» del menu—, asi que un enlace no se podia
+    /// pegar en ningun sitio: el elemento que dice «Pegar» abria Chrome.
+    /// Copiar una direccion y no poder soltarla en ningun campo fue lo
+    /// que lo destapo.
+    ///
+    /// Abrir sigue estando, pero donde no puede confundirse con pegar:
+    /// «Abrir en el navegador», arriba del menu de la fila.
     /// </summary>
     async Task Usar(Fila fila, bool sinFormato = false)
     {
-        if (fila.EsEnlace)
-        {
-            App.Actual.AbrirEnlace(fila.Texto);
-            return;
-        }
-
         if (fila.Dato is Entrada entrada)
         {
             App.Actual.Pegar(entrada);

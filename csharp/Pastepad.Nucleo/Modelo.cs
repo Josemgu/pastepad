@@ -114,7 +114,8 @@ public static class Modelo
     /// lo de siempre.
     /// </summary>
     public static Snippet CrearSnippet(
-        string texto, string categoria, string? titulo = null)
+        string texto, string categoria, string? titulo = null,
+        string? tipo = null)
     {
         string limpio = NormalizarSaltos(texto);
         string nombre = (titulo ?? "").Trim();
@@ -124,6 +125,7 @@ public static class Modelo
             Titulo = nombre.Length > 0 ? nombre : PrimeraLinea(limpio),
             Categoria = categoria,
             Runs = [CrearFragmento(limpio)],
+            Tipo = Tipos.ParaGuardar(tipo, limpio),
         };
     }
 
@@ -136,7 +138,8 @@ public static class Modelo
     /// se llama el guardado.
     /// </summary>
     public static Snippet CrearSnippet(
-        IReadOnlyList<Fragmento> runs, string categoria, string? titulo = null)
+        IReadOnlyList<Fragmento> runs, string categoria, string? titulo = null,
+        string? tipo = null)
     {
         var limpios = new List<Fragmento>();
 
@@ -168,6 +171,7 @@ public static class Modelo
                 : PrimeraLinea(TextoDe(limpios)),
             Categoria = categoria,
             Runs = limpios,
+            Tipo = Tipos.ParaGuardar(tipo, TextoDe(limpios)),
         };
     }
 

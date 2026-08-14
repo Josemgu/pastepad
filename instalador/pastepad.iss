@@ -1,4 +1,4 @@
-; Instalador de pastepad. Se compila con ISCC:
+﻿; Instalador de pastepad. Se compila con ISCC:
 ;
 ;   ISCC /DVersion=4.0.0 /DPublish=<carpeta de publish> pastepad.iss
 ;
@@ -20,6 +20,17 @@
 #ifndef Publish
   #define Publish "..\publicado-x86"
 #endif
+
+; Donde Inno apunta lo que hay instalado. Es la misma GUID del AppId de
+; abajo con el sufijo que le pone Inno, y va en HKCU y no en HKLM porque
+; el instalador es PrivilegesRequired=lowest. Comprobado leyendo el
+; registro de una maquina con pastepad puesto: DisplayVersion=4.3.0 en
+; HKCU\...\Uninstall\{DF56...}_is1.
+;
+; Se escribe aparte y no se saca del AppId porque el AppId lleva la llave
+; doblada ({{) para escapar la constante, y esa forma no vale como ruta.
+#define ClaveInstalado \
+  "Software\Microsoft\Windows\CurrentVersion\Uninstall\{DF56167A-B0A2-4B5B-AF7F-91DF597A67C9}_is1"
 
 [Setup]
 ; Fijo y para siempre: es lo que hace que reinstalar reemplace en vez de
@@ -120,6 +131,121 @@ Filename: "{app}\pastepad.exe"; Description: "Abrir pastepad"; \
 ; rastro. Al desinstalar ya no hace falta.
 [UninstallDelete]
 Type: files; Name: "{app}\errores.log"
+
+; ---------------------------------------------------------------------
+; Reconocer lo que ya hay puesto antes de instalar nada
+; ---------------------------------------------------------------------
+;
+; Inno ya reemplazaba la instalacion anterior —para eso esta el AppId
+; fijo—, pero no lo decia: el instalador de la 4.4.0 sobre una 4.3.0 se
+; veia exactamente igual que una instalacion nueva. Quien lo ejecuta no
+; sabe si esta actualizando o duplicando, ni si sus textos guardados
+; sobreviven, y la respuesta a lo segundo —que si— es justo la que hay
+; que dar antes y no despues.
+[Code]
+
+const
+  { Renglon en blanco dentro del aviso. #13#10 y no #13 a secas: el
+    cuadro de mensaje es de Windows. }
+  Salto = #13#10#13#10;
+
+var
+  Instalada: string;
+  EsActualizacion: Boolean;
+
+{ Compara dos versiones. No se usa el signo que devuelve
+  ComparePackedVersion porque su documentacion dice que devuelve un
+  Integer sin decir en que orden; los Int64 empaquetados si se pueden
+  comparar directamente, que es para lo que se empaquetan.
+
+  Devuelve False si alguna de las dos no se puede leer, y entonces quien
+  llama tiene que conformarse con saber que hay algo instalado. }
+function Comparar(const a, b: string; var salida: Integer): Boolean;
+var
+  va, vb: Int64;
+begin
+  Result := StrToVersion(a, va) and StrToVersion(b, vb);
+  if not Result then exit;
+
+  if va = vb then salida := 0
+  else if va < vb then salida := -1
+  else salida := 1;
+end;
+
+function InitializeSetup(): Boolean;
+var
+  cmp: Integer;
+begin
+  Result := True;
+  EsActualizacion := False;
+
+  if not RegQueryStringValue(HKEY_CURRENT_USER, '{#ClaveInstalado}',
+                             'DisplayVersion', Instalada) then
+    exit;
+
+  EsActualizacion := True;
+
+  { En instalacion silenciosa no se pregunta nada. Un MsgBox aqui se
+    queda esperando a alguien que no esta mirando, y el instalador nunca
+    devuelve el control — que es un fallo que este proyecto ya se
+    encontro por otro camino. }
+  if WizardSilent() then exit;
+
+  { Los literales se unen con + y no poniendolos uno detras de otro:
+    Pascal lo admite, pero Pascal Script no es Delphi y no hace falta
+    averiguarlo por las malas en la compilacion de una release. }
+  if not Comparar(Instalada, '{#Version}', cmp) then
+  begin
+    Result := MsgBox(
+      'Ya hay una versión de pastepad instalada.' + Salto +
+      'Se reemplazará por la {#Version}. Tu historial y tus textos ' +
+      'guardados no se tocan: viven en otra carpeta.' + Salto +
+      '¿Continuar?', mbConfirmation, MB_YESNO) = IDYES;
+    exit;
+  end;
+
+  if cmp = 0 then
+  begin
+    Result := MsgBox(
+      'Ya tienes pastepad {#Version}, que es justo la de este ' +
+      'instalador.' + Salto +
+      'Puedes volver a instalarla encima si algo va mal. Tu historial y ' +
+      'tus textos guardados no se tocan.' + Salto +
+      '¿Reinstalar?', mbConfirmation, MB_YESNO) = IDYES;
+    exit;
+  end;
+
+  if cmp < 0 then
+  begin
+    Result := MsgBox(
+      'Tienes pastepad ' + Instalada + ' y este instalador trae la ' +
+      '{#Version}.' + Salto +
+      'Se va a ACTUALIZAR: se reemplaza el programa y se conserva todo ' +
+      'lo tuyo —historial, textos guardados, atajo y preferencias—, que ' +
+      'vive en otra carpeta. Si pastepad está abierto, se cierra y se ' +
+      'vuelve a abrir solo.' + Salto +
+      '¿Actualizar ahora?', mbConfirmation, MB_YESNO) = IDYES;
+    exit;
+  end;
+
+  { Instalar una version mas vieja encima de una mas nueva no se prohibe
+    —a veces es justo lo que se quiere cuando la nueva sale mal— pero no
+    puede pasar sin decirlo: desde el instalador las dos se ven igual. }
+  Result := MsgBox(
+    'Tienes pastepad ' + Instalada + ', que es MÁS NUEVA que la ' +
+    '{#Version} de este instalador.' + Salto +
+    'Si continúas, te quedarás con una versión anterior.' + Salto +
+    '¿Seguir de todas formas?', mbConfirmation, MB_YESNO) = IDYES;
+end;
+
+{ Y que lo diga tambien la pagina de confirmacion, no solo el aviso del
+  principio: quien llegue hasta ahi tiene que seguir viendo que esto
+  reemplaza y no duplica. }
+procedure CurPageChanged(IdPagina: Integer);
+begin
+  if (IdPagina = wpReady) and EsActualizacion then
+    WizardForm.NextButton.Caption := '&Actualizar';
+end;
 
 ; Nada de [UninstallDelete] sobre la carpeta de DATOS, y no es un olvido.
 ; %LOCALAPPDATA%\pastepad —historial, textos guardados e imagenes— es del

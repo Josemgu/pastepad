@@ -42,9 +42,15 @@ Pin what you use often and it stays on top.
 Saved texts live in folders you name, and one with `[[fields]]` in it
 becomes a template — pastepad asks for them before pasting.
 
-Copy a web address on its own and pastepad treats it as a link: the row
-shows the domain, and clicking opens the browser instead of pasting.
-Bookmarks sit in their own group under Saved.
+Every saved text is one of four things — bookmark, template, email or
+note — and Saved keeps each in its own collapsible group. pastepad
+proposes the one that fits what you wrote and you change it if it got it
+wrong. Email is the one it never guesses: a message body is ordinary
+text, and there is nothing inside it that says so.
+
+Copy a web address on its own and the row shows the domain and an Open
+in browser entry in its menu. Clicking still pastes, like everything
+else in the list.
 
 Search covers both tabs. Words can come in any order and accents are
 ignored.

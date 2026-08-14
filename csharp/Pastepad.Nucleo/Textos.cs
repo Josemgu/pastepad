@@ -168,6 +168,18 @@ public static class Textos
                 "Bookmarks",
             ["Notas"] =
                 "Notes",
+            ["Correos"] =
+                "Emails",
+            ["Tipo"] =
+                "Type",
+            ["Marcador"] =
+                "Bookmark",
+            ["Plantilla"] =
+                "Template",
+            ["Correo"] =
+                "Email",
+            ["Nota"] =
+                "Note",
             ["Abrir en el navegador"] =
                 "Open in browser",
             ["Pegar"] =
@@ -421,6 +433,18 @@ public static class Textos
                 "Favoritos",
             ["Notas"] =
                 "Notas",
+            ["Correos"] =
+                "E-mails",
+            ["Tipo"] =
+                "Tipo",
+            ["Marcador"] =
+                "Favorito",
+            ["Plantilla"] =
+                "Modelo",
+            ["Correo"] =
+                "E-mail",
+            ["Nota"] =
+                "Nota",
             ["Abrir en el navegador"] =
                 "Abrir no navegador",
             ["Pegar"] =
@@ -674,6 +698,18 @@ public static class Textos
                 "Favoris",
             ["Notas"] =
                 "Notes",
+            ["Correos"] =
+                "Courriels",
+            ["Tipo"] =
+                "Type",
+            ["Marcador"] =
+                "Favori",
+            ["Plantilla"] =
+                "Modèle",
+            ["Correo"] =
+                "Courriel",
+            ["Nota"] =
+                "Note",
             ["Abrir en el navegador"] =
                 "Ouvrir dans le navigateur",
             ["Pegar"] =

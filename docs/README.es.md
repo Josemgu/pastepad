@@ -40,10 +40,15 @@ Los textos guardados van en carpetas que nombras tú, y uno que lleve
 `[[campos]]` dentro se convierte en plantilla: pastepad te los pregunta
 antes de pegar.
 
-Si lo que copias es una dirección web y nada más, pastepad la trata como
-enlace: la fila enseña el dominio, y al hacer clic se abre el navegador
-en vez de pegarse. Los marcadores van en su propio grupo dentro de
-Guardados.
+Cada texto guardado es una de cuatro cosas —marcador, plantilla, correo
+o nota— y Guardados tiene un grupo plegable para cada una. pastepad te
+propone la que encaja con lo que escribiste y tú la cambias si no
+acertó. El correo es la única que no adivina nunca: un cuerpo de correo
+es texto corriente y no lleva nada dentro que lo diga.
+
+Si lo que copias es una dirección web y nada más, la fila enseña el
+dominio y su menú trae «Abrir en el navegador». El clic pega, como en
+todo lo demás de la lista.
 
 La búsqueda cruza las dos pestañas. Las palabras pueden ir en cualquier
 orden y las tildes dan igual.

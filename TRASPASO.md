@@ -140,8 +140,13 @@ evento y elimina el sondeo.
 cada pocos segundos lo dejó en 0,020 ms. Lo que el usuario hace a
 propósito (fijar, borrar, vaciar) sí debe escribirse al instante.
 
-**Un enlace se abre, no se pega.** Solo si el texto entero es una URL;
-un párrafo que la menciona de pasada no cuenta.
+**Reconocer cuándo el texto entero es una URL** —un párrafo que la
+menciona de pasada no cuenta— para ofrecer «Abrir en el navegador».
+Ojo: hasta la 4.3.0 ese enlace *se abría en vez de pegarse*, y eso
+resultó ser un fallo, no una comodidad. Como por ahí pasaban también
+«Pegar» y «Pegar sin formato», un enlace copiado no se podía soltar en
+ningún campo. Abrir es una acción del menú; el clic pega, como en todo
+lo demás.
 
 **Instalar en `%LOCALAPPDATA%`, no en Archivos de programa.** Ahí
 Windows bloquea la escritura sin avisar: el programa arrancaría pero no

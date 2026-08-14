@@ -37,6 +37,18 @@ public sealed class Snippet : Elemento
     [JsonPropertyName("runs")] public List<Fragmento> Runs { get; set; } = [];
 
     /// <summary>
+    /// De que es esto, si el usuario lo dijo: ver <see cref="Tipos"/>.
+    ///
+    /// Nulo mientras nadie lo elija, y entonces se deduce del texto como
+    /// se ha hecho siempre. Por eso no se escribe cuando es nulo: un
+    /// snippets.json de antes de esta version se vuelve a escribir tal
+    /// cual, sin una clave que no estaba.
+    /// </summary>
+    [JsonPropertyName("tipo")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Tipo { get; set; }
+
+    /// <summary>
     /// Solo lo traen los archivos de versiones viejas, de antes de que
     /// un snippet pudiera llevar formato. Al cargar se convierte en un
     /// unico fragmento; no se vuelve a escribir.

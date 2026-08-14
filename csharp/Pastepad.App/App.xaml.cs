@@ -180,13 +180,20 @@ public partial class App : Application
             Almacen.Pref(Autoarranque.Clave, Autoarranque.PorDefecto)
             ?? Autoarranque.PorDefecto;
 
+        bool quiere = Autoarranque.Quiere(preferencia);
+
+        // La tarea programada, en un hilo de fondo y sin esperarla: lanza
+        // schtasks, que cuesta mas que todo el arranque junto. Nada de lo
+        // que viene detras depende de ella.
+        _ = Task.Run(() => Arranque.AsegurarTarea(quiere));
+
         // El valor que habia, para poder decir de que a que. Se lee y se
         // vuelve a leer despues de escribir en vez de componer la ruta a
         // mano: asi los dos lados se comparan en el mismo formato, con
         // las comillas que Windows guarda.
         string? antes = Arranque.ValorActual();
 
-        if (Autoarranque.Quiere(preferencia))
+        if (quiere)
         {
             Arranque.Poner(true);
 
@@ -299,19 +306,54 @@ public partial class App : Application
             return;
         }
 
-        // El otro numero que faltaba. Se mide alrededor de Asomar, que es
-        // sincrono, asi que al volver el panel ya esta puesto y con el
-        // foco. La linea se escribe despues de medir: el coste de anotar
-        // no entra en la cifra.
+        // El camino entero, en tres trozos, porque hasta ahora solo se
+        // medía el de en medio —«panel en 25 ms»— y el usuario decía que
+        // tardaba. Los dos que faltaban son justo donde puede estar:
+        //
+        //   cola     lo que la pulsacion espero a que la recogieramos.
+        //            Si el proceso lleva diez minutos parado y Windows lo
+        //            ha echado de la memoria o lo ha frenado por estar en
+        //            segundo plano, el retraso aparece aqui y en ningun
+        //            otro sitio.
+        //   asomar   lo de siempre: pedir la ventana y darle el foco.
+        //   dibujo   desde que Asomar vuelve hasta que hay pixeles. Show()
+        //            no espera al primer fotograma.
+        //
+        // Y al lado, cuanto llevaba el programa sin hacer nada. Sin ese
+        // dato las cifras no se pueden agrupar en «recien usado» y «diez
+        // minutos parado», que es la comparacion que hace falta.
+        int cola = _buzon?.EsperaDelAtajo ?? 0;
+        var parado = System.Diagnostics.Stopwatch.GetElapsedTime(_ultimaActividad);
+
         long marca = System.Diagnostics.Stopwatch.GetTimestamp();
 
         MostrarPanel();
 
-        Registro.Anotar(string.Format(
-            "panel en {0:F1} ms",
-            System.Diagnostics.Stopwatch
-                .GetElapsedTime(marca).TotalMilliseconds));
+        double asomar = System.Diagnostics.Stopwatch
+            .GetElapsedTime(marca).TotalMilliseconds;
+
+        _panel.AlPrimerFotograma(() => Registro.Anotar(string.Format(
+            "panel: cola {0} ms + asomar {1:F1} ms + dibujo {2:F1} ms "
+            + "= {3:F1} ms (llevaba {4:F1} min parado)",
+            cola,
+            asomar,
+            System.Diagnostics.Stopwatch.GetElapsedTime(marca).TotalMilliseconds
+                - asomar,
+            cola + System.Diagnostics.Stopwatch
+                .GetElapsedTime(marca).TotalMilliseconds,
+            parado.TotalMinutes)));
+
+        Actividad();
     }
+
+    /// <summary>
+    /// Cuando el programa hizo algo por ultima vez. Lo mueven el atajo y
+    /// cada copia: son las dos cosas que lo despiertan.
+    /// </summary>
+    long _ultimaActividad = System.Diagnostics.Stopwatch.GetTimestamp();
+
+    void Actividad() =>
+        _ultimaActividad = System.Diagnostics.Stopwatch.GetTimestamp();
 
     void MostrarPanel()
     {
@@ -330,6 +372,11 @@ public partial class App : Application
         // verdad de un aviso repetido.
         if (secuencia == _ultimaSecuencia) return;
         _ultimaSecuencia = secuencia;
+
+        // Una copia tambien despierta al programa: si el usuario copio
+        // hace diez segundos, no llevaba diez minutos parado por mucho
+        // que no haya tocado el atajo.
+        Actividad();
 
         // Lo que acabamos de poner nosotros para pegarlo no se reanota.
         if (secuencia == _secuenciaPropia) return;
@@ -481,8 +528,12 @@ public partial class App : Application
     }
 
     /// <summary>
-    /// Un enlace se abre, no se pega. Solo cuando el texto entero es la
-    /// direccion: un parrafo que la menciona de pasada no cuenta.
+    /// Abre el enlace en el navegador. Se ofrece solo cuando el texto
+    /// entero es la direccion: un parrafo que la menciona de pasada no
+    /// cuenta.
+    ///
+    /// Es una accion mas del menu de la fila, no lo que hace el clic.
+    /// Cuando lo era, un enlace no se podia pegar en ningun sitio.
     /// </summary>
     internal void AbrirEnlace(string texto)
     {

@@ -3,6 +3,83 @@
 All notable changes to this project are documented here.
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [4.4.0] - 2026-08-13
+
+### Fixed
+- **A link could not be pasted anywhere.** Copying a web address and
+  trying to drop it into a field did nothing: the row behaved like a
+  button and opened the browser. Opening was deliberate; what was not is
+  that all four routes to pasting went through the same place — the
+  click, Enter from the search box, and **Paste** and **Paste without
+  formatting** in the row menu. So the entry labelled Paste opened
+  Chrome. Clicking now pastes, like every other row, and opening moved
+  to where it cannot be mistaken for pasting: **Open in browser**, at the
+  top of the row menu. Verified end to end against Notepad.
+
+### Added
+- **You choose what a saved text is**: bookmark, template, email or
+  note. pastepad proposes the one that fits what you wrote — a whole URL
+  is a bookmark, `[[fields]]` make a template — and stops proposing the
+  moment you touch the drop-down. It sits on the same line as the Name
+  label, which costs 13 pixels of dialog height rather than the 40 a row
+  of its own would take; measured at the default 380×560, Save and
+  Cancel keep all 32 pixels with 42 to spare, and at the 340 minimum
+  they sit below the fold exactly as they already did in 4.3.0, measured
+  side by side.
+- **Emails are the fourth group**, and the one that could never be
+  guessed: a message body is ordinary text and there is nothing inside
+  it that separates it from a note. Five email bodies used to be five
+  more notes. pastepad never proposes this type on its own — offering it
+  because the text contains an @ would turn every note that mentions an
+  address into an email.
+- What you pick is only written to `snippets.json` when it contradicts
+  what would have been deduced anyway. Opening a saved text and pressing
+  Save cannot give it a key it did not have, and files written by earlier
+  versions come back unchanged.
+
+### Changed
+- **The installer now says when it found an existing copy.** It always
+  replaced rather than duplicated — that is what the fixed AppId is for
+  — but it never said so, so installing 4.4.0 over 4.3.0 looked exactly
+  like a first install: no way to tell whether you were updating or
+  duplicating, and no word on whether your saved texts survived. It now
+  reads the installed version first and offers to update to this one,
+  saying up front that the history, saved texts, shortcut and
+  preferences are kept because they live in a separate folder. Installing
+  the same version again is offered as a reinstall, and installing an
+  older version over a newer one says so instead of doing it quietly.
+  Nothing is asked during a silent install, where a message box would
+  wait forever for someone who is not watching.
+- **The startup entry is no longer the only way pastepad comes back.**
+  There is now also a logon task, registered by pastepad itself without
+  needing administrator rights, and delayed half a minute so the registry
+  entry wins whenever it works. Both are removed when you turn off
+  "start with Windows".
+
+  This follows a machine where pastepad did not start after a reboot and
+  left nothing to read. The registry entry was correct, pointed at an
+  executable that exists, was not disabled in Task Manager, and Windows
+  did process that key on that boot — OneDrive, another entry in it,
+  started 15 seconds after explorer. pastepad left no line in either log
+  and no crash report, so the process either was never created or died
+  before its first instruction, where the .NET host fails silently. The
+  cause is still unknown; the second route means it no longer has to be
+  found before the program comes back.
+- **Every start now records how long Windows had been running.** Until
+  now pastepad could only log the starts that happened, so a startup that
+  did not happen left nothing behind — which is exactly what made the
+  fault above impossible to diagnose. A few seconds means Windows opened
+  it; nine hours means you did, and the autostart failed.
+- **The shortcut is now timed along its whole path**, in three parts:
+  how long the keypress waited in the queue, how long the panel took to
+  ask for its window, and how long until it was actually drawn. The old
+  figure covered only the middle one and read 25 ms while the panel felt
+  slow, because neither the wait before it nor the first frame after it
+  was being counted. Each line also records how long the program had been
+  idle, so the numbers can be split into "just used" and "left alone for
+  ten minutes".
+- 79 tests to 90.
+
 ## [4.3.0] - 2026-08-13
 
 ### Added

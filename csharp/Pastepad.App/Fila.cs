@@ -60,14 +60,31 @@ public sealed class Fila : ItemLista, INotifyPropertyChanged
     /// <summary>El texto plano, para pegar, copiar o abrir.</summary>
     public string Texto { get; }
 
+    /// <summary>
+    /// El texto entero es una direccion. Es un hecho sobre lo que hay
+    /// escrito, no una preferencia: por eso sigue mandando sobre si se
+    /// ofrece «Abrir en el navegador» y sobre si debajo del titulo va el
+    /// dominio. Un correo que el usuario haya archivado como tal se
+    /// puede abrir igual si resulta que es una url.
+    /// </summary>
     public bool EsEnlace { get; }
 
     /// <summary>
     /// Lleva [[campos]] dentro, o sea que al usarla pregunta antes de
     /// pegar. Se ve en la fila porque hasta ahora no habia forma de
     /// saber cual iba a preguntar y cual no hasta pulsarla.
+    ///
+    /// Tampoco depende del tipo elegido: quien archive una plantilla
+    /// como correo sigue teniendo que rellenar sus campos.
     /// </summary>
     public bool EsPlantilla { get; }
+
+    /// <summary>
+    /// De que es esto: lo que eligio el usuario, o lo que se deduce del
+    /// texto mientras no elija. Decide el grupo y el icono, y nada mas
+    /// —lo que hace el clic es pegar, sea del tipo que sea—.
+    /// </summary>
+    public string Tipo { get; }
 
     public bool EsImagen { get; }
     public bool Fijada { get; }
@@ -94,6 +111,7 @@ public sealed class Fila : ItemLista, INotifyPropertyChanged
                     Titulo = Textos.T("Imagen copiada");
                     Detalle = Textos.T("captura");
                     Texto = "";
+                    Tipo = Tipos.Nota;
                     Icono = Estilo.Iconos.Imagen;
                     break;
                 }
@@ -101,6 +119,11 @@ public sealed class Fila : ItemLista, INotifyPropertyChanged
                 Texto = entrada.Texto ?? "";
                 EsEnlace = Modelo.EsEnlace(Texto);
                 EsPlantilla = !EsEnlace && Modelo.CamposDe(Texto).Count > 0;
+
+                // Lo que pasa por el portapapeles no lo archiva nadie, asi
+                // que aqui el tipo solo puede deducirse.
+                Tipo = Tipos.Deducir(Texto);
+
                 Titulo = Modelo.UnaLinea(Texto, 80);
                 if (Titulo.Length == 0) Titulo = "—";
 
@@ -108,13 +131,14 @@ public sealed class Fila : ItemLista, INotifyPropertyChanged
                     ? Modelo.DominioDe(Texto)
                     : Textos.T("%d caracteres", Texto.Length);
 
-                Icono = IconoDe(EsEnlace, EsPlantilla);
+                Icono = IconoDe(Tipo);
                 break;
 
             case Snippet snippet:
                 Texto = Modelo.TextoDe(snippet.Runs);
                 EsEnlace = Modelo.EsEnlace(Texto);
                 EsPlantilla = !EsEnlace && Modelo.CamposDe(Texto).Count > 0;
+                Tipo = Tipos.De(snippet);
 
                 // El titulo se guarda entero y se acorta aqui, igual que
                 // ya se hacia con el historial: el recorte es de pantalla
@@ -123,26 +147,31 @@ public sealed class Fila : ItemLista, INotifyPropertyChanged
                 if (Titulo.Length == 0) Titulo = "—";
 
                 Detalle = EsEnlace ? Modelo.DominioDe(Texto) : snippet.Categoria;
-                Icono = IconoDe(EsEnlace, EsPlantilla);
+                Icono = IconoDe(Tipo);
                 break;
 
             default:
                 Titulo = "";
                 Detalle = "";
                 Texto = "";
+                Tipo = Tipos.Nota;
                 Icono = "";
                 break;
         }
     }
 
     /// <summary>
-    /// Un enlace y una plantilla llevan icono; el resto, ninguno. Una
-    /// fila con icono en todas seria una columna de ruido.
+    /// Los tres tipos con nombre llevan icono; la nota, ninguno. Una
+    /// fila con icono en todas seria una columna de ruido, y la nota es
+    /// la mayoria.
     /// </summary>
-    static string IconoDe(bool enlace, bool plantilla) =>
-        enlace ? Estilo.Iconos.Enlace
-        : plantilla ? Estilo.Iconos.Plantilla
-        : "";
+    static string IconoDe(string tipo) => tipo switch
+    {
+        Tipos.Marcador => Estilo.Iconos.Enlace,
+        Tipos.Plantilla => Estilo.Iconos.Plantilla,
+        Tipos.Correo => Estilo.Iconos.Correo,
+        _ => "",
+    };
 
     // ------------------------------------------------------ el estado
 
@@ -208,18 +237,25 @@ public sealed class Fila : ItemLista, INotifyPropertyChanged
                : Microsoft.UI.Text.FontWeights.Normal;
 
     /// <summary>
-    /// El dominio va en acento y no en tenue: es lo que avisa de que
-    /// ese clic abre el navegador en vez de pegar.
+    /// El dominio va en acento y no en tenue: distingue de un vistazo la
+    /// fila que lleva una direccion dentro de la que lleva una carpeta o
+    /// una cuenta de caracteres.
     /// </summary>
     public Brush ColorDetalle => Activa
         ? Estilo.Pincel(Estilo.ColorAcento.Sobre, 0.75)
         : Estilo.Pincel(EsEnlace ? Estilo.ColorAcento.Color : Estilo.Actual.Tenue);
 
+    /// <summary>
+    /// En acento el icono de tipo —marcador, plantilla, correo—, porque
+    /// dice algo que hay que ver. El de la imagen no: ahi el icono es
+    /// todo lo que hay en la fila y en acento se comeria el titulo. Era
+    /// asi antes de que existieran los tipos y sigue siendolo.
+    /// </summary>
     public Brush ColorIcono => Activa
         ? Estilo.Pincel(Estilo.ColorAcento.Sobre)
-        : Estilo.Pincel(EsEnlace || EsPlantilla
-            ? Estilo.ColorAcento.Color
-            : Estilo.Actual.Tenue);
+        : Estilo.Pincel(EsImagen
+            ? Estilo.Actual.Tenue
+            : Estilo.ColorAcento.Color);
 
     public Brush ColorCasilla => Activa
         ? Estilo.Pincel(Estilo.ColorAcento.Sobre)

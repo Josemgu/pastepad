@@ -40,6 +40,22 @@ internal sealed class Buzon : IDisposable
     public bool AtajoPuesto { get; private set; }
     public string? Problema { get; private set; }
 
+    /// <summary>
+    /// Milisegundos que el ultimo atajo espero en la cola desde que
+    /// Windows lo puso hasta que este hilo lo recogio.
+    ///
+    /// Se calcula aqui y no donde se usa porque solo vale dentro del
+    /// despacho del mensaje: GetMessageTime habla del ultimo mensaje
+    /// recuperado por GetMessage, y en cuanto se recupere otro ya no es
+    /// el nuestro.
+    ///
+    /// La resta va en int y no en long a proposito. El contador «wraps to
+    /// the minimum value for a long integer» cada 49 dias, y la
+    /// documentacion dice que para medir retrasos hay que restar
+    /// «ignoring overflow» — que es justo lo que hace el int.
+    /// </summary>
+    public int EsperaDelAtajo { get; private set; }
+
     // El delegado se guarda en un campo a proposito: si solo viviera en
     // la llamada a RegisterClass, el recolector podria llevarselo y
     // Windows saltaria a memoria liberada.
@@ -171,6 +187,8 @@ internal sealed class Buzon : IDisposable
             switch (mensaje)
             {
                 case Nativo.WM_HOTKEY when (int)wParam == ID_ATAJO:
+                    EsperaDelAtajo =
+                        unchecked(Environment.TickCount - Nativo.GetMessageTime());
                     Atajo?.Invoke();
                     return 0;
 

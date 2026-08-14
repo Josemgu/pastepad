@@ -1169,6 +1169,124 @@ public sealed class PruebaEnlaces
 }
 
 /// <summary>
+/// De que es cada guardado. Lo que se prueba aqui no es la propuesta
+/// —que es la clasificacion de siempre— sino las dos reglas nuevas: que
+/// lo que elige el usuario gana, y que lo que no elige no se escribe.
+/// </summary>
+[TestClass]
+public sealed class PruebaTipos
+{
+    [TestMethod]
+    public void test_propone_lo_que_se_deducia_antes()
+    {
+        Assert.AreEqual(Tipos.Marcador, Tipos.Deducir("https://x.com"));
+        Assert.AreEqual(Tipos.Plantilla, Tipos.Deducir("Hola [[nombre]]"));
+        Assert.AreEqual(Tipos.Nota, Tipos.Deducir("una cosa cualquiera"));
+        Assert.AreEqual(Tipos.Nota, Tipos.Deducir(""));
+        Assert.AreEqual(Tipos.Nota, Tipos.Deducir(null));
+    }
+
+    [TestMethod]
+    public void test_un_enlace_con_campos_es_marcador()
+    {
+        // Entre los dos gana el que se reconoce con mas certeza.
+        Assert.AreEqual(Tipos.Marcador, Tipos.Deducir("https://x.com/[[id]]"));
+    }
+
+    [TestMethod]
+    public void test_correo_no_se_deduce_nunca()
+    {
+        // No hay nada en un cuerpo de correo que lo separe de una nota.
+        // Deducirlo por una arroba convertiria en correo cualquier texto
+        // que mencione una direccion.
+        Assert.AreEqual(Tipos.Nota, Tipos.Deducir("escribe a hola@x.com"));
+        Assert.AreEqual(Tipos.Nota, Tipos.Deducir("Estimado cliente:"));
+    }
+
+    [TestMethod]
+    public void test_lo_que_elige_el_usuario_manda()
+    {
+        // El caso que trajo todo esto: un cuerpo de correo es texto
+        // corriente, y hasta ahora no habia forma de decir que era.
+        Assert.AreEqual(Tipos.Correo, Tipos.De(Tipos.Correo, "Hola equipo,"));
+
+        // Y al reves: una direccion que el usuario quiere tratar como
+        // nota deja de comportarse como marcador.
+        Assert.AreEqual(Tipos.Nota, Tipos.De(Tipos.Nota, "https://x.com"));
+    }
+
+    [TestMethod]
+    public void test_sin_elegir_vale_lo_deducido()
+    {
+        Assert.AreEqual(Tipos.Marcador, Tipos.De(null, "https://x.com"));
+        Assert.AreEqual(Tipos.Nota, Tipos.De("", "texto"));
+    }
+
+    [TestMethod]
+    public void test_un_tipo_desconocido_no_deja_el_guardado_fuera()
+    {
+        // snippets.json se edita a mano y llega de versiones que aun no
+        // existen. Un tipo que no conocemos no puede dejar la fila sin
+        // grupo, que en la practica es desaparecer de la lista.
+        Assert.AreEqual(Tipos.Nota, Tipos.De("factura", "texto"));
+        Assert.IsFalse(Tipos.Vale("factura"));
+        Assert.IsFalse(Tipos.Vale(null));
+    }
+
+    [TestMethod]
+    public void test_no_se_escribe_lo_que_ya_se_deducia()
+    {
+        // Abrir un guardado y pulsar Guardar sin tocar nada no puede
+        // añadirle una clave que antes no tenia.
+        Assert.IsNull(Tipos.ParaGuardar(Tipos.Marcador, "https://x.com"));
+        Assert.IsNull(Tipos.ParaGuardar(Tipos.Nota, "texto normal"));
+        Assert.IsNull(Tipos.ParaGuardar(null, "texto normal"));
+        Assert.IsNull(Tipos.ParaGuardar("factura", "texto normal"));
+    }
+
+    [TestMethod]
+    public void test_si_se_escribe_lo_que_contradice_al_texto()
+    {
+        Assert.AreEqual(Tipos.Correo, Tipos.ParaGuardar(Tipos.Correo, "Hola,"));
+        Assert.AreEqual(Tipos.Nota, Tipos.ParaGuardar(Tipos.Nota, "https://x.com"));
+    }
+
+    [TestMethod]
+    public void test_el_guardado_nuevo_lo_lleva()
+    {
+        var s = Modelo.CrearSnippet("Hola equipo,", "Trabajo", null, Tipos.Correo);
+
+        Assert.AreEqual(Tipos.Correo, s.Tipo);
+        Assert.AreEqual(Tipos.Correo, Tipos.De(s));
+    }
+
+    [TestMethod]
+    public void test_el_guardado_de_siempre_no_gana_una_clave()
+    {
+        var s = Modelo.CrearSnippet("https://x.com", "Trabajo");
+
+        Assert.IsNull(s.Tipo);
+        Assert.AreEqual(Tipos.Marcador, Tipos.De(s));
+    }
+
+    [TestMethod]
+    public void test_con_formato_tambien()
+    {
+        var runs = new List<Fragmento>
+        {
+            Modelo.CrearFragmento("Estimado "),
+            Modelo.CrearFragmento("cliente", negrita: 1),
+        };
+
+        var s = Modelo.CrearSnippet(runs, "Trabajo", "Bienvenida", Tipos.Correo);
+
+        Assert.AreEqual(Tipos.Correo, s.Tipo);
+        Assert.AreEqual("Bienvenida", s.Titulo);
+        Assert.HasCount(2, s.Runs);
+    }
+}
+
+/// <summary>
 /// La linea con la que Windows nos reabre despues de actualizarnos.
 /// Equivocarse aqui no rompe nada a la vista: pastepad vuelve a abrirse
 /// tan tranquilo sobre otra carpeta de datos.

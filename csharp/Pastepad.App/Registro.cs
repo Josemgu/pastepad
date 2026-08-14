@@ -119,7 +119,22 @@ internal static class Registro
             // un vistazo, y era lo que faltaba para entender por que unos
             // arranques dejaban lineas y otros del mismo binario no.
             + $"LOCALAPPDATA={Environment.GetEnvironmentVariable("LOCALAPPDATA")}, "
-            + $"datos {Path.GetDirectoryName(Ruta)}";
+            + $"datos {Path.GetDirectoryName(Ruta)}, "
+
+            // Cuanto llevaba Windows encendido cuando arrancamos. Es la
+            // unica forma de ver un autoarranque que NO ocurrio: mientras
+            // pastepad solo sepa anotar los arranques que si pasan, un
+            // fallo del autoarranque no deja nada que leer, y eso es
+            // exactamente lo que se encontro al investigarlo. Unos pocos
+            // segundos aqui significan que nos abrio Windows; unas horas,
+            // que el autoarranque fallo y lo abrio el usuario a mano.
+            //
+            // GetTickCount64 —que es de donde sale TickCount64— cuenta
+            // «milliseconds that have elapsed since the system was
+            // started», suspension incluida: la documentacion remite a
+            // QueryUnbiasedInterruptTime para el tiempo en activo. Aqui
+            // interesa el del reloj de pared, no el de trabajo.
+            + $"windows encendido hace {DesdeElArranque()}";
 
         var linea = string.Format(
             "{0:yyyy-MM-dd HH:mm:ss.fff}  [hilo {1,3}]  {2}{3}",
@@ -152,6 +167,21 @@ internal static class Registro
                     + Environment.NewLine);
             }
         }
+    }
+
+    /// <summary>
+    /// Legible de un vistazo, que es para lo que se lee: «4 s» dice
+    /// «nos abrio Windows» y «9 h 12 min» dice «lo abrio el usuario».
+    /// </summary>
+    static string DesdeElArranque()
+    {
+        var t = TimeSpan.FromMilliseconds(Environment.TickCount64);
+
+        if (t.TotalMinutes < 1) return $"{t.TotalSeconds:F0} s";
+
+        if (t.TotalHours < 1) return $"{t.Minutes} min {t.Seconds} s";
+
+        return $"{(int)t.TotalHours} h {t.Minutes} min";
     }
 
     /// <summary>

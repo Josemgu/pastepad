@@ -317,6 +317,20 @@ internal static partial class Nativo
     public static partial void keybd_event(
         byte tecla, byte codigo, uint banderas, nuint extra);
 
+    /// <summary>
+    /// Cuando se PUSO en la cola el mensaje que se esta despachando, no
+    /// cuando se atiende: «the elapsed time, in milliseconds, from the
+    /// time the system was started to the time the message was created
+    /// (that is, placed in the thread's message queue)».
+    ///
+    /// Restandoselo a GetTickCount sale lo que el mensaje espero a que
+    /// alguien lo recogiera, que es el unico trozo del camino del atajo
+    /// que hasta ahora no se medía y donde tiene que estar el retraso que
+    /// el usuario nota tras diez minutos parado.
+    /// </summary>
+    [LibraryImport("user32.dll")]
+    public static partial int GetMessageTime();
+
     // --- pantalla ---------------------------------------------------
 
     [LibraryImport("user32.dll", SetLastError = true)]
