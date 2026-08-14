@@ -373,8 +373,9 @@ public sealed partial class Panel : Window
         Buscador.Text = "";
         Refrescar();
 
-        // Despues de Refrescar, que no la toca: la novedad sobrevive a
-        // que se cierre el panel y se vuelve a poner hasta que se mire.
+        // Despues de Refrescar, que no las toca. Las dos sobreviven a
+        // que se cierre el panel y se vuelven a poner hasta que se miren.
+        PintarAviso();
         PintarNovedad();
 
         AppWindow.Show();
@@ -390,6 +391,57 @@ public sealed partial class Panel : Window
             Registro.Anotar("el panel no consiguio el primer plano");
 
         Buscador.Focus(FocusState.Programmatic);
+    }
+
+    /// <summary>
+    /// Compone el panel una vez, fuera de la pantalla, para que la
+    /// primera apertura de verdad no sea tambien el primer fotograma.
+    ///
+    /// Medido: al instante de aparecer la ventana el contenido esta a
+    /// medio pintar —unos 5.500 pixeles de los 36.500 que tiene ya
+    /// completa— y termina de componerse en unos 150 ms. Normalmente no
+    /// se nota; con la maquina cargada se estira lo suficiente para que
+    /// el usuario vea el panel sin cabecera y crea que falta. No es de la
+    /// barra de titulo, que era la primera sospecha: falta contenido en
+    /// TODA la ventana, no solo en esa fila.
+    ///
+    /// Va en el arranque y no en Asomar, asi que **no cuesta un solo
+    /// milisegundo en abrir el panel**, que es el requisito numero dos.
+    /// Lo que cuesta es un fotograma en el arranque.
+    ///
+    /// Tres detalles que no son casualidad:
+    ///
+    /// - <c>Show(false)</c>, no <c>Show()</c>: «Shows the window with an
+    ///   option to activate it or not». Activarlo robaria el primer plano
+    ///   a lo que el usuario estuviera haciendo al iniciar sesion.
+    /// - Muy lejos y arriba, en coordenadas negativas grandes, para que
+    ///   no caiga dentro de ningun monitor por raro que sea el montaje.
+    ///   Un fotograma asomando al arrancar seria peor que el fallo.
+    /// - <c>EstaVisible</c> no se toca. Vale false todo el rato, asi que
+    ///   el manejador de activacion —que esconde el panel al perder el
+    ///   foco— sale por su primera linea y esto le pasa desapercibido.
+    /// </summary>
+    public void Calentar()
+    {
+        try
+        {
+            AppWindow.MoveAndResize(
+                new Windows.Graphics.RectInt32(-32000, -32000, 380, 560));
+
+            AppWindow.Show(false);
+
+            AlPrimerFotograma(() =>
+            {
+                AppWindow.Hide();
+                Registro.Anotar("panel compuesto por adelantado");
+            });
+        }
+        catch (Exception e)
+        {
+            // Que no se componga por adelantado es una molestia; que se
+            // caiga el arranque por intentarlo, no.
+            Registro.Fallo("calentar el panel", e);
+        }
     }
 
     bool _faltaDiagnostico = true;
@@ -464,6 +516,10 @@ public sealed partial class Panel : Window
         EstaVisible = false;
         AppWindow.Hide();
 
+        // Cerrar el panel da el aviso por leido. La novedad de version no
+        // se toca aqui: esa se guarda aparte y vuelve hasta que se mire.
+        _avisoPendiente = null;
+
         Aviso.Visibility = Visibility.Collapsed;
         AvisoAccion.Visibility = Visibility.Collapsed;
 
@@ -498,18 +554,41 @@ public sealed partial class Panel : Window
     /// Un problema que el usuario tiene que ver. Nada de fallos mudos:
     /// si el atajo no se pudo registrar, se dice cual es y por que.
     /// </summary>
+    /// <summary>
+    /// El aviso pendiente de que el usuario lo vea, si lo hay.
+    ///
+    /// Se guarda igual que la novedad de version, y por el mismo motivo:
+    /// hay avisos que se emiten con el panel escondido —el arranque
+    /// degradado sale ANTES del primer Asomar— y sin guardarlos se
+    /// pintaban sobre una ventana invisible y se perdian.
+    ///
+    /// Y hace falta guardarlo, y no solo pintarlo: colapsar la banda en
+    /// cada apertura arreglaria el aviso rancio pero se llevaria por
+    /// delante el del arranque degradado, que es el unico que de verdad
+    /// no puede perderse — dice que el historial no se pudo leer.
+    /// </summary>
+    string? _avisoPendiente;
+
     public void Avisar(string texto)
     {
         DispatcherQueue.TryEnqueue(() =>
         {
-            _avisoEnlace = null;
-
-            Aviso.Text = texto;
-            Aviso.Foreground = Estilo.Pincel(Estilo.Rojo);
-            Aviso.Visibility = Visibility.Visible;
-
-            AvisoAccion.Visibility = Visibility.Collapsed;
+            _avisoPendiente = texto;
+            PintarAviso();
         });
+    }
+
+    void PintarAviso()
+    {
+        if (_avisoPendiente is not { } texto) return;
+
+        _avisoEnlace = null;
+
+        Aviso.Text = texto;
+        Aviso.Foreground = Estilo.Pincel(Estilo.Rojo);
+        Aviso.Visibility = Visibility.Visible;
+
+        AvisoAccion.Visibility = Visibility.Collapsed;
     }
 
     /// <summary>

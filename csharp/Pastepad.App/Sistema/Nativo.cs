@@ -135,6 +135,20 @@ internal static partial class Nativo
     public const uint NIF_ICON = 0x00000002;
     public const uint NIF_TIP = 0x00000004;
 
+    /// <summary>
+    /// «Display a balloon notification. The szInfo, szInfoTitle,
+    /// dwInfoFlags, and uTimeout members are valid.» Y para quitarlo,
+    /// el mismo aviso con szInfo vacio.
+    /// </summary>
+    public const uint NIF_INFO = 0x00000010;
+
+    /// <summary>
+    /// El triangulo de advertencia del globo. Sin titulo no se dibuja
+    /// ninguno: «if the szInfoTitle member is zero-length, the icon is
+    /// not shown».
+    /// </summary>
+    public const uint NIIF_WARNING = 0x00000002;
+
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     public struct NOTIFYICONDATAW
     {

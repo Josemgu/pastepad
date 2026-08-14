@@ -136,6 +136,11 @@ public partial class App : Application
                 await ComprobarNovedades()),
             null, PrimeraComprobacion, CadaDia);
 
+        // Lo ultimo del arranque, y solo si no hemos tenido que enseñar
+        // el panel ya: si el almacen venia roto esta abierto delante del
+        // usuario, y moverlo a -32000 seria hacerlo desaparecer.
+        if (!_panel.EstaVisible) _panel.Calentar();
+
         // Cuanto tarda en estar listo, desde la primera linea de Main.
         // En caliente sale una cosa y en frio otra muy distinta: el
         // arranque en frio de verdad son 476 archivos que nadie ha
@@ -485,10 +490,21 @@ public partial class App : Application
 
         if (!Foco.Devolver(_ventanaPrevia))
         {
-            // Queda copiado: el usuario puede pegar a mano. Es peor
-            // no decirselo que decirlo.
-            _panel?.Avisar(Textos.T("Copiado, pero no pude volver a la ventana "
-                                  + "anterior. Pega con Ctrl+V."));
+            // Queda copiado: el usuario puede pegar a mano. Es peor no
+            // decirselo que decirlo.
+            //
+            // Y va por la bandeja, no por el panel. El panel se acaba de
+            // esconder tres lineas mas arriba, asi que pintar el aviso
+            // ahi era escribirlo en una ventana invisible: el usuario se
+            // quedaba con el texto copiado, sin pegar y sin saber por
+            // que. Ademas el aviso sobrevivia escondido y reaparecia en
+            // la apertura siguiente, ya sin nada que ver con lo que
+            // estuviera haciendo entonces.
+            _bandeja?.Avisar(
+                Textos.T("Copiado, pero no pegado"),
+                Textos.T("No pude volver a la ventana anterior. "
+                       + "Está en el portapapeles: pega con Ctrl+V."));
+
             return;
         }
 
@@ -557,7 +573,13 @@ public partial class App : Application
         catch (Exception e)
         {
             Registro.Fallo("AbrirEnlace", e);
-            _panel?.Avisar(Textos.T("No se pudo abrir el enlace."));
+
+            // Por la bandeja por lo mismo que el aviso de pegar: el panel
+            // se esconde arriba del todo de este metodo, asi que aqui ya
+            // no hay ventana donde escribir.
+            _bandeja?.Avisar(
+                Textos.T("No se pudo abrir el enlace"),
+                Textos.T("Windows no encontró con qué abrirlo."));
         }
     }
 

@@ -3,6 +3,41 @@
 All notable changes to this project are documented here.
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [4.6.0] - 2026-08-14
+
+**Two things that failed in silence.** One you could see and not believe,
+the other you could not see at all.
+
+### Fixed
+- **The panel no longer appears half-drawn.** Reported from real use: the
+  first time it opened, the header came up empty — no shortcut label, no
+  buttons — and the next time it was fine. Measured, it was neither the
+  header nor the title bar: at the instant the window appeared, content
+  was missing **everywhere**, about 5,500 painted pixels out of the
+  36,500 a finished panel has, filling in over roughly 150 ms. Normally
+  you never notice. With the machine busy it stretches far enough to look
+  like something is missing.
+
+  The panel is now composed once at startup, off screen and without being
+  activated, so the first time you actually open it is no longer the
+  first frame it has ever drawn. Measured over six runs under load: the
+  panel is complete at the instant it appears — 6,562 header pixels and
+  36,518 in the body, identical at 0 ms and at 300 ms, where before those
+  were about 800 and 5,500. **Opening costs nothing extra**, because the
+  work happens at startup, which stayed at 467–493 ms.
+- **The warning you could never read.** When pasting, the panel hides
+  before the focus is handed back, so on the rare occasion that handing
+  it back failed, "Copied, but I could not return to the previous window"
+  was painted onto a window that was already hidden. You were left with
+  the text copied, not pasted, and no idea why. It now comes from the
+  tray icon, which is the only place that can reach you when the panel is
+  not in front of you. Same for a link that fails to open.
+- **A warning could also come back stale.** Because those messages were
+  written to a hidden panel, the next time you opened it — possibly half
+  an hour later, next to something unrelated — the red bar was still
+  there. Warnings are now held the same way the new-version notice
+  already was, and closing the panel marks one as read.
+
 ## [4.5.0] - 2026-08-14
 
 ### Added

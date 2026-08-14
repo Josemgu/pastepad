@@ -13,7 +13,7 @@ las pierde al reiniciar.
 
 ## Estado
 
-Versión 4.5.0, reescrita en C# con WinUI 3 sobre el Windows App SDK
+Versión 4.6.0, reescrita en C# con WinUI 3 sobre el Windows App SDK
 2.3.1 y .NET 10. Desempaquetada y self-contained.
 
 La versión anterior (3.x, Python con Flet) **ya no está en el repo**.
@@ -222,6 +222,29 @@ Tres trampas que ya costaron caras:
 - Al comparar longitudes, la caja carga **tantos caracteres menos como
   saltos de línea tenga** el archivo. Con 100 líneas, 5290 en disco son
   5191 en la caja. Si la cuenta cuadra, no hay pérdida.
+
+**El panel se compone una vez al arrancar, fuera de pantalla.**
+`Panel.Calentar()`. No es prudencia: medido, en el instante en que la
+ventana aparece el contenido está a medio pintar —unos 5.500 píxeles de
+los 36.500 que tiene completa— y termina en unos 150 ms. Con la máquina
+cargada se estira hasta parecer que falta media interfaz. Después del
+cambio, seis vueltas bajo carga: 6.562 en la cabecera y 36.518 en el
+cuerpo **ya en el instante 0**, idéntico a los 300 ms.
+
+Va con `Show(false)` —«Shows the window with an option to activate it or
+not»— para no robarle el primer plano a nadie al iniciar sesión, y a
+`-32000,-32000`, que queda fuera de cualquier monitor: el escritorio
+virtual de la máquina de pruebas iba de `X -2560..2560, Y 0..1440`. Y
+**no toca `EstaVisible`**, así que el manejador que esconde el panel al
+perder el foco sale por su primera línea y no se entera.
+
+**Los avisos de cuando el panel no está delante van por la bandeja.**
+Al pegar, el panel se esconde ANTES de devolver el foco, así que el
+aviso «Copiado, pero no pude volver» se pintaba en una ventana ya
+invisible: el usuario se quedaba con el texto copiado, sin pegar y sin
+saber por qué. Y encima el aviso sobrevivía escondido y reaparecía en la
+apertura siguiente, ya sin contexto. Si escribes un `Avisar()` nuevo,
+mira antes si en ese punto el panel está visible.
 
 ### El árbol de accesibilidad no dice nada de lo que se pinta
 
