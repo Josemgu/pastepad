@@ -40,6 +40,58 @@ Ver la 4.9.0.
 
 ## Para la próxima versión
 
+### Reportados el 14 ago 2026, sin investigar todavía
+
+Los tres son del usuario, describiéndolos él mismo. **Buscar la opción
+antes de tocar código** — es su norma y se le olvidó a Claude una vez.
+
+**1. «Copiado, pero no pegado» la primera vez.** No siempre, pero cuando
+pasa es *la primera vez* que elige un sitio donde pegar; después va bien.
+Significa que `Foco.Devolver` devolvió false.
+
+La 4.9.0 le puso delante `PorLasBuenas`, que puede haberlo arreglado de
+paso — **está sin comprobar**. Lo primero es preguntarle si sigue
+pasando con la 4.9.0 antes de investigar nada.
+
+Si sigue: el aviso ya sale por la bandeja desde la 4.6.0, así que ahora
+sí se lee. Y en el log queda `SetForegroundWindow rechazado para 0x…`.
+
+**2. El diálogo de texto nuevo se corta con la ventana pequeña.** La
+caja tiene `MinHeight = 140` y va en la fila de estrella de
+`CuerpoConHueco`, que la recorta cuando no cabe. Con el panel en su
+mínimo no entra: título, carpeta, nombre, tipo, barra de formato, caja,
+nota y pie.
+
+Ya está medido en el `CHANGELOG` de la 4.3.0 que en el mínimo de 340 los
+botones quedan bajo el pliegue. Ahora además el desplegable de tipo
+añade altura. Opciones que ni se han evaluado: que la caja encoja por
+debajo de 140 cuando no hay sitio, que la barra de formato se pliegue, o
+que el diálogo tenga su propio desplazamiento en vez de recortar.
+
+**3. No se puede mover la ventana con un diálogo abierto.** El
+`ContentDialog` cubre el panel entero, incluida `ZonaArrastre`, que es
+la franja por la que se arrastra. No queda nada de dónde agarrar.
+
+### Lo de la lentitud tras el reposo, a medias
+
+Descartado que sea la memoria: vaciar el working set entero cuesta ~14 ms
+y sale en `asomar`, nunca en `cola`. El `cola` de 15–47 ms coincide con
+la resolución por defecto del temporizador (15,625 ms), y el arreglo
+—`SetProcessInformation` con `ProcessPowerThrottling`— **está
+identificado pero sin probar que funcione**: una muestra a favor y una en
+contra no son prueba.
+
+Falta también saber si la máquina del trabajo es portátil y va con
+batería. Cambia el cuadro: el ahogo automático de Windows solo baja la
+frecuencia con batería, y en un sobremesa sin núcleos eficientes no
+aplica.
+
+### El arranque de 2.810 ms en la máquina del trabajo
+
+Ni tocado. En casa son 450–500 ms. Se mide comparando el arranque con y
+sin una exclusión del antivirus sobre `%LOCALAPPDATA%\Programs\pastepad`,
+y eso lo decide el usuario con su IT, no nosotros.
+
 ### Firmar el ejecutable
 
 Dejar preparada la firma con certificado de Windows, para cuando el
