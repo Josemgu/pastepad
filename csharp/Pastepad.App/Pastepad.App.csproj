@@ -23,9 +23,14 @@
     <Product>pastepad</Product>
     <AssemblyTitle>pastepad</AssemblyTitle>
     <Description>pastepad - gestor de portapapeles para Windows</Description>
-    <Company>Jose Miguel Ortiz</Company>
-    <Authors>Jose Miguel Ortiz</Authors>
-    <Copyright>Copyright (c) 2026 Jose Miguel Ortiz. Licencia MIT.</Copyright>
+    <!--
+      El usuario de GitHub y no el nombre real: esto acaba dentro del
+      .exe como CompanyName, que se ve en las propiedades del archivo y
+      lo imprime el CI al comprobar lo publicado.
+    -->
+    <Company>Josemgu</Company>
+    <Authors>Josemgu</Authors>
+    <Copyright>Copyright (c) 2026 Josemgu. Licencia MIT.</Copyright>
 
     <!--
       Sin el "+<sha>" que el SDK le anade a la version informativa. Lo

@@ -1458,9 +1458,9 @@ public sealed class PruebaArgumentos
     public void test_ruta_con_espacios_va_entre_comillas()
     {
         Assert.AreEqual(
-            "--datos \"C:\\Users\\Jose Miguel Ortiz\\Mi pequeno Secreto\"",
+            "--datos \"C:\\Users\\Ana Maria Perez\\Mi carpeta\"",
             Argumentos.Componer(
-                ["--datos", "C:\\Users\\Jose Miguel Ortiz\\Mi pequeno Secreto"]));
+                ["--datos", "C:\\Users\\Ana Maria Perez\\Mi carpeta"]));
     }
 
     [TestMethod]

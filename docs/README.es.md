@@ -222,5 +222,5 @@ Outlook.
 ---
 
 <div align="center">
-<sub>por <a href="https://github.com/Josemgu">Jose Miguel Ortiz</a></sub>
+<sub>por <a href="https://github.com/Josemgu">Josemgu</a></sub>
 </div>

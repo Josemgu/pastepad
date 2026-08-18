@@ -42,7 +42,10 @@ AppName=pastepad
 AppVersion={#Version}
 AppVerName=pastepad {#Version}
 VersionInfoVersion={#Version}
-AppPublisher=Jose Miguel Ortiz
+; El usuario de GitHub, que ya es publico, y no el nombre real. Este
+; campo es el que Windows enseña como «Editor» en Agregar o quitar
+; programas y en el aviso de SmartScreen, asi que se ve.
+AppPublisher=Josemgu
 AppPublisherURL=https://github.com/Josemgu/pastepad
 AppSupportURL=https://github.com/Josemgu/pastepad/issues
 AppUpdatesURL=https://github.com/Josemgu/pastepad/releases

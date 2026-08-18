@@ -6,33 +6,39 @@ se hace, se borra de aquí y se cuenta en `CHANGELOG.md`.
 No es una lista de ideas. Aquí solo entra lo que el usuario ha pedido
 explícitamente.
 
+### DESCARTADO: que el panel no le robe el protagonismo
+
+**Decisión del usuario, 14 ago 2026: no es viable, se deja.** No volver a
+investigarlo sin que él lo pida.
+
+Se estudió a fondo y queda escrito para que nadie repita el camino:
+
+- **Win+V lo consigue porque no es una aplicación.** Medido: no cambia el
+  primer plano, ni la ventana activa, ni el foco, y **no crea ninguna
+  ventana** — lo pinta `TextInputHost.exe`, el host de entrada de texto
+  del sistema, sobre una superficie que ya existía. Recibe teclas por
+  estar dentro de la cadena de entrada, no por tener foco.
+- **Sin activarse, el teclado no llega.** «The system posts keyboard
+  messages to the message queue of the foreground thread that created the
+  window with the keyboard focus». El ratón sí funciona; el teclado no.
+- **Nadie más lo consigue.** PowerToys Run roba el foco y tiene cuatro
+  incidencias abiertas por ello; CopyQ y Ditto hacen lo mismo que
+  pastepad. El único que lo logra —una reimplementación de Ditto en
+  AutoHotkey— **renunció al buscador**: solo Ctrl+1..5 y ratón.
+- **Había una vía y funcionaba**: registrar cada tecla con
+  `RegisterHotKey` mientras el panel está abierto. Medido: 53 de 53
+  teclas sueltas aceptadas, 0,3 ms por apertura, se traga la tecla, y
+  convive con el atajo del programa. Las tildes también, verificado con
+  la distribución española: `´` + `a` da `á`.
+- **Se descartó por el riesgo, no por imposible.** Lo que no registres se
+  cuela en el documento del usuario, y si pastepad se cuelga con el panel
+  abierto no hay letras en todo Windows hasta que reviva. En una máquina
+  con agentes de seguridad de por medio, eso es demasiado.
+
+De todo esto sí se quedó lo que valía: quitar la llamada que se colgaba.
+Ver la 4.9.0.
+
 ## Para la próxima versión
-
-### Quitar el nombre completo del instalador
-
-`AppPublisher` en `instalador/pastepad.iss` dice `Jose Miguel Ortiz`.
-Debe decir **`Josemgu`**, que es el usuario de GitHub y ya es público.
-El usuario no quiere su nombre real ahí.
-
-Ese campo es el que Windows enseña como «Editor» en Agregar o quitar
-programas y en el aviso de SmartScreen, así que se ve.
-
-**Ojo, no basta con cambiar el `.iss`.** El nombre completo está también
-en, al menos:
-
-- `csharp/Pastepad.App/Pastepad.App.csproj` — acaba dentro del `.exe`
-  como `CompanyName`, y el propio CI lo imprime al comprobar lo
-  publicado
-- `README.md` y `docs/README.es.md`
-- `csharp/Pastepad.Nucleo.Pruebas/PruebasNucleo.cs`
-
-Hay que repasarlos todos en la misma pasada, o el cambio queda a medias.
-
-Y decírselo al usuario tal cual: **el historial de git lleva su nombre y
-su correo en cada commit**, y las releases ya publicadas llevan el
-`AppPublisher` viejo dentro. Cambiarlo de ahora en adelante no lo borra
-de lo que ya está publicado. Reescribir la historia de git es otra
-decisión, y es suya.
 
 ### Firmar el ejecutable
 

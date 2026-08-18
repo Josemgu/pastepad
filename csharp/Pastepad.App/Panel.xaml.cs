@@ -368,7 +368,14 @@ public sealed partial class Panel : Window
 
         _compacta = ancho < Estilo.AnchoCompacto;
 
+        // Vaciar el buscador dispara Buscador_TextChanged, que ya llama a
+        // Refrescar. Sin callarlo, **toda apertura que venga despues de
+        // una busqueda reconstruye la lista dos veces** — hasta 80 filas
+        // de mas, en la ruta que tiene que ser instantanea.
+        _callado = true;
         Buscador.Text = "";
+        _callado = false;
+
         Refrescar();
 
         // Despues de Refrescar, que no las toca. Las dos sobreviven a
@@ -496,12 +503,32 @@ public sealed partial class Panel : Window
     /// desengancharse en el primero. Si no, se paga en cada cuadro de
     /// toda la vida del programa.
     /// </summary>
+    Action? _esperandoFotograma;
+
     public void AlPrimerFotograma(Action aviso)
     {
+        // **Solo puede haber uno esperando.** Abriendo y cerrando deprisa
+        // se acumulaban varias suscripciones que disparaban todas en el
+        // mismo fotograma, cada una midiendo desde su propia marca: en el
+        // log del usuario salieron tres lineas separadas 8 ms entre si
+        // diciendo 588, 322 y 200 ms de dibujo. Ninguna era cierta, y
+        // esas cifras mandan a buscar una lentitud que no existe.
+        //
+        // Se queda la ultima, que es la apertura que el usuario esta
+        // viendo de verdad; las anteriores ya no interesan porque su
+        // panel se cerro antes de llegar a pintarse.
+        bool primera = _esperandoFotograma is null;
+        _esperandoFotograma = aviso;
+
+        if (!primera) return;
+
         void UnaVez(object? _, object __)
         {
             Microsoft.UI.Xaml.Media.CompositionTarget.Rendering -= UnaVez;
-            aviso();
+
+            var pendiente = _esperandoFotograma;
+            _esperandoFotograma = null;
+            pendiente?.Invoke();
         }
 
         Microsoft.UI.Xaml.Media.CompositionTarget.Rendering += UnaVez;
@@ -1588,8 +1615,19 @@ public sealed partial class Panel : Window
         Esconder();
     }
 
-    void Buscador_TextChanged(object remitente, TextChangedEventArgs args) =>
+    /// <summary>
+    /// Mientras esta puesto, cambiar el texto del buscador no refresca.
+    /// Lo usa <see cref="Asomar"/> para vaciarlo sin pagar una
+    /// reconstruccion de la lista que va a hacer ella misma acto seguido.
+    /// </summary>
+    bool _callado;
+
+    void Buscador_TextChanged(object remitente, TextChangedEventArgs args)
+    {
+        if (_callado) return;
+
         Refrescar();
+    }
 
     /// <summary>
     /// El buscador enmarcado en acento cuando tiene el foco, como la

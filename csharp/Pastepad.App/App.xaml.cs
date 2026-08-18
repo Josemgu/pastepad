@@ -390,6 +390,7 @@ public partial class App : Application
         // minutos parado», que es la comparacion que hace falta.
         int cola = _buzon?.EsperaDelAtajo ?? 0;
         var parado = System.Diagnostics.Stopwatch.GetElapsedTime(_ultimaActividad);
+        var sinAbrir = System.Diagnostics.Stopwatch.GetElapsedTime(_ultimaApertura);
 
         long marca = System.Diagnostics.Stopwatch.GetTimestamp();
 
@@ -402,13 +403,17 @@ public partial class App : Application
         {
             Registro.Anotar(string.Format(
                 "panel: cola {0} ms + asomar {1:F1} ms + dibujo {2:F1} ms "
-                + "= {3:F1} ms (llevaba {4:F1} min parado)",
+                + "= {3:F1} ms ({4:F1} min sin abrirlo, {5:F1} min sin nada)",
                 cola,
                 asomar,
                 System.Diagnostics.Stopwatch.GetElapsedTime(marca).TotalMilliseconds
                     - asomar,
                 cola + System.Diagnostics.Stopwatch
                     .GetElapsedTime(marca).TotalMilliseconds,
+
+                // El primero es el que predice si va a tardar; el segundo
+                // se queda porque distingue «frio» de «ademas dormido».
+                sinAbrir.TotalMinutes,
                 parado.TotalMinutes));
 
             // Solo en la primera apertura del proceso, que es la unica
@@ -417,6 +422,7 @@ public partial class App : Application
         });
 
         Actividad();
+        _ultimaApertura = System.Diagnostics.Stopwatch.GetTimestamp();
     }
 
     /// <summary>
@@ -424,6 +430,20 @@ public partial class App : Application
     /// cada copia: son las dos cosas que lo despiertan.
     /// </summary>
     long _ultimaActividad = System.Diagnostics.Stopwatch.GetTimestamp();
+
+    /// <summary>
+    /// Cuando se abrio el panel por ultima vez, que **no es lo mismo** y
+    /// es lo que de verdad predice si va a tardar.
+    ///
+    /// Se separo al leer el log de la maquina del usuario: una apertura
+    /// decia «llevaba 0,5 min parado» y entre ella y la anterior habia
+    /// ocho minutos de reloj. Habia estado copiando mientras trabajaba, y
+    /// cada copia reiniciaba el contador — pero capturar una copia es
+    /// barato y no mantiene caliente nada de lo que dibuja el panel. La
+    /// cifra decia «recien usado» de algo que llevaba ocho minutos frio,
+    /// y con ella la lentitud que el usuario nota era invisible.
+    /// </summary>
+    long _ultimaApertura = System.Diagnostics.Stopwatch.GetTimestamp();
 
     void Actividad() =>
         _ultimaActividad = System.Diagnostics.Stopwatch.GetTimestamp();
@@ -569,11 +589,23 @@ public partial class App : Application
             return;
         }
 
-        // Windows necesita un instante para asentar el primer plano
-        // antes de aceptar las teclas.
-        await Task.Delay(60);
+        // Windows necesita un instante para asentar el primer plano antes
+        // de aceptar las teclas, pero **cuanto no se sabe de antemano**.
+        // Antes se esperaban 60 ms fijos: de sobra en una maquina
+        // desahogada —y se pagaban siempre— y posiblemente cortos en una
+        // cargada, donde el Ctrl+V salia antes de que el destino pudiera
+        // recibirlo. Ahora se espera a que la ventana este delante de
+        // verdad, que es lo que se queria saber.
+        long antes = System.Diagnostics.Stopwatch.GetTimestamp();
+
+        int espera = await Task.Run(() => Foco.EsperarAlFrente(_ventanaPrevia));
 
         Foco.PegarConTeclado();
+
+        Registro.Anotar(string.Format(
+            "pegado: foco en {0} ms + total {1:F1} ms",
+            espera,
+            System.Diagnostics.Stopwatch.GetElapsedTime(antes).TotalMilliseconds));
     }
 
     /// <summary>Deja el contenido en el portapapeles sin pegarlo.</summary>

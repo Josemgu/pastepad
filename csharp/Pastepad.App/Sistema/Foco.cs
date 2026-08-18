@@ -33,6 +33,13 @@ internal static class Foco
     {
         if (hwnd == 0 || !Nativo.IsWindow(hwnd)) return false;
 
+        if (Nativo.IsIconic(hwnd))
+            Nativo.ShowWindow(hwnd, Nativo.SW_RESTORE);
+
+        // Primero por las buenas. Ver PorLasBuenas: el enganche es lo
+        // que puede costar segundos, y muchas veces no hace falta.
+        if (PorLasBuenas(hwnd)) return true;
+
         uint hiloDestino = Nativo.GetWindowThreadProcessId(hwnd, out _);
         uint hiloPropio = Nativo.GetCurrentThreadId();
 
@@ -79,6 +86,8 @@ internal static class Foco
 
         if (delante == propia) return true;
 
+        if (PorLasBuenas(propia)) return true;
+
         uint hiloDelante = delante != 0
             ? Nativo.GetWindowThreadProcessId(delante, out _)
             : 0;
@@ -102,6 +111,69 @@ internal static class Foco
             if (enganchado)
                 Nativo.AttachThreadInput(hiloPropio, hiloDelante, false);
         }
+    }
+
+    /// <summary>
+    /// Poner una ventana delante **sin engancharse al hilo de nadie**.
+    ///
+    /// Es el camino rapido, y sobre todo el unico que no puede quedarse
+    /// esperando. El enganche que usan los dos metodos de arriba hace que
+    /// «keyboard and mouse events received by both threads are processed
+    /// in the order they were received», o sea que nos ponemos en la cola
+    /// del programa que este delante: si ese esta ocupado, esperamos.
+    /// Medido con una ventana con el hilo bloqueado a proposito,
+    /// <c>SetForegroundWindow</c> tardo **5.399 ms** y encima devolvio
+    /// false. Y en la maquina de trabajo del usuario —saturada de agentes
+    /// de seguridad— eso deja de ser un caso de laboratorio.
+    ///
+    /// Sin enganche puede funcionar igual: entre las condiciones que
+    /// Windows acepta para ceder el primer plano esta que «the process
+    /// received the last input event», y a pastepad lo acaban de
+    /// despertar con un atajo global. Cuando cuela, nos ahorramos el
+    /// enganche entero; cuando no, se sigue por el camino de siempre y no
+    /// se pierde nada.
+    ///
+    /// Se comprueba el resultado leyendo quien manda de verdad y no
+    /// fiandose del valor devuelto: la llamada puede decir true y no
+    /// haber cambiado nada.
+    /// </summary>
+    static bool PorLasBuenas(nint hwnd)
+    {
+        Nativo.SetForegroundWindow(hwnd);
+
+        if (Nativo.GetForegroundWindow() != hwnd) return false;
+
+        Nativo.SetFocus(hwnd);
+        return true;
+    }
+
+    /// <summary>
+    /// Espera a que esa ventana este de verdad delante, y devuelve
+    /// cuanto tardo. Sustituye a una espera fija de 60 ms escrita a mano.
+    ///
+    /// Los 60 ms eran a ciegas: en una maquina desahogada sobraban —se
+    /// pagaban enteros aunque el foco ya estuviera puesto en 5— y en una
+    /// cargada podian quedarse cortos, y entonces el Ctrl+V salia antes
+    /// de que el destino pudiera recibirlo. Esto es mas rapido en el caso
+    /// normal y mas fiable en el malo.
+    /// </summary>
+    public static int EsperarAlFrente(nint hwnd, int topeMs = 400)
+    {
+        var reloj = System.Diagnostics.Stopwatch.StartNew();
+
+        while (reloj.ElapsedMilliseconds < topeMs)
+        {
+            if (Nativo.GetForegroundWindow() == hwnd)
+                return (int)reloj.ElapsedMilliseconds;
+
+            Thread.Sleep(5);
+        }
+
+        Registro.Anotar(
+            $"la ventana 0x{hwnd:X} no llego a estar delante en {topeMs} ms; "
+            + "se pega igual");
+
+        return -1;
     }
 
     /// <summary>

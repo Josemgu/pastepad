@@ -13,7 +13,7 @@ las pierde al reiniciar.
 
 ## Estado
 
-Versión 4.8.0, reescrita en C# con WinUI 3 sobre el Windows App SDK
+Versión 4.9.0, reescrita en C# con WinUI 3 sobre el Windows App SDK
 2.3.1 y .NET 10. Desempaquetada y self-contained.
 
 La versión anterior (3.x, Python con Flet) **ya no está en el repo**.
@@ -243,6 +243,26 @@ not»— para no robarle el primer plano a nadie al iniciar sesión, y a
 virtual de la máquina de pruebas iba de `X -2560..2560, Y 0..1440`. Y
 **no toca `EstaVisible`**, así que el manejador que esconde el panel al
 perder el foco sale por su primera línea y no se entera.
+
+**Pedir el primer plano puede costar segundos, asi que primero se pide
+por las buenas.** `Foco.PorLasBuenas`. `AttachThreadInput` hace que
+«keyboard and mouse events received by both threads are processed in the
+order they were received»: nos ponemos en la cola del programa de
+delante y, si ese esta ocupado, esperamos. Medido contra una ventana con
+el hilo bloqueado a proposito: `SetForegroundWindow` tardo **5.399 ms** y
+encima devolvio false.
+
+No se quita la llamada —sin ella el panel sale visible pero sin teclado—:
+se le pone delante un intento **sin enganche**, que Windows acepta
+porque a pastepad lo acaba de despertar un atajo global. Mismo test
+despues: **5.604 ms a 35,7 ms**.
+
+**Y la espera antes de pegar ya no es un numero escrito a mano.** Eran 60
+ms fijos; medido, la ventana destino ya estaba delante cuando empezaba la
+espera, asi que se tiraban los 60 enteros — y en una maquina cargada el
+mismo numero podia quedarse corto y soltar el Ctrl+V antes de tiempo.
+Ahora se espera a que este delante de verdad. Un pegado completo paso de
+~130 ms a 73,9 ms.
 
 **Un atajo que no se puede registrar se avisa por la bandeja, no por el
 panel.** El panel se abre con el atajo: quien tiene el problema es

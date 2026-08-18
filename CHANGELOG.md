@@ -3,6 +3,65 @@
 All notable changes to this project are documented here.
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [4.9.0] - 2026-08-14
+
+**Opening the panel could take five and a half seconds, and nobody knew.**
+
+### Fixed
+- **The call that steals the foreground could block for seconds, and it
+  sat in the middle of the path that has to be instant.** Measured
+  against a window whose UI thread was deliberately busy:
+  `SetForegroundWindow` took **5,399 ms** — and then returned false. The
+  cause is documented: attaching to the other window's thread means
+  "keyboard and mouse events received by both threads are processed in
+  the order they were received", so pastepad queues behind whatever that
+  program is doing.
+
+  This is not a laboratory case. On a work machine loaded with corporate
+  security agents, the program in front is busy far more often, which is
+  exactly why the same panel opens in 18 ms one time and 163 ms the next
+  with no pattern.
+
+  The call is not removed — without it the panel comes up visible but
+  without keyboard focus. It now has a fast path in front of it: ask for
+  the foreground **without attaching to anyone**, which is allowed
+  because pastepad was just woken by a global hotkey, and only fall back
+  to the old path if Windows refuses. Measured in the same test:
+  **5,604 ms to 35.7 ms**.
+- **Pasting waited 60 milliseconds every single time, for nothing.** That
+  number was written by hand to let the focus settle. Measured, the
+  target window was already in front when the wait began, so all 60 ms
+  were thrown away — and on a loaded machine the same fixed number could
+  just as easily be too short, sending the Ctrl+V before the target could
+  receive it. It now waits until the window really is in front, and pastes
+  then. A whole paste went from about 130 ms to **73.9 ms**.
+- **Opening the panel rebuilt the list twice** whenever the previous use
+  had left something in the search box: clearing it fires the same
+  refresh that the next line then calls again. Up to 80 rows built for
+  nothing, on the path that has to be instant.
+
+### Changed
+- **The publisher is now `Josemgu`**, the GitHub account, instead of a
+  full legal name — in the installer, inside the executable's
+  `CompanyName`, and in both READMEs. Note this does not rewrite what is
+  already published: releases up to 4.8.0 carry the old value, and so
+  does every git commit.
+
+### Fixed in the instrumentation itself
+Both of these were making the logs lie, which is worse than not measuring.
+
+- **Opening and closing quickly inflated the drawing figures.** Several
+  timers piled up waiting for the same frame and all reported at once:
+  three lines eight milliseconds apart claiming 588, 322 and 200 ms. None
+  were true, and figures like that send you hunting for slowness that
+  does not exist. Only the opening actually on screen is timed now.
+- **The idle counter measured the wrong thing.** It counted any activity,
+  and copying anything reset it — so someone working normally always
+  looked "just used". One line said "0.5 min idle" with eight minutes of
+  clock between it and the previous open. The log now reports both:
+  minutes since the panel was last opened, which is what predicts a slow
+  open, and minutes since anything happened at all.
+
 ## [4.8.0] - 2026-08-14
 
 ### Fixed

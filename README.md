@@ -216,5 +216,5 @@ constantly, and rich-text paste that survives into Outlook.
 ---
 
 <div align="center">
-<sub>by <a href="https://github.com/Josemgu">Jose Miguel Ortiz</a></sub>
+<sub>by <a href="https://github.com/Josemgu">Josemgu</a></sub>
 </div>
