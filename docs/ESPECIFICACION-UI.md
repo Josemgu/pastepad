@@ -304,6 +304,13 @@ usuario lo toca. Lo elegido solo se escribe en `snippets.json` si
 contradice a lo deducido, así que un archivo de antes de la 4.4.0 se
 vuelve a escribir sin una clave de más.
 
+**Un marcador guardado se abre al hacer clic; todo lo demas se pega.**
+Lo decide el TIPO, no que el texto parezca un enlace: una direccion en el
+historial se pega —copiarla y no poder soltarla en ningun campo fue el
+fallo de la 4.3.0— y un guardado que el usuario cambie a Nota tambien.
+Copiar y pegar un marcador siguen estando en el menu de tres puntos, y
+«Pegar» de ese menu pega siempre, tambien en un marcador.
+
 **Ni correo ni prompt de IA se deducen nunca.** No hay nada en un cuerpo
 de correo que lo separe de una nota, y proponerlo por llevar una arroba
 convertiría en correo cualquier texto que mencione una dirección. Con un

@@ -54,7 +54,12 @@ five more notes, and a library of prompts disappeared among them.
 
 Copy a web address on its own and the row shows the domain and an Open
 in browser entry in its menu. Clicking still pastes, like everything
-else in the list.
+else in the history.
+
+**A bookmark you saved opens instead.** Saving an address as a bookmark
+means you want to visit it, so clicking it does that; copying and pasting
+it are in the three-dot menu. If you would rather it pasted, change its
+type to Note.
 
 Search covers both tabs. Words can come in any order and accents are
 ignored.
@@ -163,7 +168,7 @@ matches the build.
 
 C# on .NET 10 with WinUI 3. The clipboard, the global shortcut, the tray
 icon and the focus handoff are Win32 calls; the rest is XAML. The data
-layer has 78 tests that run without opening a window.
+layer has 99 tests that run without opening a window.
 
 Versions up to 3.0.1 were written in Python with Flet. That was
 abandoned because the global shortcut stopped answering after a few

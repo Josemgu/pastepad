@@ -1574,8 +1574,18 @@ public sealed partial class Panel : Window
     /// Abrir sigue estando, pero donde no puede confundirse con pegar:
     /// «Abrir en el navegador», arriba del menu de la fila.
     /// </summary>
-    async Task Usar(Fila fila, bool sinFormato = false)
+    /// <param name="abrirMarcador">
+    /// Falso cuando la orden es pegar y nada mas. **Es lo que evita
+    /// repetir el fallo de la 4.3.0**: por aqui pasan tambien «Pegar» y
+    /// «Pegar sin formato» del menu, y si un marcador abriera el
+    /// navegador tambien desde ahi, el elemento que dice «Pegar» no
+    /// pegaria — que es exactamente lo que se arreglo en la 4.4.0.
+    /// </param>
+    async Task Usar(Fila fila, bool sinFormato = false, bool abrirMarcador = true)
     {
+        // El historial siempre pega, aunque lo copiado sea una direccion.
+        // Copiar un enlace y no poder soltarlo en ningun campo fue el
+        // fallo que arreglo la 4.4.0 y no se vuelve atras.
         if (fila.Dato is Entrada entrada)
         {
             App.Actual.Pegar(entrada);
@@ -1583,6 +1593,21 @@ public sealed partial class Panel : Window
         }
 
         if (fila.Dato is not Snippet snippet) return;
+
+        // **Un marcador guardado si se abre.** Guardar una direccion como
+        // marcador es decir «esto lo quiero visitar», no «esto lo quiero
+        // escribir»; lo dijo el usuario con esas palabras. Copiarla sigue
+        // estando, en el menu de tres puntos.
+        //
+        // Los dos casos son distintos y por eso conviven: lo que manda
+        // aqui es el TIPO del guardado, no que el texto parezca un
+        // enlace. Una direccion en el historial se pega, y un guardado
+        // que el usuario cambie a Nota tambien — el tipo lo elige el.
+        if (abrirMarcador && fila.Tipo == Tipos.Marcador)
+        {
+            App.Actual.AbrirEnlace(fila.Texto);
+            return;
+        }
 
         var campos = Modelo.CamposDe(fila.Texto);
 
@@ -1760,12 +1785,14 @@ public sealed partial class Panel : Window
 
     async void Menu_Pegar(object remitente, RoutedEventArgs args)
     {
-        if (DeMenu(remitente) is { } fila) await Usar(fila);
+        if (DeMenu(remitente) is { } fila)
+            await Usar(fila, abrirMarcador: false);
     }
 
     async void Menu_PegarPlano(object remitente, RoutedEventArgs args)
     {
-        if (DeMenu(remitente) is { } fila) await Usar(fila, sinFormato: true);
+        if (DeMenu(remitente) is { } fila)
+            await Usar(fila, sinFormato: true, abrirMarcador: false);
     }
 
     void Menu_Copiar(object remitente, RoutedEventArgs args)

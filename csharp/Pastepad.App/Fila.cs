@@ -81,8 +81,10 @@ public sealed class Fila : ItemLista, INotifyPropertyChanged
 
     /// <summary>
     /// De que es esto: lo que eligio el usuario, o lo que se deduce del
-    /// texto mientras no elija. Decide el grupo y el icono, y nada mas
-    /// —lo que hace el clic es pegar, sea del tipo que sea—.
+    /// texto mientras no elija. Decide el grupo, el icono, y —solo en un
+    /// guardado— si el clic abre o pega: un marcador guardado se abre en
+    /// el navegador, todo lo demas se pega. El historial siempre pega,
+    /// aunque lo copiado sea una direccion.
     /// </summary>
     public string Tipo { get; }
 
@@ -121,8 +123,10 @@ public sealed class Fila : ItemLista, INotifyPropertyChanged
                 EsPlantilla = !EsEnlace && Modelo.CamposDe(Texto).Count > 0;
 
                 // Lo que pasa por el portapapeles no lo archiva nadie, asi
-                // que aqui el tipo solo puede deducirse.
-                Tipo = Tipos.Deducir(Texto);
+                // que aqui el tipo solo puede deducirse. Y se deduce de lo
+                // que ya se acaba de calcular: Tipos.Deducir(Texto) volveria
+                // a recorrer el texto entero buscando lo mismo dos veces.
+                Tipo = Tipos.DeducirDe(EsEnlace, EsPlantilla);
 
                 Titulo = Modelo.UnaLinea(Texto, 80);
                 if (Titulo.Length == 0) Titulo = "—";
@@ -138,7 +142,12 @@ public sealed class Fila : ItemLista, INotifyPropertyChanged
                 Texto = Modelo.TextoDe(snippet.Runs);
                 EsEnlace = Modelo.EsEnlace(Texto);
                 EsPlantilla = !EsEnlace && Modelo.CamposDe(Texto).Count > 0;
-                Tipo = Tipos.De(snippet);
+                // Tipos.De(snippet) volveria a unir todos los fragmentos
+                // con TextoDe —el texto ya esta arriba— y a repetir las dos
+                // busquedas. Aqui se aprovecha todo lo hecho.
+                Tipo = Tipos.Vale(snippet.Tipo)
+                    ? snippet.Tipo!
+                    : Tipos.DeducirDe(EsEnlace, EsPlantilla);
 
                 // El titulo se guarda entero y se acorta aqui, igual que
                 // ya se hacia con el historial: el recorte es de pantalla

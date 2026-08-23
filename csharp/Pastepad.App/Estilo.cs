@@ -333,7 +333,34 @@ public static class Estilo
             Convert.ToByte(h.Substring(i + 4, 2), 16));
     }
 
-    public static SolidColorBrush Pincel(string hex) => new(Desde(hex));
+    /// <summary>
+    /// Los pinceles ya hechos, por color.
+    ///
+    /// Se reparten entre todos los que pidan el mismo color en vez de
+    /// crear uno nuevo cada vez. No es microoptimizacion: cada refresco
+    /// de la lista pide decenas —fondo, borde, titulo, subtitulo e icono
+    /// por fila, hasta ochenta filas— y eso pasa en cada apertura y con
+    /// cada tecla del buscador.
+    ///
+    /// Compartirlos es seguro **mientras nadie los modifique**: aqui se
+    /// asignan a propiedades y no se les toca el Color ni la Opacity. Si
+    /// alguna vez hiciera falta mutar uno, que se cree aparte con new,
+    /// porque cambiarlo aqui lo cambiaria en toda la interfaz de golpe.
+    ///
+    /// El diccionario no crece sin control: las claves son los colores de
+    /// la paleta, que son un puñado.
+    /// </summary>
+    static readonly Dictionary<string, SolidColorBrush> _pinceles = [];
+
+    public static SolidColorBrush Pincel(string hex)
+    {
+        if (_pinceles.TryGetValue(hex, out var hecho)) return hecho;
+
+        var nuevo = new SolidColorBrush(Desde(hex));
+        _pinceles[hex] = nuevo;
+
+        return nuevo;
+    }
 
     /// <summary>
     /// Un pincel del mismo color con menos opacidad. Se usa para el

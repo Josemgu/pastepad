@@ -53,7 +53,12 @@ perdía entera entre ellas.
 
 Si lo que copias es una dirección web y nada más, la fila enseña el
 dominio y su menú trae «Abrir en el navegador». El clic pega, como en
-todo lo demás de la lista.
+todo lo demás del historial.
+
+**Un marcador que tú guardaste sí se abre.** Guardar una dirección como
+marcador es decir que quieres visitarla, así que el clic hace eso;
+copiarla y pegarla están en el menú de tres puntos. Si prefieres que se
+pegue, cámbiale el tipo a Nota.
 
 La búsqueda cruza las dos pestañas. Las palabras pueden ir en cualquier
 orden y las tildes dan igual.
@@ -165,7 +170,7 @@ lo que salió de la compilación.
 
 C# sobre .NET 10 con WinUI 3. El portapapeles, el atajo global, el icono
 de la bandeja y la devolución del foco son llamadas a Win32; lo demás es
-XAML. La capa de datos tiene 78 pruebas que corren sin abrir ninguna
+XAML. La capa de datos tiene 99 pruebas que corren sin abrir ninguna
 ventana.
 
 Hasta la 3.0.1 el programa estaba escrito en Python con Flet. Se

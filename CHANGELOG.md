@@ -3,6 +3,48 @@
 All notable changes to this project are documented here.
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [4.10.0] - 2026-08-15
+
+### Changed
+- **A saved bookmark opens again when you click it.** Saving an address
+  as a bookmark means "I want to visit this", not "I want to type this",
+  and 4.4.0 took that away along with the fault it was fixing.
+
+  Both cases now live together, because what decides is the **type**, not
+  whether the text looks like a link:
+
+  | | Click | Three-dot menu |
+  |---|---|---|
+  | Saved bookmark | Opens the browser | Copy, Paste, Open |
+  | Address in the history | Pastes | Copy, Paste, Open |
+  | Note, email, template, prompt | Pastes | Copy, Paste |
+
+  A copied address still pastes — that was the 4.4.0 fault and it is not
+  coming back. And a saved address you would rather paste than open just
+  needs its type changed to Note.
+
+  **Paste in the menu still pastes, bookmark or not.** That is the exact
+  trap 4.3.0 fell into: the four paths that lead to pasting all went
+  through one place, so the menu entry saying "Paste" opened Chrome.
+
+### Internal
+- **Every row was scanning its whole text twice.** Working out whether it
+  is a link and whether it carries `[[fields]]` was done once for the
+  row, and then again inside the type deduction — up to eighty times per
+  opening, and again on every keystroke in the search box. Saved rows
+  also rejoined all their formatting fragments into one string a second
+  time. Now the work is done once and reused.
+- **Brushes of the same colour are shared** instead of one new object per
+  call, of which each refresh asks for dozens.
+
+  Measured honestly: **neither of these moved the panel's opening time.**
+  With eighty long entries the median went from 20.3 ms to 19.3 ms, which
+  is noise — the cost there is the window system, not our arithmetic, as
+  the analysis had already said. They stay because doing the same work
+  twice is worth removing on its own, not because they made anything
+  faster. Whether they help while typing in the search box was **not
+  measured**, so nothing is claimed.
+
 ## [4.9.0] - 2026-08-14
 
 **Opening the panel could take five and a half seconds, and nobody knew.**

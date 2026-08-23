@@ -63,12 +63,22 @@ public static class Tipos
     /// texto, no el tipo. Quien lo quiera entre sus prompts lo cambia, y
     /// sigue preguntandole los campos igual.
     /// </summary>
-    public static string Deducir(string? texto)
-    {
-        if (Modelo.EsEnlace(texto)) return Marcador;
+    public static string Deducir(string? texto) => DeducirDe(
+        Modelo.EsEnlace(texto),
+        Modelo.CamposDe(texto ?? "").Count > 0);
 
-        return Modelo.CamposDe(texto ?? "").Count > 0 ? Plantilla : Nota;
-    }
+    /// <summary>
+    /// Lo mismo, para quien ya sabe las dos respuestas.
+    ///
+    /// Existe por rendimiento y no por gusto: la fila necesita saber si
+    /// es enlace y si lleva campos para pintarse, y llamar a
+    /// <see cref="Deducir"/> despues repetia las dos busquedas sobre el
+    /// texto ENTERO — hasta ochenta veces por apertura, y otra vez con
+    /// cada tecla del buscador. La regla sigue viviendo aqui y en un solo
+    /// sitio; lo unico que cambia es quien trae los datos.
+    /// </summary>
+    public static string DeducirDe(bool esEnlace, bool tieneCampos) =>
+        esEnlace ? Marcador : tieneCampos ? Plantilla : Nota;
 
     /// <summary>
     /// El tipo que vale: el elegido, si se eligio uno y es de los
