@@ -1793,3 +1793,150 @@ public sealed class PruebaMedidasDelPanel
         Assert.IsLessThanOrEqualTo(Config.MaxAlto, Config.AltoDef);
     }
 }
+
+/// <summary>
+/// El bloc de apuntes. Vive en su propio archivo y no se pega nunca, asi
+/// que lo que hay que fijar aqui es que no se mezcle con lo demas y que
+/// el orden aguante.
+/// </summary>
+[TestClass]
+public sealed class PruebaNotas : BaseConCarpetaTemporal
+{
+    static DateTimeOffset El(int dia) =>
+        new(2026, 8, dia, 10, 0, 0, TimeSpan.FromHours(-4));
+
+    [TestMethod]
+    public void test_la_nota_se_guarda_en_su_propio_archivo()
+    {
+        var a = new Almacen(Rutas);
+        a.AnadirNota(Modelo.CrearNota("comprar pan", El(1)));
+
+        Assert.IsTrue(File.Exists(Rutas.Notas), "no se escribio notas.json");
+
+        // Y sobre todo: no se cuela en lo que si se pega.
+        Assert.IsFalse(File.Exists(Rutas.Datos),
+            "un apunte no puede acabar en snippets.json");
+
+        var otra = new Almacen(Rutas);
+        Assert.HasCount(1, otra.Notas);
+        Assert.AreEqual("comprar pan", otra.Notas[0].Texto);
+    }
+
+    /// <summary>
+    /// Lo ultimo tocado, arriba — como las notas rapidas de Windows. Se
+    /// comprueba tras releer el archivo, no solo en memoria: el orden
+    /// tiene que sobrevivir al disco.
+    /// </summary>
+    [TestMethod]
+    public void test_lo_ultimo_tocado_queda_arriba()
+    {
+        var a = new Almacen(Rutas);
+        a.AnadirNota(Modelo.CrearNota("la vieja", El(1)));
+        a.AnadirNota(Modelo.CrearNota("la nueva", El(3)));
+        a.AnadirNota(Modelo.CrearNota("la de enmedio", El(2)));
+
+        CollectionAssert.AreEqual(
+            new[] { "la nueva", "la de enmedio", "la vieja" },
+            new Almacen(Rutas).Notas.Select(n => n.Texto).ToArray());
+    }
+
+    [TestMethod]
+    public void test_editar_una_nota_la_sube_al_principio()
+    {
+        var a = new Almacen(Rutas);
+        a.AnadirNota(Modelo.CrearNota("la vieja", El(1)));
+        a.AnadirNota(Modelo.CrearNota("la nueva", El(3)));
+
+        var vieja = a.Notas.Single(n => n.Texto == "la vieja");
+        Assert.IsTrue(a.CambiarNota(vieja, "la vieja, retocada", El(5).ToString("O")));
+
+        CollectionAssert.AreEqual(
+            new[] { "la vieja, retocada", "la nueva" },
+            new Almacen(Rutas).Notas.Select(n => n.Texto).ToArray());
+    }
+
+    /// <summary>
+    /// Se busca por referencia y no por indice a proposito: la lista se
+    /// reordena en cada guardado, asi que un indice tomado antes apunta
+    /// a otra nota. Esta prueba fija justo eso — la que se borra es la
+    /// que se pidio, no la que quedo en esa posicion.
+    /// </summary>
+    [TestMethod]
+    public void test_se_borra_la_que_se_pidio_aunque_la_lista_se_reordene()
+    {
+        var a = new Almacen(Rutas);
+        a.AnadirNota(Modelo.CrearNota("primera", El(1)));
+        a.AnadirNota(Modelo.CrearNota("segunda", El(2)));
+        a.AnadirNota(Modelo.CrearNota("tercera", El(3)));
+
+        var segunda = a.Notas.Single(n => n.Texto == "segunda");
+        Assert.IsTrue(a.BorrarNota(segunda));
+
+        CollectionAssert.AreEqual(
+            new[] { "tercera", "primera" },
+            new Almacen(Rutas).Notas.Select(n => n.Texto).ToArray());
+    }
+
+    [TestMethod]
+    public void test_borrar_algo_que_ya_no_esta_no_revienta()
+    {
+        var a = new Almacen(Rutas);
+        var suelta = Modelo.CrearNota("nunca se anadio", El(1));
+
+        Assert.IsFalse(a.BorrarNota(suelta));
+        Assert.IsFalse(a.CambiarNota(suelta, "algo", El(2).ToString("O")));
+    }
+
+    /// <summary>
+    /// Un archivo escrito a mano puede no traer fecha. Eso no puede
+    /// tumbar el arranque: la nota sin fecha se coloca al final y las
+    /// demas conservan su orden.
+    /// </summary>
+    [TestMethod]
+    public void test_una_nota_sin_fecha_no_rompe_el_orden()
+    {
+        File.WriteAllText(Rutas.Notas,
+            """
+            [
+              { "texto": "sin fecha" },
+              { "texto": "con fecha", "editada": "2026-08-01T10:00:00.0000000-04:00" }
+            ]
+            """);
+
+        CollectionAssert.AreEqual(
+            new[] { "con fecha", "sin fecha" },
+            new Almacen(Rutas).Notas.Select(n => n.Texto).ToArray());
+    }
+
+    /// <summary>
+    /// Los saltos se normalizan al entrar, como en todo lo que llega del
+    /// usuario: una caja de WinUI devuelve \r a secas, y guardarlo asi
+    /// deja un apunte de tres lineas convertido en una.
+    /// </summary>
+    [TestMethod]
+    public void test_los_saltos_se_normalizan()
+    {
+        var a = new Almacen(Rutas);
+        a.AnadirNota(Modelo.CrearNota("una\rdos\ntres", El(1)));
+
+        Assert.AreEqual("una\r\ndos\r\ntres", new Almacen(Rutas).Notas[0].Texto);
+
+        var n = a.Notas[0];
+        a.CambiarNota(n, "cuatro\rcinco", El(2).ToString("O"));
+        Assert.AreEqual("cuatro\r\ncinco", new Almacen(Rutas).Notas[0].Texto);
+    }
+
+    /// <summary>
+    /// La fecha se escribe en ISO-8601 y no en el formato de la region.
+    /// Con «15/08/2026», un equipo configurado en ingles lee el mismo
+    /// archivo como el 8 de marzo, y el orden de la lista cambia solo.
+    /// </summary>
+    [TestMethod]
+    public void test_la_fecha_va_en_iso_8601()
+    {
+        var nota = Modelo.CrearNota("x", El(9));
+
+        StringAssert.StartsWith(nota.Editada, "2026-08-09T10:00:00");
+        StringAssert.Contains(nota.Editada, "-04:00");
+    }
+}

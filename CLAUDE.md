@@ -13,7 +13,7 @@ las pierde al reiniciar.
 
 ## Estado
 
-Versión 4.10.0, reescrita en C# con WinUI 3 sobre el Windows App SDK
+Versión 4.11.0, reescrita en C# con WinUI 3 sobre el Windows App SDK
 2.3.1 y .NET 10. Desempaquetada y self-contained.
 
 La versión anterior (3.x, Python con Flet) **ya no está en el repo**.
@@ -45,8 +45,9 @@ csharp/
     Versiones.cs             comparar versiones y decidir si toca avisar
     Argumentos.cs            la linea con la que Windows nos reabre
     Tipos.cs                 de que es cada guardado, y cuando se escribe
+    Fechas.cs                una fecha guardada, en palabras
     Config.cs, Datos.cs, Autoarranque.cs, Rutas
-  Pastepad.Nucleo.Pruebas/   99 pruebas, sin abrir ventana
+  Pastepad.Nucleo.Pruebas/   107 pruebas, sin abrir ventana
   Pastepad.App/
     Sistema/                 todo lo que habla con Win32
       Buzon.cs               ventana solo-mensajes: atajo y portapapeles
@@ -67,7 +68,7 @@ docs/                        35 maquetas, especificacion, logos
 ```
 
 `Pastepad.Nucleo` no importa nada gráfico **a propósito**. Es lo que
-permite que 99 pruebas corran sin abrir ventana y sin el Windows App
+permite que 107 pruebas corran sin abrir ventana y sin el Windows App
 SDK. No metas WinUI ahí dentro.
 
 Ese reparto es también por qué `Versiones.cs` está en el núcleo y
@@ -205,6 +206,17 @@ antes de que haya píxeles.
 - **Los datos del usuario viven en `%LOCALAPPDATA%\pastepad`** y el
   programa en `%LOCALAPPDATA%\Programs\pastepad`. Separados a propósito:
   así desinstalar no puede tocar el historial.
+
+- **Una clave repetida en `Textos.cs` no da ni un aviso.** Las tablas se
+  construyen con sintaxis de indexador (`["clave"] = "valor"`), y ahi una
+  clave repetida **no es un error de compilacion**: la ultima gana y la
+  primera queda muerta. La prueba que compara los cuatro idiomas tampoco
+  lo ve, porque para cuando corre ya son la misma clave. Antes de añadir
+  una traduccion, comprueba que no este:
+
+  ```bash
+  grep -n '\["Tu clave"\] =' csharp/Pastepad.Nucleo/Textos.cs
+  ```
 
 ## Probar con contenido largo. No es opcional
 

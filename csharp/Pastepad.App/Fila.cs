@@ -91,6 +91,17 @@ public sealed class Fila : ItemLista, INotifyPropertyChanged
     public bool EsImagen { get; }
     public bool Fijada { get; }
 
+    /// <summary>
+    /// Es un apunte del bloc. No se pega nunca: pulsarlo lo abre para
+    /// editarlo, y el menu no ofrece pegar.
+    ///
+    /// Lo pidio el usuario asi —«no debe tener la opcion de pegar porque
+    /// son notas»— y ademas evita el problema que tendria ofrecerlo:
+    /// pegar deja el panel y devuelve el foco a otra ventana, que es
+    /// justo lo contrario de lo que se quiere al escribir un apunte.
+    /// </summary>
+    public bool EsApunte { get; }
+
     /// <summary>Vacio cuando la fila no lleva icono, que es lo normal.</summary>
     public string Icono { get; }
 
@@ -157,6 +168,27 @@ public sealed class Fila : ItemLista, INotifyPropertyChanged
 
                 Detalle = EsEnlace ? Modelo.DominioDe(Texto) : snippet.Categoria;
                 Icono = IconoDe(Tipo);
+                break;
+
+            case Nota apunte:
+                EsApunte = true;
+                Texto = apunte.Texto;
+
+                Titulo = Modelo.UnaLinea(Texto, 80);
+                if (Titulo.Length == 0) Titulo = "—";
+
+                // Ni el dominio ni la carpeta: un apunte no tiene
+                // ninguna de las dos. Lo util debajo del titulo es
+                // cuando se toco, como en las notas rapidas de Windows.
+                Detalle = Fechas.Legible(apunte.Editada, DateTimeOffset.Now);
+
+                Tipo = Tipos.Nota;
+
+                // Sin icono, por la misma regla que las notas guardadas:
+                // en esta pestaña TODAS las filas son apuntes, asi que un
+                // icono en cada una seria una columna de ruido que no
+                // distingue nada.
+                Icono = "";
                 break;
 
             default:
@@ -323,11 +355,24 @@ public sealed class Fila : ItemLista, INotifyPropertyChanged
     public string TxtPegar => Textos.T("Pegar");
     public string TxtPegarPlano => Textos.T("Pegar sin formato");
     public string TxtCopiar => Textos.T("Copiar");
-    public string TxtEditar => Textos.T("Editar y guardar...");
+    public string TxtEditar =>
+        Textos.T(EsApunte ? "Editar" : "Editar y guardar...");
     public string TxtBorrar => Textos.T("Borrar");
 
+    /// <summary>
+    /// Pegar y pegar sin formato. Se esconden en los apuntes, que es lo
+    /// unico que separa al bloc del resto del panel.
+    /// </summary>
+    public Visibility VerPegar =>
+        EsApunte ? Visibility.Collapsed : Visibility.Visible;
+
+    /// <summary>
+    /// «Abrir en el navegador» tampoco: un apunte que mencione una
+    /// direccion sigue siendo un apunte, y abrirlo se lleva el foco
+    /// fuera igual que pegar.
+    /// </summary>
     public Visibility VerAbrir =>
-        EsEnlace ? Visibility.Visible : Visibility.Collapsed;
+        EsEnlace && !EsApunte ? Visibility.Visible : Visibility.Collapsed;
 
     public Visibility VerFijar =>
         EsHist ? Visibility.Visible : Visibility.Collapsed;

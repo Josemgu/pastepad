@@ -24,6 +24,12 @@ public sealed partial class Panel : Window
     const string Reciente = "reciente";
     const string Guardados = "guardados";
 
+    /// <summary>
+    /// El bloc. Es la unica pestaña donde nada se pega: se escribe, se
+    /// lee y se borra.
+    /// </summary>
+    const string Notas = "notas";
+
     readonly ObservableCollection<ItemLista> _items = [];
 
     /// <summary>Solo las tarjetas, sin cabeceras: es lo pegable.</summary>
@@ -211,6 +217,7 @@ public sealed partial class Panel : Window
         Buscador.PlaceholderText = Textos.T("Buscar en todo");
         TabReciente.Content = Textos.T("Reciente");
         TabGuardados.Content = Textos.T("Guardados");
+        TabNotas.Content = Textos.T("Notas");
         AvisoPausa.Text = "● " + Textos.T("En pausa");
 
         Rotular(BotonApariencia, Textos.T("Apariencia"));
@@ -698,6 +705,15 @@ public sealed partial class Panel : Window
             vacio = Textos.T("Vacío. Usa Nuevo para guardar un texto");
             iconoVacio = Estilo.Iconos.CarpetaAbierta;
         }
+        else if (_pestana == Notas)
+        {
+            // Ya vienen ordenados del almacen, lo ultimo tocado primero.
+            foreach (var n in Almacen.Notas)
+                _filas.Add(new Fila(n, _compacta));
+
+            vacio = Textos.T("Vacío. Usa Nuevo para escribir un apunte");
+            iconoVacio = Estilo.Iconos.Nota;
+        }
         else
         {
             foreach (var e in Almacen.HistOrdenado())
@@ -780,7 +796,13 @@ public sealed partial class Panel : Window
         Volcar("prompts", Textos.T("Prompts IA"), porTipo[Tipos.Prompt],
                Estilo.Iconos.Prompt, true, conCabecera);
 
-        Volcar("notas", Textos.T("Notas"), porTipo[Tipos.Nota],
+        // «Textos» y no «Notas» desde la 4.11.0. El tipo se sigue
+        // llamando nota por dentro y en el archivo —cambiar eso obligaria
+        // a reescribir snippets.json de todo el mundo— pero en pantalla
+        // ya no puede llamarse igual que la pestaña del bloc, que es otra
+        // cosa y no se pega. La clave del grupo tampoco cambia: es la que
+        // recuerda si estaba abierto o cerrado.
+        Volcar("notas", Textos.T("Textos"), porTipo[Tipos.Nota],
                Estilo.Iconos.Nota, false, conCabecera);
     }
 
@@ -827,6 +849,7 @@ public sealed partial class Panel : Window
 
         Pintar(TabReciente, _pestana == Reciente && !buscando);
         Pintar(TabGuardados, _pestana == Guardados && !buscando);
+        Pintar(TabNotas, _pestana == Notas && !buscando);
     }
 
     static void Pintar(Button pestana, bool activa)
@@ -896,6 +919,8 @@ public sealed partial class Panel : Window
     void Tab_Reciente(object remitente, RoutedEventArgs args) => Cambiar(Reciente);
 
     void Tab_Guardados(object remitente, RoutedEventArgs args) => Cambiar(Guardados);
+
+    void Tab_Notas(object remitente, RoutedEventArgs args) => Cambiar(Notas);
 
     void Cambiar(string cual)
     {
@@ -1344,6 +1369,12 @@ public sealed partial class Panel : Window
                 Estilo.Iconos.Lista, Textos.T("Agregar una lista"),
                 async () => await AgregarLista()));
         }
+        else if (_pestana == Notas)
+        {
+            // Sin escoba y sin carpetas. La escoba vacia el historial, que
+            // se llena solo; el bloc no se llena solo y no hay nada que
+            // barrer. Los apuntes se borran de uno en uno o marcandolos.
+        }
         else
         {
             izquierda.Children.Add(IconoPie(
@@ -1480,6 +1511,18 @@ public sealed partial class Panel : Window
 
     async Task Nuevo()
     {
+        if (_pestana == Notas)
+        {
+            string? texto = await Dialogos.Apunte(
+                Marco.XamlRoot, Textos.T("Apunte nuevo"), "");
+
+            if (texto is null) return;
+
+            Almacen.AnadirNota(Modelo.CrearNota(texto, DateTimeOffset.Now));
+            App.Actual.RefrescarLista();
+            return;
+        }
+
         var snippet = await Dialogos.Texto(
             Marco.XamlRoot,
             Textos.T("Nuevo texto"),
@@ -1529,6 +1572,18 @@ public sealed partial class Panel : Window
 
     async Task Editar(Fila fila)
     {
+        if (fila.Dato is Nota apunte)
+        {
+            string? texto = await Dialogos.Apunte(
+                Marco.XamlRoot, Textos.T("Editar apunte"), apunte.Texto);
+
+            if (texto is null) return;
+
+            Almacen.CambiarNota(apunte, texto, Modelo.Sello(DateTimeOffset.Now));
+            App.Actual.RefrescarLista();
+            return;
+        }
+
         if (fila.Dato is Snippet viejo)
         {
             var nuevo = await Dialogos.Texto(
@@ -1583,6 +1638,15 @@ public sealed partial class Panel : Window
     /// </param>
     async Task Usar(Fila fila, bool sinFormato = false, bool abrirMarcador = true)
     {
+        // Un apunte no se pega nunca. Va lo primero y aqui dentro —y no
+        // en el clic— para que valga tambien para el Enter del buscador
+        // y para cualquier camino que llegue a usar una fila.
+        if (fila.Dato is Nota)
+        {
+            await Editar(fila);
+            return;
+        }
+
         // El historial siempre pega, aunque lo copiado sea una direccion.
         // Copiar un enlace y no poder soltarlo en ningun campo fue el
         // fallo que arreglo la 4.4.0 y no se vuelve atras.

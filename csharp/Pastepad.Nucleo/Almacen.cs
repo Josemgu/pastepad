@@ -60,6 +60,12 @@ public sealed class Almacen
     public List<Snippet> Snippets { get; private set; } = [];
     public List<Entrada> Hist { get; set; } = [];
 
+    /// <summary>
+    /// Los apuntes del bloc, lo ultimo tocado primero. Nunca se pegan;
+    /// ver <see cref="Nota"/>.
+    /// </summary>
+    public List<Nota> Notas { get; private set; } = [];
+
     JsonObject _prefs = [];
 
     bool _histSucio;
@@ -146,6 +152,9 @@ public sealed class Almacen
 
         _prefs = Leer<JsonObject>(Rutas.Preferencias) ?? [];
         Hist = Leer<List<Entrada>>(Rutas.Historial) ?? [];
+
+        Notas = Leer<List<Nota>>(Rutas.Notas) ?? [];
+        OrdenarNotas();
 
         var coleccion = Leer<Coleccion>(Rutas.Datos) ?? new Coleccion();
         Carpetas = coleccion.Categorias;
@@ -404,6 +413,57 @@ public sealed class Almacen
         return dentro.Count;
     }
 
+    // ---------------------------------------------------------- notas
+
+    /// <summary>
+    /// Lo ultimo tocado, arriba. Se ordena por la cadena ISO-8601 tal
+    /// cual: ese formato esta hecho para que el orden alfabetico y el
+    /// cronologico sean el mismo, y asi no hay que interpretar fechas
+    /// —que es donde se cuelan los problemas de region— solo para
+    /// ordenar. Una nota sin fecha, de un archivo escrito a mano, cae al
+    /// final en vez de romper nada.
+    /// </summary>
+    void OrdenarNotas() =>
+        Notas = Notas.OrderByDescending(n => n.Editada, StringComparer.Ordinal)
+                     .ToList();
+
+    public void GuardarNotas()
+    {
+        OrdenarNotas();
+        Escribir(Rutas.Notas, Notas);
+    }
+
+    public void AnadirNota(Nota nota)
+    {
+        Notas.Add(nota);
+        GuardarNotas();
+    }
+
+    /// <summary>
+    /// Cambia el texto de un apunte que ya existe y lo sube al principio.
+    /// Se busca por referencia y no por indice: la lista se reordena en
+    /// cada guardado, y un indice tomado antes de reordenar apunta a otra
+    /// nota.
+    /// </summary>
+    public bool CambiarNota(Nota nota, string texto, string cuando)
+    {
+        if (!Notas.Contains(nota)) return false;
+
+        nota.Texto = Modelo.NormalizarSaltos(texto);
+        nota.Editada = cuando;
+
+        GuardarNotas();
+        return true;
+    }
+
+    public bool BorrarNota(Nota nota)
+    {
+        if (!Notas.Remove(nota)) return false;
+
+        GuardarNotas();
+        return true;
+    }
+
     // ------------------------------------------------------- snippets
 
     public void AnadirSnippet(Snippet snippet)
@@ -525,6 +585,14 @@ public sealed class Almacen
                 if (!Snippets.Remove(snippet)) return false;
                 GuardarDatos();
                 return true;
+
+            // Tambien por aqui, y no solo por BorrarNota: el menu de la
+            // fila y el borrado en bloque pasan por este metodo. Sin el
+            // caso, el apunte se quitaba de la pantalla al refrescar y
+            // reaparecia al abrir el panel, porque nunca se toco el
+            // archivo.
+            case Nota nota:
+                return BorrarNota(nota);
 
             default:
                 return false;

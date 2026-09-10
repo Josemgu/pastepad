@@ -6,6 +6,23 @@ se hace, se borra de aquí y se cuenta en `CHANGELOG.md`.
 No es una lista de ideas. Aquí solo entra lo que el usuario ha pedido
 explícitamente.
 
+### Las filas y su botón no se anuncian bien
+
+Encontrado el 10 sep 2026 automatizando las pruebas de la pestaña Notas,
+con UI Automation. No lo pidió el usuario; se apunta porque el README
+dice que los botones de icono llevan nombre accesible, y estos dos no.
+
+- **Cada fila de la lista se anuncia como `Pastepad.App.Fila`** — el
+  `ToString()` del objeto. Un lector de pantalla lee eso en lugar del
+  texto de la nota. Falta `AutomationProperties.Name` en el
+  `ListViewItem`, o un `ToString()` que devuelva el título.
+- **El botón de tres puntos se anuncia con el glifo del icono**
+  (``), que no es una palabra. Debería llevar rótulo, como ya lo
+  llevan los de la cabecera y el de Nuevo.
+
+Se descubrió porque la sonda buscaba el botón por «nombre vacío» y no lo
+encontraba nunca: el nombre no estaba vacío, era un carácter invisible.
+
 ### DESCARTADO: que el panel no le robe el protagonismo
 
 **Decisión del usuario, 14 ago 2026: no es viable, se deja.** No volver a

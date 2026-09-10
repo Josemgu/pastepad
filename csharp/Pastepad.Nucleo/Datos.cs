@@ -90,6 +90,30 @@ public sealed class Entrada : Elemento
     public bool EsImagen => Tipo == Imagen;
 }
 
+/// <summary>
+/// Un apunte del bloc. No se pega nunca: se escribe, se lee y se borra,
+/// como las notas rapidas de Windows.
+///
+/// Vive en su propio archivo y no dentro de snippets.json a proposito.
+/// Lo de snippets.json existe para pegarlo en otro sitio; esto existe
+/// para quedarse aqui. Mezclarlos obligaria a que cada lista, cada
+/// busqueda y cada menu preguntase cual de las dos cosas es cada fila.
+/// </summary>
+public sealed class Nota : Elemento
+{
+    [JsonPropertyName("texto")] public string Texto { get; set; } = "";
+
+    /// <summary>
+    /// Cuando se toco por ultima vez, en ISO-8601. Cadena y no DateTime
+    /// para que el archivo se lea igual en cualquier region: con
+    /// DateTime, un equipo con otra configuracion regional escribe
+    /// «15/08/2026» y otro lo lee como el 8 de marzo.
+    ///
+    /// Ordena la lista: lo ultimo tocado, arriba.
+    /// </summary>
+    [JsonPropertyName("editada")] public string Editada { get; set; } = "";
+}
+
 /// <summary>El contenido de snippets.json.</summary>
 internal sealed class Coleccion
 {

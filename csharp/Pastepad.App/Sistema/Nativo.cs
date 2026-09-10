@@ -332,6 +332,17 @@ internal static partial class Nativo
         byte tecla, byte codigo, uint banderas, nuint extra);
 
     /// <summary>
+    /// Si la tecla esta fisicamente pulsada AHORA. El bit alto del
+    /// resultado es el que lo dice; el bajo habla de si se pulso desde la
+    /// ultima llamada, y ese no nos sirve.
+    ///
+    /// Hace falta para no soltar teclas que nadie ha pulsado: ver
+    /// Foco.PegarConTeclado.
+    /// </summary>
+    [LibraryImport("user32.dll")]
+    public static partial short GetAsyncKeyState(int tecla);
+
+    /// <summary>
     /// Cuando se PUSO en la cola el mensaje que se esta despachando, no
     /// cuando se atiende: «the elapsed time, in milliseconds, from the
     /// time the system was started to the time the message was created

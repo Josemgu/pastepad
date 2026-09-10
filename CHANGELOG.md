@@ -3,6 +3,36 @@
 All notable changes to this project are documented here.
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [4.11.0] - 2026-09-10
+
+### Added
+- **A Notes tab**, for things you write down rather than things you
+  paste. Like Windows' quick notes: you write one, you read it, you
+  delete it. **Nothing in it can be pasted** — clicking a note opens it
+  to edit, and its menu offers Copy, Edit and Delete but not Paste.
+  Notes live in their own file, so nothing you jot down can leak into
+  the lists that exist to be pasted somewhere else.
+- The most recently touched note sits at the top.
+
+### Fixed
+- **Templates could not be pasted into Outlook.** Before every paste,
+  pastepad released Shift and Alt in case the shortcut used them — but
+  it released them whether or not they were held, so a shortcut like
+  `Ctrl+Q` still sent an Alt key-up that nobody had pressed. Windows
+  turns a lone Alt release into a menu command: the documentation says
+  `DefWindowProc` sends `WM_SYSCOMMAND` with `SC_KEYMENU` when the ALT
+  key is released. Outlook answered by lettering every button on the
+  ribbon, and the `Ctrl+V` that followed went to the menu instead of the
+  message. Now only keys that are actually held get released, and
+  `Ctrl` goes down first so that releasing Alt is never a lone release.
+
+### Changed
+- Inside Saved, the group that was called **Notes is now called Texts**.
+  Otherwise a tab and a group would share a name while meaning different
+  things — one pastes, the other does not. The type is still `nota` in
+  the file, so nothing needs rewriting.
+- 99 tests to 107.
+
 ## [4.10.0] - 2026-08-15
 
 ### Changed

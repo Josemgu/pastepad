@@ -100,7 +100,8 @@ public sealed record Rutas(
     string Datos,
     string Historial,
     string Preferencias,
-    string Imagenes)
+    string Imagenes,
+    string Notas)
 {
     /// <summary>
     /// %LOCALAPPDATA%\pastepad. En Archivos de programa Windows bloquea
@@ -121,11 +122,12 @@ public sealed record Rutas(
         Path.Combine(carpeta, "snippets.json"),
         Path.Combine(carpeta, "historial.json"),
         Path.Combine(carpeta, "config.json"),
-        Path.Combine(carpeta, "imagenes"));
+        Path.Combine(carpeta, "imagenes"),
+        Path.Combine(carpeta, "notas.json"));
 
     /// <summary>
     /// La carpeta que las contiene a todas. Se deduce y no se guarda
-    /// aparte para que no puedan discrepar: las cuatro rutas salen
+    /// aparte para que no puedan discrepar: todas las rutas salen
     /// siempre de la misma, incluso cuando vienen de <c>--datos</c>.
     /// </summary>
     public string Carpeta => Path.GetDirectoryName(Datos) ?? "";

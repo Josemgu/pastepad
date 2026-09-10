@@ -69,6 +69,34 @@ public static class Modelo
             : texto.Replace("\r\n", "\n").Replace('\r', '\n').Replace("\n", "\r\n");
 
     /// <summary>
+    /// Un apunte nuevo para el bloc.
+    ///
+    /// La fecha entra como parametro y no se lee del reloj aqui: asi
+    /// esto se puede probar sin depender de que hora sea, que es la
+    /// misma razon por la que el resto del nucleo no toca el reloj.
+    ///
+    /// El formato es el de ida y vuelta de .NET —«O»—, que es ISO-8601 y
+    /// ordena igual alfabeticamente que cronologicamente. No hace falta
+    /// pasarle una cultura: la documentacion dice que «because the "O"
+    /// or "o" standard format specifier conforms to an international
+    /// standard, the formatting or parsing operation that uses the
+    /// specifier always uses the invariant culture». Con cualquier otro
+    /// —«d», «G»— el archivo se escribiria distinto en cada region.
+    /// </summary>
+    public static Nota CrearNota(string texto, DateTimeOffset cuando) => new()
+    {
+        Texto = NormalizarSaltos(texto),
+        Editada = Sello(cuando),
+    };
+
+    /// <summary>
+    /// Una fecha tal y como se escribe en el archivo. En un solo sitio
+    /// para que crear un apunte y retocarlo no puedan usar formatos
+    /// distintos, que dejaria la lista ordenada de cualquier manera.
+    /// </summary>
+    public static string Sello(DateTimeOffset cuando) => cuando.ToString("O");
+
+    /// <summary>
     /// La primera linea con algo escrito, con los espacios de dentro
     /// normalizados. Ni corta ni añade: lo que devuelve esta contenido
     /// tal cual en el texto del usuario.

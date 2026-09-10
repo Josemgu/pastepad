@@ -176,21 +176,44 @@ internal static class Foco
         return -1;
     }
 
+    /// <summary>Si esa tecla esta pulsada ahora mismo.</summary>
+    static bool Pulsada(byte tecla) =>
+        (Nativo.GetAsyncKeyState(tecla) & 0x8000) != 0;
+
     /// <summary>
     /// Manda Ctrl+V con la API de Windows.
     /// </summary>
     public static void PegarConTeclado()
     {
-        // El atajo lleva Shift o Alt y pueden seguir pulsadas: si no se
-        // sueltan primero, el destino recibe Ctrl+Shift+V en vez de
-        // Ctrl+V, que en muchas aplicaciones es "pegar sin formato" y en
-        // otras no es nada.
-        Nativo.keybd_event(Nativo.VK_SHIFT, 0, Nativo.KEYEVENTF_KEYUP, 0);
-        Nativo.keybd_event(Nativo.VK_MENU, 0, Nativo.KEYEVENTF_KEYUP, 0);
+        // Ctrl baja lo PRIMERO, y no despues de soltar los otros
+        // modificadores como se hacia hasta la 4.11.0. Soltar Alt a secas
+        // no es inofensivo: la documentacion de WM_SYSKEYUP dice que
+        // «DefWindowProc sends a WM_SYSCOMMAND message to the top-level
+        // window if the F10 key or the ALT key was released. The wParam
+        // parameter of the message is set to SC_KEYMENU», y SC_KEYMENU es
+        // abrir el menu. En Outlook eso saca las letras sobre todos los
+        // botones de la cinta, y el Ctrl+V que viene detras se lo come el
+        // menu en vez de pegar. Con Ctrl ya pulsado, ese Alt de subida no
+        // va solo.
+        Nativo.keybd_event(Nativo.VK_CONTROL, 0, 0, 0);
+
+        // Y solo se sueltan las que de verdad estan pulsadas. Antes se
+        // soltaban las dos siempre, incluso con un atajo como ctrl+q que
+        // no lleva ninguna: se mandaba un Alt que el usuario nunca habia
+        // tocado, en cada pegado.
+        //
+        // Soltarlas cuando SI estan sigue haciendo falta: si el atajo
+        // lleva Shift y no se suelta, el destino recibe Ctrl+Shift+V, que
+        // en muchas aplicaciones es "pegar sin formato" y en otras no es
+        // nada.
+        if (Pulsada(Nativo.VK_SHIFT))
+            Nativo.keybd_event(Nativo.VK_SHIFT, 0, Nativo.KEYEVENTF_KEYUP, 0);
+
+        if (Pulsada(Nativo.VK_MENU))
+            Nativo.keybd_event(Nativo.VK_MENU, 0, Nativo.KEYEVENTF_KEYUP, 0);
 
         Thread.Sleep(20);
 
-        Nativo.keybd_event(Nativo.VK_CONTROL, 0, 0, 0);
         Nativo.keybd_event(Nativo.VK_V, 0, 0, 0);
 
         Thread.Sleep(30);

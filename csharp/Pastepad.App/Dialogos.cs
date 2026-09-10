@@ -1541,6 +1541,68 @@ public static class Dialogos
         return (salida, seVan);
     }
 
+    // --------------------------------------------------------- bloc
+
+    /// <summary>
+    /// Escribir o retocar un apunte. Devuelve null si se cancelo, y la
+    /// cadena vacia no se distingue: guardar un apunte en blanco no
+    /// tiene sentido, asi que el boton se apaga mientras no haya nada.
+    ///
+    /// Es a proposito el dialogo mas simple del programa: sin carpeta,
+    /// sin tipo, sin nombre y sin barra de formato. Un apunte no viaja a
+    /// ningun sitio —no se pega— asi que no necesita nada de lo que esas
+    /// cosas resuelven. Es el bloc de notas, no un guardado.
+    /// </summary>
+    public static async Task<string?> Apunte(
+        XamlRoot raiz, string titulo, string valor)
+    {
+        var caja = Campo(valor, lineas: 10, alto: 200);
+
+        var cancelar = Boton(Textos.T("Cancelar"), "normal");
+        var guardar = Boton(Textos.T("Guardar"), "acento", 94);
+
+        void Recontar() =>
+            guardar.IsEnabled = caja.Text.Trim().Length > 0;
+
+        Recontar();
+        caja.TextChanged += (_, _) => Recontar();
+
+        var cuerpo = CuerpoConHueco(
+            Disponible(raiz),
+            [Titulo(titulo)],
+            caja,
+            [
+                new Border { Height = Estilo.E3 },
+                Nota(Textos.T("Los apuntes se quedan aquí: no se pegan.")),
+                Pie(cancelar, guardar),
+            ]);
+
+        var dialogo = Caja(raiz, cuerpo);
+
+        string? salida = null;
+
+        cancelar.Click += (_, _) => dialogo.Hide();
+
+        guardar.Click += (_, _) =>
+        {
+            salida = caja.Text;
+            dialogo.Hide();
+        };
+
+        // Con el dialogo ya abierto, como en el editor de texto: pedir el
+        // foco antes de que el control este en el arbol visual no hace
+        // nada, y el usuario se encuentra escribiendo en ningun sitio.
+        dialogo.Opened += (_, _) =>
+        {
+            caja.Focus(FocusState.Programmatic);
+            caja.SelectionStart = caja.Text.Length;
+        };
+
+        await dialogo.ShowAsync();
+
+        return salida;
+    }
+
     // ----------------------------------------------------- apariencia
 
     public sealed record Preferencias(

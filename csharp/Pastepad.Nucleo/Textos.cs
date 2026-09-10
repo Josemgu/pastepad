@@ -96,6 +96,36 @@ public static class Textos
     static readonly IReadOnlyDictionary<string, string> _en =
         new Dictionary<string, string>
         {
+            ["Apunte nuevo"] =
+                "New note",
+
+            ["Editar apunte"] =
+                "Edit note",
+
+            ["Editar"] =
+                "Edit",
+
+            ["Vacío. Usa Nuevo para escribir un apunte"] =
+                "Empty. Use New to write a note",
+
+            ["Los apuntes se quedan aquí: no se pegan."] =
+                "Notes stay here: they are never pasted.",
+
+            ["ahora mismo"] =
+                "just now",
+
+            ["hace %d min"] =
+                "%d min ago",
+
+            ["hoy %s"] =
+                "today %s",
+
+            ["ayer %s"] =
+                "yesterday %s",
+
+            ["Textos"] =
+                "Texts",
+
             ["%d caracteres"] =
                 "%d characters",
             ["Borrar (%d)"] =
@@ -365,6 +395,36 @@ public static class Textos
     static readonly IReadOnlyDictionary<string, string> _pt =
         new Dictionary<string, string>
         {
+            ["Apunte nuevo"] =
+                "Nova anotação",
+
+            ["Editar apunte"] =
+                "Editar anotação",
+
+            ["Editar"] =
+                "Editar",
+
+            ["Vacío. Usa Nuevo para escribir un apunte"] =
+                "Vazio. Use Novo para escrever uma anotação",
+
+            ["Los apuntes se quedan aquí: no se pegan."] =
+                "As anotações ficam aqui: nunca são coladas.",
+
+            ["ahora mismo"] =
+                "agora mesmo",
+
+            ["hace %d min"] =
+                "há %d min",
+
+            ["hoy %s"] =
+                "hoje %s",
+
+            ["ayer %s"] =
+                "ontem %s",
+
+            ["Textos"] =
+                "Textos",
+
             ["%d caracteres"] =
                 "%d caracteres",
             ["Borrar (%d)"] =
@@ -634,6 +694,36 @@ public static class Textos
     static readonly IReadOnlyDictionary<string, string> _fr =
         new Dictionary<string, string>
         {
+            ["Apunte nuevo"] =
+                "Nouvelle note",
+
+            ["Editar apunte"] =
+                "Modifier la note",
+
+            ["Editar"] =
+                "Modifier",
+
+            ["Vacío. Usa Nuevo para escribir un apunte"] =
+                "Vide. Utilisez Nouveau pour écrire une note",
+
+            ["Los apuntes se quedan aquí: no se pegan."] =
+                "Les notes restent ici : elles ne se collent pas.",
+
+            ["ahora mismo"] =
+                "à l'instant",
+
+            ["hace %d min"] =
+                "il y a %d min",
+
+            ["hoy %s"] =
+                "aujourd'hui %s",
+
+            ["ayer %s"] =
+                "hier %s",
+
+            ["Textos"] =
+                "Textes",
+
             ["%d caracteres"] =
                 "%d caractères",
             ["Borrar (%d)"] =

@@ -145,8 +145,14 @@
                                         Text="{x:Bind TxtAbrir}"
                                         Visibility="{x:Bind VerAbrir}" />
                                     <MenuFlyoutSeparator Visibility="{x:Bind VerAbrir}" />
-                                    <MenuFlyoutItem Click="Menu_Pegar" Text="{x:Bind TxtPegar}" />
-                                    <MenuFlyoutItem Click="Menu_PegarPlano" Text="{x:Bind TxtPegarPlano}" />
+                                    <MenuFlyoutItem
+                                        Click="Menu_Pegar"
+                                        Text="{x:Bind TxtPegar}"
+                                        Visibility="{x:Bind VerPegar}" />
+                                    <MenuFlyoutItem
+                                        Click="Menu_PegarPlano"
+                                        Text="{x:Bind TxtPegarPlano}"
+                                        Visibility="{x:Bind VerPegar}" />
                                     <MenuFlyoutItem Click="Menu_Copiar" Text="{x:Bind TxtCopiar}" />
                                     <MenuFlyoutSeparator />
                                     <MenuFlyoutItem
@@ -373,6 +379,7 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <Button
                     x:Name="TabReciente"
@@ -386,6 +393,13 @@
                     Grid.Column="1"
                     Click="Tab_Guardados"
                     Content="Guardados"
+                    HorizontalAlignment="Stretch"
+                    Style="{StaticResource PpPestana}" />
+                <Button
+                    x:Name="TabNotas"
+                    Grid.Column="2"
+                    Click="Tab_Notas"
+                    Content="Notas"
                     HorizontalAlignment="Stretch"
                     Style="{StaticResource PpPestana}" />
             </Grid>
