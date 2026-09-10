@@ -3,6 +3,20 @@
 All notable changes to this project are documented here.
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [4.12.0] - 2026-09-10
+
+### Changed
+- **Notes are cards now, not rows.** A row shows one line, and a quick
+  note does not fit in one: two notes that begin the same way — the same
+  heading pasted from the same console — looked identical in the list and
+  you had to open both to tell them apart. A card shows the date and the
+  first few lines, so they are told apart at a glance. Measured on two
+  notes sharing their first three lines: one card ends in `334716554232`
+  and the other in `999999999999`.
+
+  The card uses your accent colour as its background, with the text
+  colour the palette already has checked for contrast against it.
+
 ## [4.11.0] - 2026-09-10
 
 ### Added

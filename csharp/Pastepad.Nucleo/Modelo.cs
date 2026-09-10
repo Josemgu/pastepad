@@ -97,6 +97,44 @@ public static class Modelo
     public static string Sello(DateTimeOffset cuando) => cuando.ToString("O");
 
     /// <summary>
+    /// Las primeras lineas de un apunte, para verlo en su tarjeta sin
+    /// abrirlo.
+    ///
+    /// No es <see cref="UnaLinea"/>: una nota rapida no cabe en un
+    /// renglon, y aplastarla en uno deja tarjetas que empiezan todas
+    /// igual —«Security details», «Security details»— sin nada que las
+    /// distinga. Aqui se conservan los saltos.
+    ///
+    /// Las lineas en blanco del principio se saltan: un apunte que
+    /// empieza con un hueco no puede gastar su primera linea visible en
+    /// nada.
+    /// </summary>
+    public static string Vistazo(string texto, int lineas = 6, int tope = 240)
+    {
+        if (string.IsNullOrWhiteSpace(texto)) return "";
+
+        var sueltas = NormalizarSaltos(texto).Split("\r\n");
+
+        int i = 0;
+        while (i < sueltas.Length && sueltas[i].Trim().Length == 0) i++;
+
+        var salen = sueltas.Skip(i).Take(lineas).Select(l => l.TrimEnd()).ToList();
+
+        // Un hueco al final de lo que se ve es una linea desperdiciada.
+        while (salen.Count > 0 && salen[^1].Length == 0)
+            salen.RemoveAt(salen.Count - 1);
+
+        var vista = string.Join('\n', salen);
+
+        // El recorte por caracteres es la segunda red: seis lineas de mil
+        // caracteres cada una siguen sin caber en una tarjeta.
+        if (vista.Length > tope)
+            vista = vista[..tope].TrimEnd() + "…";
+
+        return vista;
+    }
+
+    /// <summary>
     /// La primera linea con algo escrito, con los espacios de dentro
     /// normalizados. Ni corta ni añade: lo que devuelve esta contenido
     /// tal cual en el texto del usuario.

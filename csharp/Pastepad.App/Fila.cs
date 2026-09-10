@@ -173,6 +173,7 @@ public sealed class Fila : ItemLista, INotifyPropertyChanged
             case Nota apunte:
                 EsApunte = true;
                 Texto = apunte.Texto;
+                Vista = Modelo.Vistazo(Texto);
 
                 Titulo = Modelo.UnaLinea(Texto, 80);
                 if (Titulo.Length == 0) Titulo = "—";
@@ -248,7 +249,36 @@ public sealed class Fila : ItemLista, INotifyPropertyChanged
 
     // ------------------------------------------------------ el aspecto
 
-    public double Alto => Compacta ? Estilo.AltoFilaMini : Estilo.AltoFila;
+    public double Alto =>
+        EsApunte ? Estilo.AltoApunte
+        : Compacta ? Estilo.AltoFilaMini
+        : Estilo.AltoFila;
+
+    // ------------------------------------------ la tarjeta del apunte
+
+    /// <summary>
+    /// Las primeras lineas del apunte, con sus saltos. Vacio en todo lo
+    /// que no sea un apunte: la plantilla de tarjeta solo se usa ahi.
+    /// </summary>
+    public string Vista { get; } = "";
+
+    /// <summary>
+    /// El acento de fondo, como en las notas rapidas de Windows. La
+    /// tarjeta activa lo lleva entero y el resto rebajado, que es lo que
+    /// deja ver cual esta elegida sin cambiar de color.
+    /// </summary>
+    public Brush FondoApunte => Estilo.Pincel(
+        Estilo.ColorAcento.Color, Activa ? 1.0 : Encima ? 0.85 : 0.72);
+
+    /// <summary>
+    /// El color que la paleta tiene comprobado para escribir ENCIMA del
+    /// acento. Sobre una tarjeta de acento, el color de texto normal no
+    /// tiene contraste garantizado; este si.
+    /// </summary>
+    public Brush ColorApunte => Estilo.Pincel(Estilo.ColorAcento.Sobre);
+
+    public Brush ColorFechaApunte =>
+        Estilo.Pincel(Estilo.ColorAcento.Sobre, 0.75);
 
     /// <summary>
     /// 16 sin icono y 22 con el, seccion 3 de la especificacion. Cuenta

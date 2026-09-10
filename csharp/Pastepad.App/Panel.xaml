@@ -182,6 +182,86 @@
                 contenedor que el Refrescar del primero ya habia
                 reciclado, asi que plegaba el grupo equivocado.
             -->
+            <!--
+                La tarjeta de un apunte. Es otra plantilla y no la fila de
+                siempre con mas alto: lo que cambia no es el tamaño, es
+                que aqui se enseñan VARIAS lineas del texto. Una nota
+                rapida aplastada en un renglon deja tarjetas que empiezan
+                todas igual y no se distinguen entre si.
+
+                Sin icono de tipo y sin Pegar: en esta pestaña todo son
+                apuntes y ninguno se pega.
+            -->
+            <DataTemplate x:Key="PlantillaApunte" x:DataType="local:Fila">
+                <Border
+                    Background="{x:Bind FondoApunte, Mode=OneWay}"
+                    CornerRadius="14"
+                    Height="{x:Bind Alto}"
+                    Padding="14,10,10,12"
+                    PointerEntered="Fila_Entra"
+                    PointerExited="Fila_Sale">
+
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0">
+                            <TextBlock
+                                Foreground="{x:Bind ColorFechaApunte, Mode=OneWay}"
+                                HorizontalAlignment="Left"
+                                Style="{StaticResource PpSubtituloFila}"
+                                Text="{x:Bind Detalle}"
+                                VerticalAlignment="Center" />
+
+                            <Button
+                                Background="Transparent"
+                                BorderThickness="0"
+                                CornerRadius="13"
+                                FontFamily="Segoe Fluent Icons"
+                                FontSize="15"
+                                Foreground="{x:Bind ColorApunte, Mode=OneWay}"
+                                Height="26"
+                                HorizontalAlignment="Right"
+                                MinHeight="26"
+                                MinWidth="26"
+                                Padding="0"
+                                VerticalAlignment="Top"
+                                Visibility="{x:Bind VerMenu, Mode=OneWay}"
+                                Width="26">
+                                <Button.Content>
+                                    <TextBlock
+                                        FontFamily="Segoe Fluent Icons"
+                                        FontSize="15"
+                                        Text="&#xE712;" />
+                                </Button.Content>
+                                <Button.Flyout>
+                                    <MenuFlyout Placement="Bottom">
+                                        <MenuFlyoutItem Click="Menu_Editar" Text="{x:Bind TxtEditar}" />
+                                        <MenuFlyoutItem Click="Menu_Copiar" Text="{x:Bind TxtCopiar}" />
+                                        <MenuFlyoutSeparator />
+                                        <MenuFlyoutItem
+                                            Click="Menu_Borrar"
+                                            Foreground="{ThemeResource PpRojo}"
+                                            Text="{x:Bind TxtBorrar}" />
+                                    </MenuFlyout>
+                                </Button.Flyout>
+                            </Button>
+                        </Grid>
+
+                        <TextBlock
+                            Grid.Row="1"
+                            Foreground="{x:Bind ColorApunte, Mode=OneWay}"
+                            LineHeight="18"
+                            Style="{StaticResource PpTextoFila}"
+                            Text="{x:Bind Vista}"
+                            TextTrimming="CharacterEllipsis"
+                            TextWrapping="Wrap" />
+                    </Grid>
+                </Border>
+            </DataTemplate>
+
             <DataTemplate x:Key="PlantillaGrupo" x:DataType="local:Grupo">
                 <Border
                     Background="Transparent"
@@ -228,6 +308,7 @@
 
             <local:SelectorDeFila
                 x:Key="SelectorFila"
+                DeApunte="{StaticResource PlantillaApunte}"
                 DeFila="{StaticResource PlantillaFila}"
                 DeGrupo="{StaticResource PlantillaGrupo}" />
         </Border.Resources>

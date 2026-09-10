@@ -1940,3 +1940,72 @@ public sealed class PruebaNotas : BaseConCarpetaTemporal
         StringAssert.Contains(nota.Editada, "-04:00");
     }
 }
+
+/// <summary>
+/// Lo que se ve en la tarjeta de un apunte sin abrirlo. La regla es que
+/// tiene que distinguir dos apuntes que empiezan igual, que es
+/// justamente lo que una sola linea no hace.
+/// </summary>
+[TestClass]
+public sealed class PruebaVistazo
+{
+    /// <summary>Los saltos se conservan; no es un renglon.</summary>
+    [TestMethod]
+    public void test_conserva_los_saltos()
+    {
+        var v = Modelo.Vistazo("Security details\r\nIAM role\r\nOwner ID");
+
+        Assert.AreEqual(3, v.Split('\n').Length);
+        Assert.AreEqual("Security details", v.Split('\n')[0]);
+    }
+
+    /// <summary>
+    /// El caso que motivo todo esto: dos apuntes con la misma primera
+    /// linea. Resumidos a un renglon salian identicos en la lista.
+    /// </summary>
+    [TestMethod]
+    public void test_distingue_dos_que_empiezan_igual()
+    {
+        var a = Modelo.Vistazo("Security details\r\nIAM role\r\nOwner 111");
+        var b = Modelo.Vistazo("Security details\r\nIAM role\r\nOwner 222");
+
+        Assert.AreNotEqual(a, b);
+        StringAssert.Contains(a, "111");
+    }
+
+    [TestMethod]
+    public void test_se_salta_los_huecos_de_arriba_y_de_abajo()
+    {
+        Assert.AreEqual(
+            "Lo primero de verdad",
+            Modelo.Vistazo("\r\n   \r\nLo primero de verdad\r\n\r\n"));
+    }
+
+    [TestMethod]
+    public void test_corta_por_lineas()
+    {
+        var muchas = string.Join(
+            "\r\n", Enumerable.Range(1, 20).Select(i => "linea " + i));
+
+        Assert.AreEqual(6, Modelo.Vistazo(muchas).Split('\n').Length);
+    }
+
+    /// <summary>
+    /// La segunda red: seis lineas de mil caracteres tampoco caben.
+    /// </summary>
+    [TestMethod]
+    public void test_corta_por_caracteres()
+    {
+        var v = Modelo.Vistazo(new string('x', 500));
+
+        Assert.IsTrue(v.Length <= 241, "salieron " + v.Length);
+        StringAssert.EndsWith(v, "…");
+    }
+
+    [TestMethod]
+    public void test_vacio_no_revienta()
+    {
+        Assert.AreEqual("", Modelo.Vistazo(""));
+        Assert.AreEqual("", Modelo.Vistazo("   \r\n\r\n  "));
+    }
+}
