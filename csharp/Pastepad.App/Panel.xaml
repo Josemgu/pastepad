@@ -208,12 +208,18 @@
                         </Grid.RowDefinitions>
 
                         <Grid Grid.Row="0">
-                            <TextBlock
-                                Foreground="{x:Bind ColorFechaApunte, Mode=OneWay}"
-                                HorizontalAlignment="Left"
-                                Style="{StaticResource PpSubtituloFila}"
-                                Text="{x:Bind Detalle}"
-                                VerticalAlignment="Center" />
+                            <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center">
+                                <TextBlock
+                                    FontWeight="SemiBold"
+                                    Foreground="{x:Bind ColorApunte, Mode=OneWay}"
+                                    Style="{StaticResource PpTextoFila}"
+                                    Text="{x:Bind Nombre}"
+                                    Visibility="{x:Bind VerNombre}" />
+                                <TextBlock
+                                    Foreground="{x:Bind ColorFechaApunte, Mode=OneWay}"
+                                    Style="{StaticResource PpSubtituloFila}"
+                                    Text="{x:Bind Detalle}" />
+                            </StackPanel>
 
                             <Button
                                 Background="Transparent"
@@ -597,6 +603,110 @@
                         </Style>
                     </ListView.ItemContainerStyle>
                 </ListView>
+
+                <!--
+                    ================================== la pizarra
+
+                    El apunte abierto, en el hueco de la lista y no en un
+                    dialogo ni en una ventana aparte. Es lo que pidio el
+                    usuario: «una pizarra que llamo con el comando de
+                    pastepad», que se esconde con el panel y vuelve como
+                    estaba.
+
+                    Que este aqui dentro y no encima del panel entero es
+                    lo que deja el buscador a la vista mientras escribes:
+                    se puede buscar otra cosa sin cerrar el apunte, y al
+                    vaciar el buscador el apunte sigue donde estaba.
+
+                    Y como esconder el panel no destruye el arbol de XAML,
+                    lo escrito sigue en la caja al volver a llamarlo: no
+                    hay nada que restaurar.
+                -->
+                <Grid
+                    x:Name="Pizarra"
+                    Margin="16,4,16,4"
+                    Visibility="Collapsed">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="0,0,0,6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button
+                            x:Name="PizarraVolver"
+                            Grid.Column="0"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Click="Pizarra_Volver"
+                            CornerRadius="13"
+                            Height="26"
+                            MinHeight="26"
+                            MinWidth="26"
+                            Padding="0"
+                            Width="26">
+                            <TextBlock
+                                FontFamily="Segoe Fluent Icons"
+                                FontSize="14"
+                                Text="&#xE72B;" />
+                        </Button>
+
+                        <TextBox
+                            x:Name="PizarraNombre"
+                            Grid.Column="1"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            FontFamily="{StaticResource PpFuente}"
+                            FontSize="13"
+                            FontWeight="SemiBold"
+                            Margin="4,0,4,0"
+                            TextChanged="Pizarra_Cambio"
+                            VerticalAlignment="Center" />
+
+                        <Button
+                            x:Name="PizarraBorrar"
+                            Grid.Column="2"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Click="Pizarra_Borrar"
+                            CornerRadius="13"
+                            Foreground="{ThemeResource PpRojo}"
+                            Height="26"
+                            MinHeight="26"
+                            MinWidth="26"
+                            Padding="0"
+                            Width="26">
+                            <TextBlock
+                                FontFamily="Segoe Fluent Icons"
+                                FontSize="14"
+                                Text="&#xE74D;" />
+                        </Button>
+                    </Grid>
+
+                    <Border
+                        Grid.Row="1"
+                        Background="{ThemeResource PpAcento}"
+                        CornerRadius="14"
+                        Padding="12,10,8,10">
+                        <TextBox
+                            x:Name="PizarraTexto"
+                            AcceptsReturn="True"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            FontFamily="{StaticResource PpFuente}"
+                            FontSize="13"
+                            Foreground="{ThemeResource PpSobre}"
+                            IsSpellCheckEnabled="False"
+                            TextChanged="Pizarra_Cambio"
+                            TextWrapping="Wrap"
+                            VerticalAlignment="Stretch" />
+                    </Border>
+                </Grid>
 
                 <!--  El hueco cuando no hay nada que ensenar.  -->
                 <StackPanel

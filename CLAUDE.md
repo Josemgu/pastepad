@@ -13,7 +13,7 @@ las pierde al reiniciar.
 
 ## Estado
 
-Versión 4.12.0, reescrita en C# con WinUI 3 sobre el Windows App SDK
+Versión 4.13.0, reescrita en C# con WinUI 3 sobre el Windows App SDK
 2.3.1 y .NET 10. Desempaquetada y self-contained.
 
 La versión anterior (3.x, Python con Flet) **ya no está en el repo**.
@@ -47,7 +47,7 @@ csharp/
     Tipos.cs                 de que es cada guardado, y cuando se escribe
     Fechas.cs                una fecha guardada, en palabras
     Config.cs, Datos.cs, Autoarranque.cs, Rutas
-  Pastepad.Nucleo.Pruebas/   113 pruebas, sin abrir ventana
+  Pastepad.Nucleo.Pruebas/   120 pruebas, sin abrir ventana
   Pastepad.App/
     Sistema/                 todo lo que habla con Win32
       Buzon.cs               ventana solo-mensajes: atajo y portapapeles
@@ -68,7 +68,7 @@ docs/                        35 maquetas, especificacion, logos
 ```
 
 `Pastepad.Nucleo` no importa nada gráfico **a propósito**. Es lo que
-permite que 113 pruebas corran sin abrir ventana y sin el Windows App
+permite que 120 pruebas corran sin abrir ventana y sin el Windows App
 SDK. No metas WinUI ahí dentro.
 
 Ese reparto es también por qué `Versiones.cs` está en el núcleo y

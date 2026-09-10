@@ -3,6 +3,31 @@
 All notable changes to this project are documented here.
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [4.13.0] - 2026-09-10
+
+**Notes became a scratchpad you summon.**
+
+### Added
+- **A note now opens inside the panel and stays open.** Click one, write
+  in it, hide pastepad with your shortcut — and the next time you summon
+  it, that note is still open, with the cursor in it and everything you
+  wrote. No Save button: it writes on every keystroke, because something
+  you call with one shortcut and dismiss with another cannot depend on
+  remembering to save.
+- **Notes can be named**, and in the Notes tab the search box finds them
+  by that name. The name outweighs the body, so calling a note by its
+  name puts it first even when those letters appear inside ten others.
+  Notes still stay out of the general search: everything that shows up
+  there can be pasted, and a note cannot.
+- **The search box stays visible while a note is open.** Searching covers
+  the note without closing it, and clearing the box brings it straight
+  back as it was.
+- A note left completely empty deletes itself, so starting one and
+  changing your mind leaves nothing behind.
+
+### Changed
+- 113 tests to 120.
+
 ## [4.12.0] - 2026-09-10
 
 ### Changed

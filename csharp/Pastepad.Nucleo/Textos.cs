@@ -105,6 +105,15 @@ public static class Textos
             ["Editar"] =
                 "Edit",
 
+            ["Ponle un nombre"] =
+                "Give it a name",
+
+            ["Ningún apunte coincide"] =
+                "No note matches",
+
+            ["¿Borrar este apunte? Esto no se puede deshacer."] =
+                "Delete this note? This cannot be undone.",
+
             ["Vacío. Usa Nuevo para escribir un apunte"] =
                 "Empty. Use New to write a note",
 
@@ -404,6 +413,15 @@ public static class Textos
             ["Editar"] =
                 "Editar",
 
+            ["Ponle un nombre"] =
+                "Dê-lhe um nome",
+
+            ["Ningún apunte coincide"] =
+                "Nenhuma nota corresponde",
+
+            ["¿Borrar este apunte? Esto no se puede deshacer."] =
+                "Eliminar esta nota? Isto não pode ser desfeito.",
+
             ["Vacío. Usa Nuevo para escribir un apunte"] =
                 "Vazio. Use Novo para escrever uma anotação",
 
@@ -702,6 +720,15 @@ public static class Textos
 
             ["Editar"] =
                 "Modifier",
+
+            ["Ponle un nombre"] =
+                "Donnez-lui un nom",
+
+            ["Ningún apunte coincide"] =
+                "Aucune note ne correspond",
+
+            ["¿Borrar este apunte? Esto no se puede deshacer."] =
+                "Supprimer cette note ? Cette action est irréversible.",
 
             ["Vacío. Usa Nuevo para escribir un apunte"] =
                 "Vide. Utilisez Nouveau pour écrire une note",

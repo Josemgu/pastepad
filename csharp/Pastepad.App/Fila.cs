@@ -175,6 +175,12 @@ public sealed class Fila : ItemLista, INotifyPropertyChanged
                 Texto = apunte.Texto;
                 Vista = Modelo.Vistazo(Texto);
 
+                // El nombre que le puso el usuario, si lo tiene. Sin
+                // nombre no se pone nada: la tarjeta ya enseña las
+                // primeras lineas, y repetir la primera como si fuera un
+                // titulo gastaria un renglon en decir dos veces lo mismo.
+                Nombre = apunte.Titulo;
+
                 Titulo = Modelo.UnaLinea(Texto, 80);
                 if (Titulo.Length == 0) Titulo = "—";
 
@@ -261,6 +267,12 @@ public sealed class Fila : ItemLista, INotifyPropertyChanged
     /// que no sea un apunte: la plantilla de tarjeta solo se usa ahi.
     /// </summary>
     public string Vista { get; } = "";
+
+    /// <summary>El nombre del apunte, si le pusieron uno.</summary>
+    public string Nombre { get; } = "";
+
+    public Visibility VerNombre =>
+        Nombre.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
 
     /// <summary>
     /// El acento de fondo, como en las notas rapidas de Windows. La

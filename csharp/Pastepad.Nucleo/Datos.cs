@@ -101,6 +101,18 @@ public sealed class Entrada : Elemento
 /// </summary>
 public sealed class Nota : Elemento
 {
+    /// <summary>
+    /// El nombre que le puso el usuario, para llamarlo por el desde el
+    /// buscador. Opcional: un apunte sin nombre se reconoce por sus
+    /// primeras lineas, que es como funcionan las notas rapidas.
+    ///
+    /// No se escribe cuando esta vacio, asi un notas.json de la 4.11.0
+    /// se vuelve a escribir igual que estaba.
+    /// </summary>
+    [JsonPropertyName("titulo")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public string Titulo { get; set; } = "";
+
     [JsonPropertyName("texto")] public string Texto { get; set; } = "";
 
     /// <summary>

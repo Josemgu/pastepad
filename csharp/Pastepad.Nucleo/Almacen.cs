@@ -445,15 +445,43 @@ public sealed class Almacen
     /// cada guardado, y un indice tomado antes de reordenar apunta a otra
     /// nota.
     /// </summary>
-    public bool CambiarNota(Nota nota, string texto, string cuando)
+    public bool CambiarNota(
+        Nota nota, string texto, string cuando, string? titulo = null)
     {
         if (!Notas.Contains(nota)) return false;
 
         nota.Texto = Modelo.NormalizarSaltos(texto);
+        if (titulo is not null) nota.Titulo = titulo.Trim();
         nota.Editada = cuando;
 
         GuardarNotas();
         return true;
+    }
+
+    /// <summary>
+    /// Los apuntes que coinciden con lo escrito, los mas parecidos
+    /// primero. Solo se llama desde la pestaña de apuntes: en el buscador
+    /// general no salen, porque ahi todo lo que aparece se puede pegar y
+    /// un apunte no.
+    ///
+    /// El nombre pesa mas que el cuerpo —eso lo hace Puntuar—, que es lo
+    /// que pone el apunte el primero cuando lo llamas por su nombre,
+    /// aunque esas mismas letras aparezcan dentro de otros diez.
+    /// </summary>
+    public List<Nota> BuscarNotas(string consulta)
+    {
+        var palabras = Busqueda.Palabras(consulta);
+        if (palabras.Length == 0) return Notas;
+
+        return Notas
+            .Select(n => (Nota: n, Punto: Busqueda.Puntuar(
+                palabras,
+                Busqueda.Normalizar(Modelo.NombreDe(n)),
+                Busqueda.Normalizar(n.Texto))))
+            .Where(x => x.Punto is not null)
+            .OrderByDescending(x => x.Punto!.Value)
+            .Select(x => x.Nota)
+            .ToList();
     }
 
     public bool BorrarNota(Nota nota)

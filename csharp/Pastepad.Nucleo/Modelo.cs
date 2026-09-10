@@ -83,11 +83,21 @@ public static class Modelo
     /// specifier always uses the invariant culture». Con cualquier otro
     /// —«d», «G»— el archivo se escribiria distinto en cada region.
     /// </summary>
-    public static Nota CrearNota(string texto, DateTimeOffset cuando) => new()
+    public static Nota CrearNota(
+        string texto, DateTimeOffset cuando, string titulo = "") => new()
     {
+        Titulo = titulo.Trim(),
         Texto = NormalizarSaltos(texto),
         Editada = Sello(cuando),
     };
+
+    /// <summary>
+    /// Como se llama un apunte en la lista: el nombre que le puso el
+    /// usuario si lo tiene, y si no su primera linea, como en las notas
+    /// rapidas de Windows.
+    /// </summary>
+    public static string NombreDe(Nota apunte) =>
+        apunte.Titulo.Length > 0 ? apunte.Titulo : PrimeraLinea(apunte.Texto);
 
     /// <summary>
     /// Una fecha tal y como se escribe en el archivo. En un solo sitio

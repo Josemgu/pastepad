@@ -2009,3 +2009,105 @@ public sealed class PruebaVistazo
         Assert.AreEqual("", Modelo.Vistazo("   \r\n\r\n  "));
     }
 }
+
+/// <summary>
+/// Llamar a un apunte por su nombre. Es lo que convierte el bloc en algo
+/// que se usa: sin nombre hay que reconocer la nota por como empieza, y
+/// con veinte apuntes eso deja de funcionar.
+/// </summary>
+[TestClass]
+public sealed class PruebaNombreDeApuntes : BaseConCarpetaTemporal
+{
+    static Nota Apunte(string titulo, string texto) => new()
+    {
+        Titulo = titulo,
+        Texto = texto,
+        Editada = "2026-09-10T10:00:00.0000000-04:00",
+    };
+
+    [TestMethod]
+    public void test_sin_nombre_vale_la_primera_linea()
+    {
+        Assert.AreEqual(
+            "Security details",
+            Modelo.NombreDe(Apunte("", "Security details\r\nIAM role")));
+    }
+
+    [TestMethod]
+    public void test_con_nombre_manda_el_nombre()
+    {
+        Assert.AreEqual(
+            "Servidor AWS",
+            Modelo.NombreDe(Apunte("Servidor AWS", "Security details\r\nIAM role")));
+    }
+
+    /// <summary>
+    /// El nombre pesa mas que el cuerpo. Si no, buscar «servidor» pondria
+    /// primero cualquier apunte que mencione la palabra por dentro, y el
+    /// que se llama asi quedaria enterrado.
+    /// </summary>
+    [TestMethod]
+    public void test_el_que_se_llama_asi_va_primero()
+    {
+        var almacen = new Almacen(Rutas);
+
+        almacen.AnadirNota(Apunte("Otra cosa", "aqui hablo del servidor y del servidor"));
+        almacen.AnadirNota(Apunte("Servidor AWS", "IAM role"));
+
+        var salen = almacen.BuscarNotas("servidor");
+
+        Assert.AreEqual(2, salen.Count);
+        Assert.AreEqual("Servidor AWS", salen[0].Titulo);
+    }
+
+    [TestMethod]
+    public void test_encuentra_por_el_cuerpo_tambien()
+    {
+        var almacen = new Almacen(Rutas);
+        almacen.AnadirNota(Apunte("Servidor AWS", "Owner ID 334716554232"));
+
+        Assert.AreEqual(1, almacen.BuscarNotas("334716554232").Count);
+        Assert.AreEqual(0, almacen.BuscarNotas("nada de esto").Count);
+    }
+
+    /// <summary>Sin escribir nada salen todos, sin filtrar.</summary>
+    [TestMethod]
+    public void test_consulta_vacia_los_devuelve_todos()
+    {
+        var almacen = new Almacen(Rutas);
+        almacen.AnadirNota(Apunte("Uno", "a"));
+        almacen.AnadirNota(Apunte("Dos", "b"));
+
+        Assert.AreEqual(2, almacen.BuscarNotas("").Count);
+        Assert.AreEqual(2, almacen.BuscarNotas("   ").Count);
+    }
+
+    /// <summary>
+    /// Las tildes dan igual, como en el buscador de siempre.
+    /// </summary>
+    [TestMethod]
+    public void test_las_tildes_dan_igual()
+    {
+        var almacen = new Almacen(Rutas);
+        almacen.AnadirNota(Apunte("Reunión de equipo", "notas"));
+
+        Assert.AreEqual(1, almacen.BuscarNotas("reunion").Count);
+    }
+
+    /// <summary>
+    /// El nombre viaja al archivo y vuelve. Una clave nueva que no se
+    /// relea deja al usuario renombrando lo mismo cada vez.
+    /// </summary>
+    [TestMethod]
+    public void test_el_nombre_sobrevive_al_archivo()
+    {
+        var primero = new Almacen(Rutas);
+        primero.AnadirNota(Modelo.CrearNota(
+            "algo", DateTimeOffset.Now, "Mi pizarra"));
+
+        var segundo = new Almacen(Rutas);
+
+        Assert.AreEqual(1, segundo.Notas.Count);
+        Assert.AreEqual("Mi pizarra", segundo.Notas[0].Titulo);
+    }
+}

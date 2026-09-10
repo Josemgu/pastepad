@@ -55,6 +55,14 @@ public sealed partial class Panel : Window
 
     string _pestana = Reciente;
 
+    /// <summary>
+    /// El apunte abierto en la pizarra, o null si se esta viendo la
+    /// lista. Sobrevive a esconder el panel a proposito: es lo que hace
+    /// que llamar a pastepad otra vez devuelva la nota donde se dejo, con
+    /// lo escrito dentro.
+    /// </summary>
+    Nota? _pizarra;
+
     /// <summary>null es "todas las carpetas".</summary>
     string? _carpeta;
 
@@ -402,7 +410,19 @@ public sealed partial class Panel : Window
         if (!Foco.TraerAlFrente(_hwnd))
             Registro.Anotar("el panel no consiguio el primer plano");
 
-        Buscador.Focus(FocusState.Programmatic);
+        // Con un apunte abierto el cursor va DENTRO de el, no al
+        // buscador. Es la pizarra: se llama con el atajo y se sigue
+        // escribiendo donde se dejo, sin tener que pulsar nada. El
+        // buscador se queda arriba a la vista y a un clic.
+        if (_pizarra is not null)
+        {
+            PizarraTexto.Focus(FocusState.Programmatic);
+            PizarraTexto.SelectionStart = PizarraTexto.Text.Length;
+        }
+        else
+        {
+            Buscador.Focus(FocusState.Programmatic);
+        }
     }
 
     /// <summary>
@@ -546,6 +566,12 @@ public sealed partial class Panel : Window
         if (!EstaVisible) return;
 
         EstaVisible = false;
+
+        // Antes de esconderse, no despues: el apunte se guarda en cada
+        // tecla, pero esconder es el momento en que el usuario deja de
+        // mirar y hay que estar seguro.
+        GuardarPizarra();
+
         AppWindow.Hide();
 
         // Cerrar el panel da el aviso por leido. La novedad de version no
@@ -686,7 +712,18 @@ public sealed partial class Panel : Window
         string vacio;
         string iconoVacio;
 
-        if (consulta.Length > 0)
+        if (consulta.Length > 0 && _pestana == Notas)
+        {
+            // Los apuntes se buscan aqui y solo aqui. En el buscador
+            // general no salen: ahi todo lo que aparece se pega, y un
+            // apunte no.
+            foreach (var n in Almacen.BuscarNotas(consulta))
+                _filas.Add(new Fila(n, _compacta));
+
+            vacio = Textos.T("Ningún apunte coincide");
+            iconoVacio = Estilo.Iconos.Buscar;
+        }
+        else if (consulta.Length > 0)
         {
             foreach (var r in App.Actual.Indice.Buscar(consulta))
                 _filas.Add(new Fila(r.Dato, _compacta));
@@ -748,6 +785,7 @@ public sealed partial class Panel : Window
         PintarPestanas();
         PintarCarpetas();
         PintarPie();
+        PintarPizarra(consulta.Length > 0);
 
         // La primera fila queda elegida, como en la maqueta 01. Sin
         // esto, Enter no tendria sobre que actuar y la barra blanca de
@@ -1507,19 +1545,124 @@ public sealed partial class Panel : Window
         App.Actual.RefrescarLista();
     }
 
+    // -------------------------------------------------------- pizarra
+
+    /// <summary>
+    /// Quien ocupa el hueco de la lista: la pizarra o la lista.
+    ///
+    /// Buscar la tapa sin cerrarla —el buscador sigue arriba y sirve para
+    /// cualquier cosa—, y al vaciar el buscador el apunte vuelve tal cual
+    /// estaba. Por eso se mira la consulta y no se toca <c>_pizarra</c>.
+    /// </summary>
+    void PintarPizarra(bool buscando)
+    {
+        bool verla = _pizarra is not null && !buscando;
+
+        Pizarra.Visibility = verla ? Visibility.Visible : Visibility.Collapsed;
+        Lista.Visibility = verla ? Visibility.Collapsed : Visibility.Visible;
+
+        // El hueco de «no hay nada» no puede asomar por debajo del apunte.
+        if (verla) Vacio.Visibility = Visibility.Collapsed;
+    }
+
+    void AbrirPizarra(Nota apunte)
+    {
+        _pizarra = apunte;
+
+        // Callado: rellenar las cajas dispara TextChanged, y ese guarda.
+        // Sin esto, abrir un apunte lo marcaria como editado y lo subiria
+        // al principio de la lista sin que nadie haya escrito nada.
+        _callado = true;
+        PizarraNombre.Text = apunte.Titulo;
+        PizarraTexto.Text = apunte.Texto;
+        _callado = false;
+
+        PizarraNombre.PlaceholderText = Textos.T("Ponle un nombre");
+
+        PintarPizarra(false);
+
+        PizarraTexto.Focus(FocusState.Programmatic);
+        PizarraTexto.SelectionStart = PizarraTexto.Text.Length;
+    }
+
+    /// <summary>
+    /// Vuelve a la lista. Lo escrito ya esta guardado —se guarda en cada
+    /// tecla—, asi que aqui solo se suelta el apunte.
+    /// </summary>
+    void CerrarPizarra()
+    {
+        GuardarPizarra();
+        _pizarra = null;
+        Refrescar();
+    }
+
+    /// <summary>
+    /// Escribe lo que hay en las cajas. Se llama en cada tecla y al
+    /// esconder el panel: una pizarra que se llama con un atajo y se
+    /// esconde con otro no puede tener un boton de guardar que haya que
+    /// acordarse de pulsar.
+    ///
+    /// Un apunte que se queda sin nada dentro se borra, como en las notas
+    /// rapidas de Windows. Si no, abrir uno nuevo y no escribir nada
+    /// dejaria una tarjeta vacia para siempre.
+    /// </summary>
+    void GuardarPizarra()
+    {
+        if (_pizarra is null) return;
+
+        string texto = PizarraTexto.Text;
+        string nombre = PizarraNombre.Text;
+
+        if (texto.Trim().Length == 0 && nombre.Trim().Length == 0)
+        {
+            Almacen.BorrarNota(_pizarra);
+            _pizarra = null;
+            return;
+        }
+
+        Almacen.CambiarNota(
+            _pizarra, texto, Modelo.Sello(DateTimeOffset.Now), nombre);
+    }
+
+    void Pizarra_Cambio(object remitente, TextChangedEventArgs args)
+    {
+        if (_callado) return;
+        GuardarPizarra();
+    }
+
+    void Pizarra_Volver(object remitente, RoutedEventArgs args) =>
+        CerrarPizarra();
+
+    async void Pizarra_Borrar(object remitente, RoutedEventArgs args)
+    {
+        if (_pizarra is null) return;
+
+        // Sin preguntar cuando no hay nada que perder.
+        if (PizarraTexto.Text.Trim().Length > 0
+            && !await Dialogos.Confirmar(
+                Marco.XamlRoot,
+                Textos.T("¿Borrar este apunte? Esto no se puede deshacer.")))
+            return;
+
+        Almacen.BorrarNota(_pizarra);
+        _pizarra = null;
+        Refrescar();
+    }
+
     // ------------------------------------------------------- acciones
 
     async Task Nuevo()
     {
         if (_pestana == Notas)
         {
-            string? texto = await Dialogos.Apunte(
-                Marco.XamlRoot, Textos.T("Apunte nuevo"), "");
+            // Nace vacio y se abre para escribir dentro, como en las
+            // notas rapidas. Si se deja sin nada, GuardarPizarra lo
+            // borra: no hace falta preguntar ni dejar basura.
+            var apunte = Modelo.CrearNota("", DateTimeOffset.Now);
+            Almacen.AnadirNota(apunte);
 
-            if (texto is null) return;
-
-            Almacen.AnadirNota(Modelo.CrearNota(texto, DateTimeOffset.Now));
-            App.Actual.RefrescarLista();
+            Refrescar();
+            AbrirPizarra(apunte);
             return;
         }
 
@@ -1641,9 +1784,11 @@ public sealed partial class Panel : Window
         // Un apunte no se pega nunca. Va lo primero y aqui dentro —y no
         // en el clic— para que valga tambien para el Enter del buscador
         // y para cualquier camino que llegue a usar una fila.
-        if (fila.Dato is Nota)
+        if (fila.Dato is Nota apunte)
         {
-            await Editar(fila);
+            // La pizarra, no un dialogo: tiene que poder esconderse con
+            // el panel y volver abierta donde se dejo.
+            AbrirPizarra(apunte);
             return;
         }
 
