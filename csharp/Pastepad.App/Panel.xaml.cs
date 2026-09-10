@@ -417,7 +417,7 @@ public sealed partial class Panel : Window
         if (_pizarra is not null)
         {
             PizarraTexto.Focus(FocusState.Programmatic);
-            PizarraTexto.SelectionStart = PizarraTexto.Text.Length;
+            AlFinal();
         }
         else
         {
@@ -1574,15 +1574,35 @@ public sealed partial class Panel : Window
         // al principio de la lista sin que nadie haya escrito nada.
         _callado = true;
         PizarraNombre.Text = apunte.Titulo;
-        PizarraTexto.Text = apunte.Texto;
+        Formato.Cargar(PizarraTexto, apunte.Runs);
         _callado = false;
+
+        // La barra se cuelga una sola vez, no en cada apertura: son seis
+        // botones con sus manejadores, y rehacerlos cada vez que se abre
+        // un apunte es basura que se acumula.
+        PizarraBarra.Content ??= Dialogos.BarraDeApunte(PizarraTexto);
 
         PizarraNombre.PlaceholderText = Textos.T("Ponle un nombre");
 
         PintarPizarra(false);
 
         PizarraTexto.Focus(FocusState.Programmatic);
-        PizarraTexto.SelectionStart = PizarraTexto.Text.Length;
+        AlFinal();
+    }
+
+    /// <summary>
+    /// Deja el cursor al final de lo escrito. En un RichEditBox no vale
+    /// SelectionStart: se pide por el documento.
+    /// </summary>
+    void AlFinal()
+    {
+        var fin = PizarraTexto.Document.GetRange(
+            int.MaxValue / 2, int.MaxValue / 2);
+
+        fin.SetRange(fin.EndPosition, fin.EndPosition);
+        fin.SetRange(fin.EndPosition, fin.EndPosition);
+        PizarraTexto.Document.Selection.SetRange(
+            fin.EndPosition, fin.EndPosition);
     }
 
     /// <summary>
@@ -1610,10 +1630,11 @@ public sealed partial class Panel : Window
     {
         if (_pizarra is null) return;
 
-        string texto = PizarraTexto.Text;
+        var runs = Formato.Leer(PizarraTexto);
         string nombre = PizarraNombre.Text;
 
-        if (texto.Trim().Length == 0 && nombre.Trim().Length == 0)
+        if (Modelo.TextoDe(runs).Trim().Length == 0
+            && nombre.Trim().Length == 0)
         {
             Almacen.BorrarNota(_pizarra);
             _pizarra = null;
@@ -1621,10 +1642,22 @@ public sealed partial class Panel : Window
         }
 
         Almacen.CambiarNota(
-            _pizarra, texto, Modelo.Sello(DateTimeOffset.Now), nombre);
+            _pizarra, runs, Modelo.Sello(DateTimeOffset.Now), nombre);
     }
 
-    void Pizarra_Cambio(object remitente, TextChangedEventArgs args)
+    /// <summary>
+    /// Dos manejadores para lo mismo porque los dos controles no
+    /// declaran el mismo evento: TextBox.TextChanged lleva
+    /// TextChangedEventHandler y RichEditBox.TextChanged lleva
+    /// RoutedEventHandler. No hay una firma que valga para los dos.
+    /// </summary>
+    void Pizarra_Cambio(object remitente, TextChangedEventArgs args) =>
+        GuardarSiToca();
+
+    void Pizarra_Cambio(object remitente, RoutedEventArgs args) =>
+        GuardarSiToca();
+
+    void GuardarSiToca()
     {
         if (_callado) return;
         GuardarPizarra();
@@ -1638,7 +1671,7 @@ public sealed partial class Panel : Window
         if (_pizarra is null) return;
 
         // Sin preguntar cuando no hay nada que perder.
-        if (PizarraTexto.Text.Trim().Length > 0
+        if (Formato.TextoPlano(PizarraTexto).Trim().Length > 0
             && !await Dialogos.Confirmar(
                 Marco.XamlRoot,
                 Textos.T("¿Borrar este apunte? Esto no se puede deshacer.")))
@@ -1717,13 +1750,10 @@ public sealed partial class Panel : Window
     {
         if (fila.Dato is Nota apunte)
         {
-            string? texto = await Dialogos.Apunte(
-                Marco.XamlRoot, Textos.T("Editar apunte"), apunte.Texto);
-
-            if (texto is null) return;
-
-            Almacen.CambiarNota(apunte, texto, Modelo.Sello(DateTimeOffset.Now));
-            App.Actual.RefrescarLista();
+            // Editar un apunte es abrirlo en la pizarra, igual que
+            // pulsarlo. Dos formas de llegar al mismo sitio; lo que no
+            // puede haber son dos editores distintos para lo mismo.
+            AbrirPizarra(apunte);
             return;
         }
 

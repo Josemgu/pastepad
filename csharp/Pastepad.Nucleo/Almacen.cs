@@ -156,6 +156,15 @@ public sealed class Almacen
         Notas = Leer<List<Nota>>(Rutas.Notas) ?? [];
         OrdenarNotas();
 
+        // Los apuntes de antes de la 4.15.0 traen "texto" y no "runs".
+        foreach (var n in Notas)
+        {
+            if (n.Runs.Count == 0)
+                n.Runs = [Modelo.CrearFragmento(n.Texto ?? "")];
+
+            n.Texto = null;
+        }
+
         var coleccion = Leer<Coleccion>(Rutas.Datos) ?? new Coleccion();
         Carpetas = coleccion.Categorias;
         Snippets = coleccion.Snippets;
@@ -446,11 +455,12 @@ public sealed class Almacen
     /// nota.
     /// </summary>
     public bool CambiarNota(
-        Nota nota, string texto, string cuando, string? titulo = null)
+        Nota nota, IReadOnlyList<Fragmento> runs, string cuando,
+        string? titulo = null)
     {
         if (!Notas.Contains(nota)) return false;
 
-        nota.Texto = Modelo.NormalizarSaltos(texto);
+        nota.Runs = Modelo.LimpiarRuns(runs);
         if (titulo is not null) nota.Titulo = titulo.Trim();
         nota.Editada = cuando;
 
@@ -477,7 +487,7 @@ public sealed class Almacen
             .Select(n => (Nota: n, Punto: Busqueda.Puntuar(
                 palabras,
                 Busqueda.Normalizar(Modelo.NombreDe(n)),
-                Busqueda.Normalizar(n.Texto))))
+                Busqueda.Normalizar(Modelo.TextoDe(n.Runs)))))
             .Where(x => x.Punto is not null)
             .OrderByDescending(x => x.Punto!.Value)
             .Select(x => x.Nota)

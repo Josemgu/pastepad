@@ -113,7 +113,22 @@ public sealed class Nota : Elemento
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Titulo { get; set; } = "";
 
-    [JsonPropertyName("texto")] public string Texto { get; set; } = "";
+    /// <summary>
+    /// El contenido, con su formato, igual que un guardado. Desde la
+    /// 4.15.0 un apunte puede llevar negrita, cursiva, subrayado y
+    /// listas.
+    /// </summary>
+    [JsonPropertyName("runs")] public List<Fragmento> Runs { get; set; } = [];
+
+    /// <summary>
+    /// Solo lo traen los notas.json de antes de la 4.15.0, cuando un
+    /// apunte era texto plano. Al cargar se convierte en un unico
+    /// fragmento y no se vuelve a escribir — el mismo camino que ya
+    /// hicieron los guardados.
+    /// </summary>
+    [JsonPropertyName("texto")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Texto { get; set; }
 
     /// <summary>
     /// Cuando se toco por ultima vez, en ISO-8601. Cadena y no DateTime

@@ -650,6 +650,7 @@
                     Visibility="Collapsed">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
@@ -710,8 +711,15 @@
                         </Button>
                     </Grid>
 
-                    <Border
+                    <!--  La barra de formato, encima de la nota.  -->
+                    <ContentControl
+                        x:Name="PizarraBarra"
                         Grid.Row="1"
+                        HorizontalAlignment="Left"
+                        Margin="0,0,0,8" />
+
+                    <Border
+                        Grid.Row="2"
                         Background="{ThemeResource PpAcento}"
                         CornerRadius="10"
                         Padding="12,10,8,4">
@@ -721,33 +729,24 @@
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
 
-                            <TextBox
+                            <RichEditBox
                                 x:Name="PizarraTexto"
                                 Grid.Row="0"
-                                AcceptsReturn="True"
                                 Background="Transparent"
                                 BorderThickness="0"
                                 FontFamily="{StaticResource PpFuente}"
-                                FontSize="13"
-                                Foreground="{ThemeResource PpSobre}"
                                 IsSpellCheckEnabled="False"
                                 TextChanged="Pizarra_Cambio"
-                                TextWrapping="Wrap"
                                 VerticalAlignment="Stretch">
-                                <TextBox.Resources>
+                                <RichEditBox.Resources>
                                     <!--
-                                        Igual que el buscador: el TextBox
+                                        Igual que el buscador: el control
                                         trae sus propios fondos y sus
                                         propios colores de letra por
                                         estado, y ganan a lo que se le
-                                        ponga desde fuera.
-
-                                        Sin apagarlos, la nota salia como
-                                        una caja oscura DENTRO de la
-                                        tarjeta amarilla, y la letra en
-                                        blanco porque al tener el foco
-                                        mandaba TextControlForegroundFocused.
-                                        Sobre amarillo, blanco no se lee.
+                                        ponga desde fuera. Sin apagarlos,
+                                        la nota salia como una caja oscura
+                                        DENTRO de la tarjeta amarilla.
                                     -->
                                     <SolidColorBrush x:Key="TextControlBackground" Color="Transparent" />
                                     <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="Transparent" />
@@ -757,12 +756,8 @@
                                     <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="Transparent" />
                                     <Thickness x:Key="TextControlBorderThemeThickness">0</Thickness>
                                     <Thickness x:Key="TextControlBorderThemeThicknessFocused">0</Thickness>
-                                    <StaticResource x:Key="TextControlForeground" ResourceKey="PpSobre" />
-                                    <StaticResource x:Key="TextControlForegroundPointerOver" ResourceKey="PpSobre" />
-                                    <StaticResource x:Key="TextControlForegroundFocused" ResourceKey="PpSobre" />
-                                    <StaticResource x:Key="TextControlPlaceholderForeground" ResourceKey="PpSobre" />
-                                </TextBox.Resources>
-                            </TextBox>
+                                </RichEditBox.Resources>
+                            </RichEditBox>
 
                             <!--
                                 El visto de «ya esta». No hace falta para

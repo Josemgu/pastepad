@@ -727,6 +727,57 @@ public static class Dialogos
     ];
 
     /// <summary>Un boton cuadrado de la barra.</summary>
+    /// <summary>
+    /// La barra corta, para un apunte del bloc: negrita, cursiva,
+    /// subrayado, listas y quitar el formato.
+    ///
+    /// Sin fuente, sin tamaño y sin color a proposito. Un apunte no sale
+    /// de pastepad —no se pega en ningun sitio— asi que elegir tipografia
+    /// ahi no sirve para nada; lo que sirve es marcar lo importante y
+    /// hacer listas. La barra larga sigue estando donde importa, en los
+    /// textos guardados, que si viajan a Word y a Outlook.
+    ///
+    /// El subrayado SI esta aqui, aunque se quitara de la barra de los
+    /// guardados: alli se quito porque no aportaba a un texto que se va a
+    /// pegar en otro programa, y esto no se pega en ninguno.
+    /// </summary>
+    public static FrameworkElement BarraDeApunte(RichEditBox caja)
+    {
+        var negrita = BotonBarra(Textos.T("Negrita"), Letra("N", negrita: true));
+        negrita.Click += (_, _) => Formato.Negrita(caja);
+
+        var cursiva = BotonBarra(Textos.T("Cursiva"), Letra("K", cursiva: true));
+        cursiva.Click += (_, _) => Formato.Cursiva(caja);
+
+        var subrayado = BotonBarra(
+            Textos.T("Subrayado"), Letra("S", subrayado: true));
+        subrayado.Click += (_, _) => Formato.Subrayado(caja);
+
+        var vinetas = BotonBarra(Textos.T("Viñetas"), Letra("•", tam: 16));
+        vinetas.Click += (_, _) => Formato.Vinetas(caja);
+
+        var numeros = BotonBarra(Textos.T("Numeración"), Letra("1.", tam: 11));
+        numeros.Click += (_, _) => Formato.Numeros(caja);
+
+        var limpiar = BotonBarra(
+            Textos.T("Quitar el formato"), Glifo(Estilo.Iconos.Escoba));
+        limpiar.Click += (_, _) => Formato.Limpiar(caja);
+
+        var barra = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = 3,
+        };
+
+        foreach (var b in new[]
+            { negrita, cursiva, subrayado, vinetas, numeros, limpiar })
+        {
+            barra.Children.Add(b);
+        }
+
+        return barra;
+    }
+
     static Button BotonBarra(string rotulo, UIElement dentro)
     {
         var b = new Button

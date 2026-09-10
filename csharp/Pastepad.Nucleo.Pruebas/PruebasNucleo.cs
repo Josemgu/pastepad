@@ -1805,6 +1805,69 @@ public sealed class PruebaNotas : BaseConCarpetaTemporal
     static DateTimeOffset El(int dia) =>
         new(2026, 8, dia, 10, 0, 0, TimeSpan.FromHours(-4));
 
+    /// <summary>
+    /// Un notas.json escrito antes de la 4.15.0 lleva "texto" y no
+    /// "runs". Tiene que abrirse igual.
+    ///
+    /// Es la prueba que no se puede saltar: si esto falla, el usuario
+    /// actualiza y se encuentra el bloc vacio. Y no fallaria a gritos
+    /// —el archivo se lee, la lista se pinta, los apuntes salen sin nada
+    /// dentro— que es la forma mas cara de fallar.
+    /// </summary>
+    [TestMethod]
+    public void test_lee_los_apuntes_de_antes_del_formato()
+    {
+        File.WriteAllText(Rutas.Notas, """
+            [
+             {
+              "titulo": "Servidor",
+              "texto": "Security details\\r\\nIAM role",
+              "editada": "2026-08-01T10:00:00.0000000-04:00"
+             }
+            ]
+            """);
+
+        var a = new Almacen(Rutas);
+
+        Assert.HasCount(1, a.Notas);
+        Assert.AreEqual("Servidor", a.Notas[0].Titulo);
+        Assert.AreEqual("Security details\\r\\nIAM role", Modelo.TextoDe(a.Notas[0].Runs));
+
+        // Y al reescribirlo ya va en el formato nuevo, sin la clave
+        // vieja: dejarla seria tener el mismo contenido en dos sitios
+        // que pueden discrepar.
+        a.GuardarNotas();
+
+        string crudo = File.ReadAllText(Rutas.Notas);
+        StringAssert.Contains(crudo, "runs");
+        Assert.DoesNotContain("\"texto\"", crudo);
+
+        Assert.AreEqual(
+            "Security details\\r\\nIAM role",
+            Modelo.TextoDe(new Almacen(Rutas).Notas[0].Runs));
+    }
+
+    /// <summary>El formato viaja al archivo y vuelve.</summary>
+    [TestMethod]
+    public void test_el_formato_del_apunte_sobrevive()
+    {
+        var a = new Almacen(Rutas);
+
+        a.AnadirNota(Modelo.CrearNota(
+            [
+                new Fragmento { T = "en negrita", B = 1 },
+                new Fragmento { T = " y normal" },
+            ],
+            El(1)));
+
+        var leidos = new Almacen(Rutas).Notas[0].Runs;
+
+        Assert.HasCount(2, leidos);
+        Assert.AreEqual(1, leidos[0].B);
+        Assert.AreEqual(0, leidos[1].B);
+        Assert.AreEqual("en negrita y normal", Modelo.TextoDe(leidos));
+    }
+
     [TestMethod]
     public void test_la_nota_se_guarda_en_su_propio_archivo()
     {
@@ -1819,7 +1882,7 @@ public sealed class PruebaNotas : BaseConCarpetaTemporal
 
         var otra = new Almacen(Rutas);
         Assert.HasCount(1, otra.Notas);
-        Assert.AreEqual("comprar pan", otra.Notas[0].Texto);
+        Assert.AreEqual("comprar pan", Modelo.TextoDe(otra.Notas[0].Runs));
     }
 
     /// <summary>
@@ -1837,7 +1900,7 @@ public sealed class PruebaNotas : BaseConCarpetaTemporal
 
         CollectionAssert.AreEqual(
             new[] { "la nueva", "la de enmedio", "la vieja" },
-            new Almacen(Rutas).Notas.Select(n => n.Texto).ToArray());
+            new Almacen(Rutas).Notas.Select(n => Modelo.TextoDe(n.Runs)).ToArray());
     }
 
     [TestMethod]
@@ -1847,12 +1910,14 @@ public sealed class PruebaNotas : BaseConCarpetaTemporal
         a.AnadirNota(Modelo.CrearNota("la vieja", El(1)));
         a.AnadirNota(Modelo.CrearNota("la nueva", El(3)));
 
-        var vieja = a.Notas.Single(n => n.Texto == "la vieja");
-        Assert.IsTrue(a.CambiarNota(vieja, "la vieja, retocada", El(5).ToString("O")));
+        var vieja = a.Notas.Single(n => Modelo.TextoDe(n.Runs) == "la vieja");
+        Assert.IsTrue(a.CambiarNota(
+            vieja, [Modelo.CrearFragmento("la vieja, retocada")],
+            El(5).ToString("O")));
 
         CollectionAssert.AreEqual(
             new[] { "la vieja, retocada", "la nueva" },
-            new Almacen(Rutas).Notas.Select(n => n.Texto).ToArray());
+            new Almacen(Rutas).Notas.Select(n => Modelo.TextoDe(n.Runs)).ToArray());
     }
 
     /// <summary>
@@ -1869,12 +1934,12 @@ public sealed class PruebaNotas : BaseConCarpetaTemporal
         a.AnadirNota(Modelo.CrearNota("segunda", El(2)));
         a.AnadirNota(Modelo.CrearNota("tercera", El(3)));
 
-        var segunda = a.Notas.Single(n => n.Texto == "segunda");
+        var segunda = a.Notas.Single(n => Modelo.TextoDe(n.Runs) == "segunda");
         Assert.IsTrue(a.BorrarNota(segunda));
 
         CollectionAssert.AreEqual(
             new[] { "tercera", "primera" },
-            new Almacen(Rutas).Notas.Select(n => n.Texto).ToArray());
+            new Almacen(Rutas).Notas.Select(n => Modelo.TextoDe(n.Runs)).ToArray());
     }
 
     [TestMethod]
@@ -1884,7 +1949,8 @@ public sealed class PruebaNotas : BaseConCarpetaTemporal
         var suelta = Modelo.CrearNota("nunca se anadio", El(1));
 
         Assert.IsFalse(a.BorrarNota(suelta));
-        Assert.IsFalse(a.CambiarNota(suelta, "algo", El(2).ToString("O")));
+        Assert.IsFalse(a.CambiarNota(
+            suelta, [Modelo.CrearFragmento("algo")], El(2).ToString("O")));
     }
 
     /// <summary>
@@ -1905,7 +1971,7 @@ public sealed class PruebaNotas : BaseConCarpetaTemporal
 
         CollectionAssert.AreEqual(
             new[] { "con fecha", "sin fecha" },
-            new Almacen(Rutas).Notas.Select(n => n.Texto).ToArray());
+            new Almacen(Rutas).Notas.Select(n => Modelo.TextoDe(n.Runs)).ToArray());
     }
 
     /// <summary>
@@ -1919,11 +1985,18 @@ public sealed class PruebaNotas : BaseConCarpetaTemporal
         var a = new Almacen(Rutas);
         a.AnadirNota(Modelo.CrearNota("una\rdos\ntres", El(1)));
 
-        Assert.AreEqual("una\r\ndos\r\ntres", new Almacen(Rutas).Notas[0].Texto);
+        Assert.AreEqual(
+            "una\r\ndos\r\ntres",
+            Modelo.TextoDe(new Almacen(Rutas).Notas[0].Runs));
 
         var n = a.Notas[0];
-        a.CambiarNota(n, "cuatro\rcinco", El(2).ToString("O"));
-        Assert.AreEqual("cuatro\r\ncinco", new Almacen(Rutas).Notas[0].Texto);
+        a.CambiarNota(
+            n, [Modelo.CrearFragmento("cuatro\rcinco")],
+            El(2).ToString("O"));
+
+        Assert.AreEqual(
+            "cuatro\r\ncinco",
+            Modelo.TextoDe(new Almacen(Rutas).Notas[0].Runs));
     }
 
     /// <summary>
@@ -2021,7 +2094,7 @@ public sealed class PruebaNombreDeApuntes : BaseConCarpetaTemporal
     static Nota Apunte(string titulo, string texto) => new()
     {
         Titulo = titulo,
-        Texto = texto,
+        Runs = [Modelo.CrearFragmento(texto)],
         Editada = "2026-09-10T10:00:00.0000000-04:00",
     };
 

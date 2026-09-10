@@ -3,6 +3,31 @@
 All notable changes to this project are documented here.
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [4.15.0] - 2026-09-10
+
+### Added
+- **Notes can be formatted**: bold, italic, underline, bullets, numbering
+  and clear formatting, on a short bar above the note. No font, size or
+  colour pickers — a note never leaves pastepad, so choosing a typeface
+  for one buys nothing; marking what matters and making lists does. The
+  long bar stays where it earns its place, on saved texts, which do
+  travel to Word and Outlook.
+
+  Underline is here even though it was taken off the saved-text bar. It
+  was taken off there because it added nothing to text about to be pasted
+  into another program, and a note is pasted into none.
+
+### Changed
+- Notes are stored the way saved texts are, as formatted fragments. A
+  `notas.json` written by 4.14.0 or earlier still opens: its plain text
+  becomes one fragment, and the file is rewritten in the new shape
+  without the old key, so the same content cannot exist in two places
+  that disagree. There is a test that fails loudly if this ever breaks —
+  the alternative is a user updating and finding an empty scratchpad.
+- Editing a note from its three-dot menu opens the same board that
+  clicking it does. Two ways in, one editor.
+- 120 tests to 122.
+
 ## [4.14.0] - 2026-09-10
 
 **The notes looked wrong, and the reason was a style they should never

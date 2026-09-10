@@ -84,10 +84,15 @@ public static class Modelo
     /// —«d», «G»— el archivo se escribiria distinto en cada region.
     /// </summary>
     public static Nota CrearNota(
-        string texto, DateTimeOffset cuando, string titulo = "") => new()
+        string texto, DateTimeOffset cuando, string titulo = "") =>
+        CrearNota([CrearFragmento(texto)], cuando, titulo);
+
+    public static Nota CrearNota(
+        IReadOnlyList<Fragmento> runs, DateTimeOffset cuando,
+        string titulo = "") => new()
     {
         Titulo = titulo.Trim(),
-        Texto = NormalizarSaltos(texto),
+        Runs = LimpiarRuns(runs),
         Editada = Sello(cuando),
     };
 
@@ -97,7 +102,9 @@ public static class Modelo
     /// rapidas de Windows.
     /// </summary>
     public static string NombreDe(Nota apunte) =>
-        apunte.Titulo.Length > 0 ? apunte.Titulo : PrimeraLinea(apunte.Texto);
+        apunte.Titulo.Length > 0
+            ? apunte.Titulo
+            : PrimeraLinea(TextoDe(apunte.Runs));
 
     /// <summary>
     /// Una fecha tal y como se escribe en el archivo. En un solo sitio
@@ -217,26 +224,7 @@ public static class Modelo
         IReadOnlyList<Fragmento> runs, string categoria, string? titulo = null,
         string? tipo = null)
     {
-        var limpios = new List<Fragmento>();
-
-        foreach (var f in runs)
-        {
-            string t = NormalizarSaltos(f.T);
-            if (t.Length == 0) continue;
-
-            // Fragmentos seguidos con el mismo formato son uno solo: sin
-            // esto, escribir carácter a carácter dejaba un fragmento por
-            // pulsación en snippets.json.
-            if (limpios.Count > 0 && MismoFormato(limpios[^1], f))
-            {
-                limpios[^1].T += t;
-                continue;
-            }
-
-            limpios.Add(Copiar(f, t));
-        }
-
-        if (limpios.Count == 0) limpios.Add(CrearFragmento(""));
+        var limpios = LimpiarRuns(runs);
 
         string nombre = (titulo ?? "").Trim();
 
@@ -555,6 +543,42 @@ public static class Modelo
     }
 
     /// <summary>Todo menos el texto.</summary>
+    /// <summary>
+    /// Deja los fragmentos como tienen que ir al archivo: sin trozos
+    /// vacios, con los saltos normalizados, y uniendo los seguidos que
+    /// comparten formato.
+    ///
+    /// Ese ultimo paso no es cosmetico: sin el, escribir caracter a
+    /// caracter dejaba un fragmento por pulsacion. Un apunte de mil
+    /// letras serian mil objetos en notas.json.
+    ///
+    /// Nunca devuelve la lista vacia: un contenido sin nada sigue siendo
+    /// un fragmento, y el resto del programa cuenta con que haya al menos
+    /// uno.
+    /// </summary>
+    public static List<Fragmento> LimpiarRuns(IReadOnlyList<Fragmento> runs)
+    {
+        var limpios = new List<Fragmento>();
+
+        foreach (var f in runs)
+        {
+            string t = NormalizarSaltos(f.T);
+            if (t.Length == 0) continue;
+
+            if (limpios.Count > 0 && MismoFormato(limpios[^1], f))
+            {
+                limpios[^1].T += t;
+                continue;
+            }
+
+            limpios.Add(Copiar(f, t));
+        }
+
+        if (limpios.Count == 0) limpios.Add(CrearFragmento(""));
+
+        return limpios;
+    }
+
     public static bool MismoFormato(Fragmento a, Fragmento b) =>
         a.F == b.F && a.S == b.S && a.B == b.B
         && a.I == b.I && a.U == b.U

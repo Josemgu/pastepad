@@ -172,7 +172,7 @@ public sealed class Fila : ItemLista, INotifyPropertyChanged
 
             case Nota apunte:
                 EsApunte = true;
-                Texto = apunte.Texto;
+                Texto = Modelo.TextoDe(apunte.Runs);
                 Vista = Modelo.Vistazo(Texto);
 
                 // El nombre que le puso el usuario, si lo tiene. Sin
