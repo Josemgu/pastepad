@@ -160,7 +160,7 @@ public static class Estilo
     /// La tarjeta de un apunte. Mas alta que una fila porque enseña
     /// varias lineas: en una nota rapida, el titulo solo no dice nada.
     /// </summary>
-    public const int AltoApunte = 128;
+    public const int AltoApunte = 76;
     public const int AltoFilaMini = 42;
     public const int SepFila = 6;
     public const int BarraActiva = 3;

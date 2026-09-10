@@ -195,51 +195,64 @@
             <DataTemplate x:Key="PlantillaApunte" x:DataType="local:Fila">
                 <Border
                     Background="{x:Bind FondoApunte, Mode=OneWay}"
-                    CornerRadius="14"
-                    Height="{x:Bind Alto}"
-                    Padding="14,10,10,12"
+                    BorderBrush="{x:Bind BordeApunte, Mode=OneWay}"
+                    BorderThickness="2"
+                    CornerRadius="10"
+                    MinHeight="{x:Bind Alto}"
+                    Padding="16,10,10,14"
                     PointerEntered="Fila_Entra"
                     PointerExited="Fila_Sale">
 
-                    <Grid>
+                    <Grid RowSpacing="6">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
+                        <!--
+                            La fecha a la DERECHA, como en las notas
+                            rapidas: la izquierda es por donde se lee, y
+                            ahi tiene que empezar el texto.
+                        -->
                         <Grid Grid.Row="0">
-                            <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center">
-                                <TextBlock
-                                    FontWeight="SemiBold"
-                                    Foreground="{x:Bind ColorApunte, Mode=OneWay}"
-                                    Style="{StaticResource PpTextoFila}"
-                                    Text="{x:Bind Nombre}"
-                                    Visibility="{x:Bind VerNombre}" />
-                                <TextBlock
-                                    Foreground="{x:Bind ColorFechaApunte, Mode=OneWay}"
-                                    Style="{StaticResource PpSubtituloFila}"
-                                    Text="{x:Bind Detalle}" />
-                            </StackPanel>
+                            <TextBlock
+                                FontFamily="{StaticResource PpFuente}"
+                                FontSize="13"
+                                FontWeight="SemiBold"
+                                Foreground="{x:Bind ColorApunte, Mode=OneWay}"
+                                HorizontalAlignment="Left"
+                                MaxLines="1"
+                                Text="{x:Bind Nombre}"
+                                TextTrimming="CharacterEllipsis"
+                                VerticalAlignment="Center"
+                                Visibility="{x:Bind VerNombre}" />
+
+                            <TextBlock
+                                FontFamily="{StaticResource PpFuente}"
+                                FontSize="11"
+                                Foreground="{x:Bind ColorFechaApunte, Mode=OneWay}"
+                                HorizontalAlignment="Right"
+                                Margin="0,0,26,0"
+                                Text="{x:Bind Detalle}"
+                                VerticalAlignment="Center" />
 
                             <Button
                                 Background="Transparent"
                                 BorderThickness="0"
                                 CornerRadius="13"
-                                FontFamily="Segoe Fluent Icons"
-                                FontSize="15"
                                 Foreground="{x:Bind ColorApunte, Mode=OneWay}"
-                                Height="26"
+                                Height="24"
                                 HorizontalAlignment="Right"
-                                MinHeight="26"
-                                MinWidth="26"
+                                MinHeight="24"
+                                MinWidth="24"
                                 Padding="0"
                                 VerticalAlignment="Top"
                                 Visibility="{x:Bind VerMenu, Mode=OneWay}"
-                                Width="26">
+                                Width="24">
                                 <Button.Content>
                                     <TextBlock
                                         FontFamily="Segoe Fluent Icons"
-                                        FontSize="15"
+                                        FontSize="14"
                                         Text="&#xE712;" />
                                 </Button.Content>
                                 <Button.Flyout>
@@ -256,11 +269,20 @@
                             </Button>
                         </Grid>
 
+                        <!--
+                            Sin PpTextoFila a proposito: ese estilo lleva
+                            MaxLines=1 y NoWrap, que es lo que quiere una
+                            fila y lo contrario de lo que quiere una
+                            tarjeta. Heredandolo, la tarjeta enseñaba una
+                            sola linea y media tarjeta en blanco debajo.
+                        -->
                         <TextBlock
                             Grid.Row="1"
+                            FontFamily="{StaticResource PpFuente}"
+                            FontSize="13"
                             Foreground="{x:Bind ColorApunte, Mode=OneWay}"
-                            LineHeight="18"
-                            Style="{StaticResource PpTextoFila}"
+                            LineHeight="19"
+                            MaxLines="5"
                             Text="{x:Bind Vista}"
                             TextTrimming="CharacterEllipsis"
                             TextWrapping="Wrap" />
@@ -691,20 +713,85 @@
                     <Border
                         Grid.Row="1"
                         Background="{ThemeResource PpAcento}"
-                        CornerRadius="14"
-                        Padding="12,10,8,10">
-                        <TextBox
-                            x:Name="PizarraTexto"
-                            AcceptsReturn="True"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            FontFamily="{StaticResource PpFuente}"
-                            FontSize="13"
-                            Foreground="{ThemeResource PpSobre}"
-                            IsSpellCheckEnabled="False"
-                            TextChanged="Pizarra_Cambio"
-                            TextWrapping="Wrap"
-                            VerticalAlignment="Stretch" />
+                        CornerRadius="10"
+                        Padding="12,10,8,4">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <TextBox
+                                x:Name="PizarraTexto"
+                                Grid.Row="0"
+                                AcceptsReturn="True"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                FontFamily="{StaticResource PpFuente}"
+                                FontSize="13"
+                                Foreground="{ThemeResource PpSobre}"
+                                IsSpellCheckEnabled="False"
+                                TextChanged="Pizarra_Cambio"
+                                TextWrapping="Wrap"
+                                VerticalAlignment="Stretch">
+                                <TextBox.Resources>
+                                    <!--
+                                        Igual que el buscador: el TextBox
+                                        trae sus propios fondos y sus
+                                        propios colores de letra por
+                                        estado, y ganan a lo que se le
+                                        ponga desde fuera.
+
+                                        Sin apagarlos, la nota salia como
+                                        una caja oscura DENTRO de la
+                                        tarjeta amarilla, y la letra en
+                                        blanco porque al tener el foco
+                                        mandaba TextControlForegroundFocused.
+                                        Sobre amarillo, blanco no se lee.
+                                    -->
+                                    <SolidColorBrush x:Key="TextControlBackground" Color="Transparent" />
+                                    <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="Transparent" />
+                                    <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="Transparent" />
+                                    <SolidColorBrush x:Key="TextControlBorderBrush" Color="Transparent" />
+                                    <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="Transparent" />
+                                    <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="Transparent" />
+                                    <Thickness x:Key="TextControlBorderThemeThickness">0</Thickness>
+                                    <Thickness x:Key="TextControlBorderThemeThicknessFocused">0</Thickness>
+                                    <StaticResource x:Key="TextControlForeground" ResourceKey="PpSobre" />
+                                    <StaticResource x:Key="TextControlForegroundPointerOver" ResourceKey="PpSobre" />
+                                    <StaticResource x:Key="TextControlForegroundFocused" ResourceKey="PpSobre" />
+                                    <StaticResource x:Key="TextControlPlaceholderForeground" ResourceKey="PpSobre" />
+                                </TextBox.Resources>
+                            </TextBox>
+
+                            <!--
+                                El visto de «ya esta». No hace falta para
+                                guardar —eso ya pasa en cada tecla— y por
+                                eso no dice «Guardar»: dice que has
+                                terminado y te devuelve a la lista. Un
+                                boton que promete guardar donde ya esta
+                                guardado enseña a desconfiar del resto.
+                            -->
+                            <Button
+                                x:Name="PizarraHecho"
+                                Grid.Row="1"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Click="Pizarra_Volver"
+                                CornerRadius="14"
+                                Foreground="{ThemeResource PpSobre}"
+                                Height="28"
+                                HorizontalAlignment="Right"
+                                MinHeight="28"
+                                MinWidth="28"
+                                Padding="0"
+                                Width="28">
+                                <TextBlock
+                                    FontFamily="Segoe Fluent Icons"
+                                    FontSize="15"
+                                    Text="&#xE73E;" />
+                            </Button>
+                        </Grid>
                     </Border>
                 </Grid>
 

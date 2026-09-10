@@ -255,6 +255,11 @@ public sealed class Fila : ItemLista, INotifyPropertyChanged
 
     // ------------------------------------------------------ el aspecto
 
+    /// <summary>
+    /// En un apunte esto es el MINIMO, no el alto: la tarjeta crece con
+    /// lo que lleve dentro, como en las notas rapidas. Con alto fijo, una
+    /// nota de dos lineas dejaba media tarjeta en blanco.
+    /// </summary>
     public double Alto =>
         EsApunte ? Estilo.AltoApunte
         : Compacta ? Estilo.AltoFilaMini
@@ -275,12 +280,22 @@ public sealed class Fila : ItemLista, INotifyPropertyChanged
         Nombre.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
 
     /// <summary>
-    /// El acento de fondo, como en las notas rapidas de Windows. La
-    /// tarjeta activa lo lleva entero y el resto rebajado, que es lo que
-    /// deja ver cual esta elegida sin cambiar de color.
+    /// El acento de fondo, y el MISMO en todas. Se probo pintando la
+    /// activa entera y las demas rebajadas, y quedaba como si fueran dos
+    /// tipos de nota distintos: en las notas rapidas de Windows todas las
+    /// tarjetas son del mismo color. Cual esta elegida se dice con el
+    /// borde, que no cambia lo que la tarjeta ES.
     /// </summary>
-    public Brush FondoApunte => Estilo.Pincel(
-        Estilo.ColorAcento.Color, Activa ? 1.0 : Encima ? 0.85 : 0.72);
+    public Brush FondoApunte => Estilo.Pincel(Estilo.ColorAcento.Color);
+
+    /// <summary>
+    /// Solo la tarjeta activa lleva borde. Va del color del texto y no
+    /// del acento —sobre acento, el acento no se ve—, y rebajado para
+    /// que señale sin gritar.
+    /// </summary>
+    public Brush BordeApunte => Activa || Encima
+        ? Estilo.Pincel(Estilo.ColorAcento.Sobre, Activa ? 0.85 : 0.35)
+        : Estilo.Pincel(Estilo.ColorAcento.Color);
 
     /// <summary>
     /// El color que la paleta tiene comprobado para escribir ENCIMA del

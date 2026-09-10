@@ -13,7 +13,7 @@ las pierde al reiniciar.
 
 ## Estado
 
-Versión 4.13.0, reescrita en C# con WinUI 3 sobre el Windows App SDK
+Versión 4.14.0, reescrita en C# con WinUI 3 sobre el Windows App SDK
 2.3.1 y .NET 10. Desempaquetada y self-contained.
 
 La versión anterior (3.x, Python con Flet) **ya no está en el repo**.

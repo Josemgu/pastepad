@@ -3,6 +3,38 @@
 All notable changes to this project are documented here.
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [4.14.0] - 2026-09-10
+
+**The notes looked wrong, and the reason was a style they should never
+have inherited.**
+
+### Fixed
+- **A note card showed one line and half a card of empty space.** The
+  preview was built with several lines and the card was told to draw
+  them, but it borrowed the row style, which sets `MaxLines` to 1 and
+  turns wrapping off — right for a row, the opposite of right for a
+  card. Four-line notes were shown as one line.
+- **Cards were two different colours.** The selected one was painted at
+  full strength and the rest faded, which read as two kinds of note
+  rather than one selected note. They are all the same colour now, and
+  the selected one is marked with a border, which says "this one" without
+  saying "this is different".
+- **The open note was a dark box inside a yellow card**, with white text
+  that could not be read once the box went away. A `TextBox` brings its
+  own background and its own text colour per state and they beat anything
+  set from outside; the same brushes the search box already turns off had
+  to be turned off here too.
+
+### Changed
+- The date sits at the top right of the card, where the eye is not
+  reading, instead of at the top left where the text starts.
+- Cards grow with what they hold instead of being a fixed height, so a
+  two-line note is a two-line card.
+- **A ✓ closes the note** and returns to the list. It does not say
+  "Save", because saving already happened on every keystroke — a button
+  promising to save what is already saved teaches you to distrust the
+  rest.
+
 ## [4.13.0] - 2026-09-10
 
 **Notes became a scratchpad you summon.**
